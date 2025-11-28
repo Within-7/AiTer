@@ -1,8 +1,29 @@
 import React from 'react'
-import { PluginListItem, PluginStatus } from '../../../types/plugin'
+
+type PluginStatus = 'installed' | 'not-installed' | 'update-available' | 'installing' | 'updating' | 'removing' | 'error'
+
+interface PluginCardData {
+  id: string
+  name: string
+  description: string
+  version: string
+  author: string
+  installed: boolean
+  installedVersion?: string
+  updateAvailable: boolean
+  enabled: boolean
+  config?: Record<string, unknown>
+  tags?: string[]
+  icon?: string
+  homepage?: string
+  status: PluginStatus
+  latestVersion: string | null
+  hasUpdate: boolean
+  platforms: string[]
+}
 
 interface PluginCardProps {
-  plugin: PluginListItem
+  plugin: PluginCardData
   onInstall: (pluginId: string) => void
   onUpdate: (pluginId: string) => void
   onRemove: (pluginId: string) => void

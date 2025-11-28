@@ -9,7 +9,7 @@ export interface StatusBarProps {
 }
 
 export function StatusBar({ activeTerminal }: StatusBarProps) {
-  const { state } = useContext(AppContext)
+  const { state, dispatch } = useContext(AppContext)
   const [pluginStatus, setPluginStatus] = useState<PluginStatus>('no-plugins')
   const [pluginCount, setPluginCount] = useState(0)
   const [hasUpdates, setHasUpdates] = useState(false)
@@ -17,30 +17,23 @@ export function StatusBar({ activeTerminal }: StatusBarProps) {
   // Check plugin status on mount and every hour
   useEffect(() => {
     const checkPluginStatus = async () => {
-      // TODO: Replace with actual window.api.plugins.getStatus() when plugin system is implemented
-      // For now, use placeholder logic
       try {
-        // Simulated plugin status check
-        // const result = await window.api.plugins.getStatus()
-        // if (result.success) {
-        //   setPluginCount(result.data?.count || 0)
-        //   setHasUpdates(result.data?.hasUpdates || false)
-        //
-        //   if (result.data?.installing) {
-        //     setPluginStatus('installing')
-        //   } else if (result.data?.hasUpdates) {
-        //     setPluginStatus('update-available')
-        //   } else if (result.data?.count > 0) {
-        //     setPluginStatus('has-plugins')
-        //   } else {
-        //     setPluginStatus('no-plugins')
-        //   }
-        // }
+        const result = await window.api.plugins.list()
+        if (result.success && result.plugins) {
+          const installed = result.plugins.filter(p => p.installed)
+          const updates = result.plugins.filter(p => p.updateAvailable)
 
-        // Placeholder: Default to no plugins
-        setPluginStatus('no-plugins')
-        setPluginCount(0)
-        setHasUpdates(false)
+          setPluginCount(installed.length)
+          setHasUpdates(updates.length > 0)
+
+          if (updates.length > 0) {
+            setPluginStatus('update-available')
+          } else if (installed.length > 0) {
+            setPluginStatus('has-plugins')
+          } else {
+            setPluginStatus('no-plugins')
+          }
+        }
       } catch (error) {
         console.error('Failed to check plugin status:', error)
         setPluginStatus('no-plugins')
@@ -50,18 +43,36 @@ export function StatusBar({ activeTerminal }: StatusBarProps) {
     // Check on mount
     checkPluginStatus()
 
+    // Setup install/update progress listeners to update status
+    const cleanupInstall = window.api.plugins.onInstallProgress((progress) => {
+      if (progress.status === 'installing' || progress.status === 'downloading') {
+        setPluginStatus('installing')
+      } else if (progress.status === 'complete') {
+        checkPluginStatus()
+      }
+    })
+
+    const cleanupUpdate = window.api.plugins.onUpdateProgress((progress) => {
+      if (progress.status === 'installing' || progress.status === 'downloading') {
+        setPluginStatus('installing')
+      } else if (progress.status === 'complete') {
+        checkPluginStatus()
+      }
+    })
+
     // Auto-refresh every hour (3600000ms)
     const intervalId = setInterval(checkPluginStatus, 3600000)
 
-    return () => clearInterval(intervalId)
+    return () => {
+      clearInterval(intervalId)
+      cleanupInstall()
+      cleanupUpdate()
+    }
   }, [])
 
   // Handle plugin button click
   const handlePluginClick = () => {
-    // TODO: Implement plugin panel opening logic
-    // For now, just log
-    console.log('Plugin panel clicked - to be implemented')
-    // Future: dispatch({ type: 'OPEN_PLUGIN_PANEL' })
+    dispatch({ type: 'TOGGLE_PLUGIN_PANEL' })
   }
 
   // Handle settings button click

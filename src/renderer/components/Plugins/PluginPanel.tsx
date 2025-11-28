@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { PluginListItem } from '../../../types/plugin'
+import { Plugin, PluginInstallProgress, PluginUpdateProgress } from '../../../types'
 import { PluginCard } from './PluginCard'
 import { MintoConfigDialog } from './MintoConfigDialog'
 import './Plugins.css'
@@ -14,15 +14,16 @@ interface MintoConfig {
   autoCheckUpdates?: boolean
 }
 
-interface ProgressEvent {
-  pluginId: string
-  progress: number
-  phase: string
-  message: string
+// Extended plugin interface for display
+interface PluginCardData extends Plugin {
+  status: 'installed' | 'not-installed' | 'update-available' | 'installing' | 'updating' | 'removing' | 'error'
+  latestVersion: string | null
+  hasUpdate: boolean
+  platforms: string[]
 }
 
 export const PluginPanel: React.FC<PluginPanelProps> = ({ isOpen, onClose }) => {
-  const [plugins, setPlugins] = useState<PluginListItem[]>([])
+  const [plugins, setPlugins] = useState<PluginCardData[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [processingPlugins, setProcessingPlugins] = useState<Set<string>>(new Set())
@@ -36,57 +37,22 @@ export const PluginPanel: React.FC<PluginPanelProps> = ({ isOpen, onClose }) => 
     setError(null)
 
     try {
-      // Check if plugins API exists
-      if (!window.api?.plugins) {
-        // Mock data for development until backend is implemented
-        setPlugins([
-          {
-            id: 'minto',
-            name: 'Minto CLI',
-            description: 'AI-powered commit message generator and Git workflow assistant',
-            icon: '🤖',
-            status: 'not-installed',
-            installedVersion: null,
-            latestVersion: '1.2.0',
-            hasUpdate: false,
-            enabled: true,
-            platforms: ['darwin', 'linux', 'win32'],
-            tags: ['git', 'ai', 'productivity']
-          },
-          {
-            id: 'claude-code',
-            name: 'Claude Code CLI',
-            description: 'Official Claude AI CLI for code generation and assistance',
-            icon: '🔮',
-            status: 'not-installed',
-            installedVersion: null,
-            latestVersion: '2.0.1',
-            hasUpdate: false,
-            enabled: true,
-            platforms: ['darwin', 'linux', 'win32'],
-            tags: ['ai', 'code-generation']
-          },
-          {
-            id: 'gemini-cli',
-            name: 'Gemini CLI',
-            description: 'Google Gemini AI CLI tool for development workflows',
-            icon: '💎',
-            status: 'not-installed',
-            installedVersion: null,
-            latestVersion: '1.0.5',
-            hasUpdate: false,
-            enabled: true,
-            platforms: ['darwin', 'linux', 'win32'],
-            tags: ['ai', 'google']
-          }
-        ])
-        setIsLoading(false)
-        return
-      }
-
       const result = await window.api.plugins.list()
       if (result.success && result.plugins) {
-        setPlugins(result.plugins)
+        // Transform Plugin to PluginCardData
+        const cardData: PluginCardData[] = result.plugins.map((plugin) => ({
+          ...plugin,
+          status: plugin.installed
+            ? plugin.updateAvailable
+              ? 'update-available'
+              : 'installed'
+            : 'not-installed',
+          latestVersion: plugin.version,
+          hasUpdate: plugin.updateAvailable,
+          platforms: ['darwin', 'linux', 'win32'], // Default platforms
+          installedVersion: plugin.installedVersion
+        }))
+        setPlugins(cardData)
       } else {
         setError(result.error || 'Failed to load plugins')
       }
@@ -105,10 +71,8 @@ export const PluginPanel: React.FC<PluginPanelProps> = ({ isOpen, onClose }) => 
 
   // Listen for install progress
   useEffect(() => {
-    if (!window.api?.plugins?.onInstallProgress) return
-
-    const cleanup = window.api.plugins.onInstallProgress((event: ProgressEvent) => {
-      console.log(`Install progress: ${event.pluginId} - ${event.message}`)
+    const cleanup = window.api.plugins.onInstallProgress((progress: PluginInstallProgress) => {
+      console.log(`Install progress: ${progress.pluginId} - ${progress.status} (${progress.progress}%)`)
       // You could show a toast notification or progress bar here
     })
 
@@ -117,10 +81,8 @@ export const PluginPanel: React.FC<PluginPanelProps> = ({ isOpen, onClose }) => 
 
   // Listen for update progress
   useEffect(() => {
-    if (!window.api?.plugins?.onUpdateProgress) return
-
-    const cleanup = window.api.plugins.onUpdateProgress((event: ProgressEvent) => {
-      console.log(`Update progress: ${event.pluginId} - ${event.message}`)
+    const cleanup = window.api.plugins.onUpdateProgress((progress: PluginUpdateProgress) => {
+      console.log(`Update progress: ${progress.pluginId} - ${progress.status} (${progress.progress}%)`)
       // You could show a toast notification or progress bar here
     })
 
@@ -128,11 +90,6 @@ export const PluginPanel: React.FC<PluginPanelProps> = ({ isOpen, onClose }) => 
   }, [])
 
   const handleInstall = async (pluginId: string) => {
-    if (!window.api?.plugins) {
-      alert('Plugin system not available. Backend implementation needed.')
-      return
-    }
-
     setProcessingPlugins((prev) => new Set(prev).add(pluginId))
 
     try {
@@ -154,11 +111,6 @@ export const PluginPanel: React.FC<PluginPanelProps> = ({ isOpen, onClose }) => 
   }
 
   const handleUpdate = async (pluginId: string) => {
-    if (!window.api?.plugins) {
-      alert('Plugin system not available. Backend implementation needed.')
-      return
-    }
-
     setProcessingPlugins((prev) => new Set(prev).add(pluginId))
 
     try {
@@ -180,11 +132,6 @@ export const PluginPanel: React.FC<PluginPanelProps> = ({ isOpen, onClose }) => 
   }
 
   const handleRemove = async (pluginId: string) => {
-    if (!window.api?.plugins) {
-      alert('Plugin system not available. Backend implementation needed.')
-      return
-    }
-
     if (!confirm(`Are you sure you want to remove ${pluginId}?`)) {
       return
     }
@@ -212,28 +159,23 @@ export const PluginPanel: React.FC<PluginPanelProps> = ({ isOpen, onClose }) => 
   const handleConfigure = async (pluginId: string) => {
     setConfigPluginId(pluginId)
 
-    // Load current configuration
-    if (window.api?.plugins?.getConfiguration) {
-      try {
-        const result = await window.api.plugins.getConfiguration(pluginId)
-        if (result.success && result.config) {
-          setCurrentConfig(result.config as MintoConfig)
-        }
-      } catch (err) {
-        console.error('Failed to load configuration:', err)
-      }
+    // Load current configuration from the plugin's config field
+    const plugin = plugins.find((p) => p.id === pluginId)
+    if (plugin?.config) {
+      setCurrentConfig(plugin.config as MintoConfig)
+    } else {
+      setCurrentConfig({})
     }
 
     setConfigDialogOpen(true)
   }
 
   const handleSaveConfig = async (config: MintoConfig) => {
-    if (!configPluginId || !window.api?.plugins) {
-      alert('Plugin system not available. Backend implementation needed.')
+    if (!configPluginId) {
       return
     }
 
-    const result = await window.api.plugins.configure(configPluginId, config)
+    const result = await window.api.plugins.configure(configPluginId, config as Record<string, unknown>)
     if (!result.success) {
       throw new Error(result.error || 'Configuration failed')
     }

@@ -11,6 +11,7 @@ export interface AppState {
   activeEditorTabId?: string
   settings: AppSettings
   terminalDataBuffer: Map<string, string>
+  showPluginPanel: boolean
 }
 
 export type AppAction =
@@ -34,6 +35,8 @@ export type AppAction =
   | { type: 'TERMINAL_EXIT'; payload: { id: string; exitCode: number } }
   | { type: 'SET_SETTINGS'; payload: AppSettings }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<AppSettings> }
+  | { type: 'TOGGLE_PLUGIN_PANEL' }
+  | { type: 'SET_PLUGIN_PANEL'; payload: boolean }
 
 export const initialState: AppState = {
   projects: [],
@@ -51,7 +54,8 @@ export const initialState: AppState = {
     cursorBlink: true,
     cursorStyle: 'block'
   },
-  terminalDataBuffer: new Map()
+  terminalDataBuffer: new Map(),
+  showPluginPanel: false
 }
 
 export function appReducer(state: AppState, action: AppAction): AppState {
@@ -231,6 +235,12 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         settings: { ...state.settings, ...action.payload }
       }
+
+    case 'TOGGLE_PLUGIN_PANEL':
+      return { ...state, showPluginPanel: !state.showPluginPanel }
+
+    case 'SET_PLUGIN_PANEL':
+      return { ...state, showPluginPanel: action.payload }
 
     default:
       return state
