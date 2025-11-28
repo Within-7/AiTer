@@ -85,7 +85,7 @@ export class PluginManager {
           }
         }
       },
-      new MintoInstaller()
+      new MintoInstaller(this.store)
     );
 
     console.log('[PluginManager] Initialization complete');
