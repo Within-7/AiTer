@@ -26,14 +26,29 @@ interface PluginStoreSchema {
 }
 
 export class PluginManager {
+  private static instance: PluginManager | null = null;
+
   private plugins: Map<string, Plugin> = new Map();
   private store: Store<PluginStoreSchema>;
   private autoCheckInterval: NodeJS.Timeout | null = null;
   private readonly AUTO_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
-  constructor(store: Store<PluginStoreSchema>) {
+  private constructor(store: Store<PluginStoreSchema>) {
     this.store = store;
     this.initializeRegistry();
+  }
+
+  /**
+   * Get singleton instance of PluginManager
+   */
+  public static getInstance(): PluginManager {
+    if (!PluginManager.instance) {
+      const store = new Store<PluginStoreSchema>({
+        name: 'plugin-registry'
+      });
+      PluginManager.instance = new PluginManager(store);
+    }
+    return PluginManager.instance;
   }
 
   /**
@@ -42,6 +57,46 @@ export class PluginManager {
   private initializeRegistry(): void {
     const registry = this.store.get('plugins.registry', {});
     console.log(`[PluginManager] Initialized with ${Object.keys(registry).length} registered plugins`);
+  }
+
+  /**
+   * Initialize plugin manager and register built-in plugins
+   */
+  public async initialize(): Promise<void> {
+    console.log('[PluginManager] Initializing...');
+
+    // Register Minto CLI plugin
+    const { MintoInstaller } = await import('./installers/MintoInstaller');
+    await this.registerPlugin(
+      {
+        id: 'minto',
+        name: 'Minto CLI',
+        description: 'AI-powered CLI tool for chat and code generation in terminal',
+        icon: '🤖',
+        version: '1.0.0',
+        author: 'Within-7',
+        homepage: 'https://github.com/Within-7/minto',
+        platforms: ['darwin', 'linux', 'win32'],
+        tags: ['ai', 'cli', 'chat', 'code-generation'],
+        requirements: {
+          githubToken: {
+            required: true,
+            description: 'GitHub Personal Access Token for accessing private repository'
+          }
+        }
+      },
+      new MintoInstaller()
+    );
+
+    console.log('[PluginManager] Initialization complete');
+  }
+
+  /**
+   * Cleanup plugin manager resources
+   */
+  public async cleanup(): Promise<void> {
+    console.log('[PluginManager] Cleaning up...');
+    this.destroy();
   }
 
   /**
