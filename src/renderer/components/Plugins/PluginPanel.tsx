@@ -39,8 +39,12 @@ export const PluginPanel: React.FC = () => {
     setError(null)
 
     try {
+      console.log('[PluginPanel] Loading plugins...')
       const result = await window.api.plugins.list()
+      console.log('[PluginPanel] Plugins list result:', result)
+
       if (result.success && result.plugins) {
+        console.log('[PluginPanel] Raw plugins:', result.plugins)
         // Transform Plugin to PluginCardData
         const cardData: PluginCardData[] = result.plugins.map((plugin) => ({
           ...plugin,
@@ -54,11 +58,14 @@ export const PluginPanel: React.FC = () => {
           platforms: ['darwin', 'linux', 'win32'], // Default platforms
           installedVersion: plugin.installedVersion
         }))
+        console.log('[PluginPanel] Transformed plugins:', cardData)
         setPlugins(cardData)
       } else {
+        console.error('[PluginPanel] Failed to load plugins:', result.error)
         setError(result.error || 'Failed to load plugins')
       }
     } catch (err) {
+      console.error('[PluginPanel] Error loading plugins:', err)
       setError(err instanceof Error ? err.message : 'Failed to load plugins')
     } finally {
       setIsLoading(false)
@@ -69,6 +76,17 @@ export const PluginPanel: React.FC = () => {
     if (isOpen) {
       loadPlugins()
     }
+  }, [isOpen, loadPlugins])
+
+  // Listen for plugin initialization complete
+  useEffect(() => {
+    const cleanup = window.api.plugins.onInitialized(() => {
+      console.log('[PluginPanel] Plugins initialized, reloading...')
+      if (isOpen) {
+        loadPlugins()
+      }
+    })
+    return cleanup
   }, [isOpen, loadPlugins])
 
   // Listen for install progress

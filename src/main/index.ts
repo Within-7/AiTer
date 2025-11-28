@@ -27,18 +27,19 @@ async function initialize() {
     // Initialize file server manager
     serverManager = new ProjectServerManager()
 
-    // Initialize plugin manager (non-blocking)
+    // Initialize plugin manager
     pluginManager = PluginManager.getInstance()
-    // Initialize plugins in background to avoid blocking app startup
-    pluginManager.initialize().catch((error) => {
-      console.error('[PluginManager] Background initialization failed:', error)
-    })
 
-    // Create main window
+    // Create main window first (so UI appears quickly)
     mainWindow = createMainWindow()
 
     // Set main window on plugin manager for event communication
     pluginManager.setMainWindow(mainWindow)
+
+    // Initialize plugins in background (non-blocking for UI)
+    pluginManager.initialize().catch((error) => {
+      console.error('[PluginManager] Background initialization failed:', error)
+    })
 
     // Setup menu
     setupMenu()

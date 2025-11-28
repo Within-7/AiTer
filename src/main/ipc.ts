@@ -234,8 +234,10 @@ export function setupIPC(
   // Plugin management
   ipcMain.handle('plugins:list', async () => {
     try {
+      console.log('[IPC] plugins:list called')
       const pluginManager = PluginManager.getInstance()
-      const pluginListItems = pluginManager.listPlugins()
+      const pluginListItems = await pluginManager.listPluginsAsync()
+      console.log('[IPC] Got plugin list items:', pluginListItems)
 
       // Convert PluginListItem to Plugin format expected by renderer
       const plugins = await Promise.all(
@@ -245,7 +247,7 @@ export function setupIPC(
             ? await pluginManager.getPluginConfiguration(item.id).catch(() => ({}))
             : {}
 
-          return {
+          const result = {
             id: item.id,
             name: item.name,
             description: item.description,
@@ -260,12 +262,16 @@ export function setupIPC(
             icon: item.icon,
             homepage: plugin?.definition.homepage
           }
+          console.log('[IPC] Converted plugin:', result)
+          return result
         })
       )
 
+      console.log('[IPC] Returning plugins:', plugins)
       return { success: true, plugins }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
+      console.error('[IPC] Error in plugins:list:', error)
       return { success: false, error: message }
     }
   })

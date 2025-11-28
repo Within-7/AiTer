@@ -34,6 +34,7 @@ export class PluginManager {
   private autoCheckInterval: NodeJS.Timeout | null = null;
   private readonly AUTO_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
   private mainWindow: BrowserWindow | null = null;
+  private initializePromise: Promise<void> | null = null;
 
   private constructor(store: Store<PluginStoreSchema>) {
     this.store = store;
@@ -72,32 +73,50 @@ export class PluginManager {
    * Initialize plugin manager and register built-in plugins
    */
   public async initialize(): Promise<void> {
-    console.log('[PluginManager] Initializing...');
+    // Return existing promise if already initializing
+    if (this.initializePromise) {
+      return this.initializePromise;
+    }
 
-    // Register Minto CLI plugin
-    const { MintoInstaller } = await import('./installers/MintoInstaller');
-    await this.registerPlugin(
-      {
-        id: 'minto',
-        name: 'Minto CLI',
-        description: 'AI-powered CLI tool for chat and code generation in terminal',
-        icon: '🤖',
-        version: '1.0.0',
-        author: 'Within-7',
-        homepage: 'https://github.com/Within-7/minto',
-        platforms: ['darwin', 'linux', 'win32'],
-        tags: ['ai', 'cli', 'chat', 'code-generation'],
-        requirements: {
-          githubToken: {
-            required: true,
-            description: 'GitHub Personal Access Token for accessing private repository'
+    this.initializePromise = (async () => {
+      console.log('[PluginManager] Initializing...');
+
+      // Register Minto CLI plugin
+      const { MintoInstaller } = await import('./installers/MintoInstaller');
+      await this.registerPlugin(
+        {
+          id: 'minto',
+          name: 'Minto CLI',
+          description: 'AI-powered CLI tool for chat and code generation in terminal',
+          icon: '🤖',
+          version: '1.0.0',
+          author: 'Within-7',
+          homepage: 'https://github.com/Within-7/minto',
+          platforms: ['darwin', 'linux', 'win32'],
+          tags: ['ai', 'cli', 'chat', 'code-generation'],
+          requirements: {
+            githubToken: {
+              required: true,
+              description: 'GitHub Personal Access Token for accessing private repository'
+            }
           }
-        }
-      },
-      new MintoInstaller(this.store)
-    );
+        },
+        new MintoInstaller(this.store)
+      );
 
-    console.log('[PluginManager] Initialization complete');
+      console.log('[PluginManager] Initialization complete');
+
+      // Notify renderer that plugins are ready
+      if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+        try {
+          this.mainWindow.webContents.send('plugins:initialized');
+        } catch (error) {
+          console.warn('[PluginManager] Failed to send plugins:initialized event:', error);
+        }
+      }
+    })();
+
+    return this.initializePromise;
   }
 
   /**
@@ -151,10 +170,21 @@ export class PluginManager {
     };
 
     // Check installation status
+    console.log(`[PluginManager] Checking installation status for ${definition.id}...`);
     try {
       const isInstalled = await installer.checkInstallation();
+      console.log(`[PluginManager] ${definition.id} installed: ${isInstalled}`);
       if (isInstalled) {
-        const currentVersion = await installer.getCurrentVersion();
+        console.log(`[PluginManager] Getting current version for ${definition.id}...`);
+        // Add timeout to prevent hanging on slow commands
+        const currentVersion = await Promise.race([
+          installer.getCurrentVersion(),
+          new Promise<null>((resolve) => setTimeout(() => {
+            console.warn(`[PluginManager] getCurrentVersion() timed out for ${definition.id}`);
+            resolve(null);
+          }, 3000)) // 3 second timeout
+        ]);
+        console.log(`[PluginManager] ${definition.id} current version: ${currentVersion}`);
         plugin.status = 'installed';
         plugin.installedVersion = currentVersion;
         registryEntry.installedVersion = currentVersion;
@@ -165,8 +195,10 @@ export class PluginManager {
       plugin.error = error instanceof Error ? error.message : String(error);
     }
 
+    console.log(`[PluginManager] Storing ${definition.id} in memory...`);
     // Store in memory
     this.plugins.set(definition.id, plugin);
+    console.log(`[PluginManager] Plugins map size after adding: ${this.plugins.size}`);
 
     // Persist registry entry
     registry[definition.id] = registryEntry;
@@ -176,9 +208,49 @@ export class PluginManager {
   }
 
   /**
-   * Get list of all plugins
+   * Get list of all plugins (async to wait for initialization)
+   */
+  public async listPluginsAsync(): Promise<PluginListItem[]> {
+    console.log(`[PluginManager] listPluginsAsync called, waiting for initialization...`);
+
+    // Wait for initialization to complete
+    if (this.initializePromise) {
+      await this.initializePromise;
+    }
+
+    console.log(`[PluginManager] Initialization complete, plugins size: ${this.plugins.size}`);
+    console.log(`[PluginManager] Plugins map:`, Array.from(this.plugins.keys()));
+
+    const items: PluginListItem[] = [];
+
+    for (const [id, plugin] of this.plugins) {
+      items.push({
+        id,
+        name: plugin.definition.name,
+        description: plugin.definition.description,
+        icon: plugin.definition.icon,
+        status: plugin.status,
+        installedVersion: plugin.installedVersion,
+        latestVersion: plugin.latestVersion,
+        hasUpdate:
+          plugin.status === 'installed' &&
+          plugin.latestVersion !== null &&
+          plugin.installedVersion !== plugin.latestVersion,
+        enabled: plugin.enabled,
+        platforms: plugin.definition.platforms,
+        tags: plugin.definition.tags,
+      });
+    }
+
+    return items;
+  }
+
+  /**
+   * Get list of all plugins (synchronous, for backward compatibility)
    */
   public listPlugins(): PluginListItem[] {
+    console.log(`[PluginManager] listPlugins called (sync), plugins size: ${this.plugins.size}`);
+
     const items: PluginListItem[] = [];
 
     for (const [id, plugin] of this.plugins) {
