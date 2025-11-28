@@ -28,16 +28,15 @@ interface GitHubRelease {
   tag_name: string;
   name: string;
   published_at: string;
-  assets: Array<{
-    name: string;
-    browser_download_url: string;
-  }>;
 }
 
 export class MintoInstaller implements PluginInstaller {
   private store: Store;
   private readonly GITHUB_API_BASE = 'https://api.github.com';
-  private readonly GITHUB_REPO = 'minto-ai/minto'; // Update with actual repo
+  private readonly GITHUB_REPO = 'Within-7/minto';
+  private readonly INSTALL_SCRIPT_URL = 'https://raw.githubusercontent.com/Within-7/minto/main/scripts/install.sh';
+  private readonly CHECK_UPDATE_SCRIPT_URL = 'https://raw.githubusercontent.com/Within-7/minto/main/scripts/check-update.sh';
+  private readonly AUTO_UPDATE_SCRIPT_URL = 'https://raw.githubusercontent.com/Within-7/minto/main/scripts/auto-update.sh';
   private readonly TOKEN_STORE_KEY = 'plugins.minto.token';
   private readonly CONFIG_STORE_KEY = 'plugins.minto.configuration';
 
@@ -85,7 +84,7 @@ export class MintoInstaller implements PluginInstaller {
       };
 
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        headers['Authorization'] = `token ${token}`;
       }
 
       const response = await fetch(
@@ -128,15 +127,11 @@ export class MintoInstaller implements PluginInstaller {
       message: 'Fetching installation script...',
     });
 
-    // Get latest release
-    const latestVersion = await this.getLatestVersion();
-    if (!latestVersion) {
-      throw new Error('Could not determine latest version');
-    }
-
-    // Download install.sh
+    // Get GitHub token for authentication
     const token = await this.getGitHubToken();
-    const installScriptUrl = await this.getInstallScriptUrl(latestVersion, token);
+    if (!token) {
+      throw new Error('GitHub token is required. Please configure it in plugin settings.');
+    }
 
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'minto-install-'));
     const installScriptPath = path.join(tempDir, 'install.sh');
@@ -148,7 +143,7 @@ export class MintoInstaller implements PluginInstaller {
         message: 'Downloading installation script...',
       });
 
-      await this.downloadFile(installScriptUrl, installScriptPath, token);
+      await this.downloadFile(this.INSTALL_SCRIPT_URL, installScriptPath, token);
 
       // Make script executable
       await fs.chmod(installScriptPath, 0o755);
@@ -159,9 +154,9 @@ export class MintoInstaller implements PluginInstaller {
         message: 'Running installation script...',
       });
 
-      // Execute install script using bash
+      // Execute install script using bash with GH_TOKEN environment variable
       await execFileAsync('bash', [installScriptPath], {
-        env: { ...process.env },
+        env: { ...process.env, GH_TOKEN: token },
         maxBuffer: 10 * 1024 * 1024,
       });
 
@@ -212,6 +207,12 @@ export class MintoInstaller implements PluginInstaller {
       message: 'Checking for updates...',
     });
 
+    // Get GitHub token for authentication
+    const token = await this.getGitHubToken();
+    if (!token) {
+      throw new Error('GitHub token is required. Please configure it in plugin settings.');
+    }
+
     // Get latest version
     const latestVersion = await this.getLatestVersion();
     if (!latestVersion) {
@@ -227,10 +228,6 @@ export class MintoInstaller implements PluginInstaller {
       return;
     }
 
-    // Download auto-update.sh
-    const token = await this.getGitHubToken();
-    const updateScriptUrl = await this.getUpdateScriptUrl(latestVersion, token);
-
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'minto-update-'));
     const updateScriptPath = path.join(tempDir, 'auto-update.sh');
 
@@ -241,7 +238,7 @@ export class MintoInstaller implements PluginInstaller {
         message: 'Downloading update script...',
       });
 
-      await this.downloadFile(updateScriptUrl, updateScriptPath, token);
+      await this.downloadFile(this.AUTO_UPDATE_SCRIPT_URL, updateScriptPath, token);
 
       // Make script executable
       await fs.chmod(updateScriptPath, 0o755);
@@ -252,9 +249,9 @@ export class MintoInstaller implements PluginInstaller {
         message: `Updating to version ${latestVersion}...`,
       });
 
-      // Execute update script using bash
+      // Execute update script using bash with GH_TOKEN environment variable
       await execFileAsync('bash', [updateScriptPath], {
-        env: { ...process.env },
+        env: { ...process.env, GH_TOKEN: token },
         maxBuffer: 10 * 1024 * 1024,
       });
 
@@ -397,70 +394,6 @@ export class MintoInstaller implements PluginInstaller {
   // ========== Private Helper Methods ==========
 
   /**
-   * Get installation script URL from GitHub release
-   */
-  private async getInstallScriptUrl(version: string, token?: string): Promise<string> {
-    const headers: Record<string, string> = {
-      Accept: 'application/vnd.github+json',
-      'User-Agent': 'AiTer-Plugin-Manager',
-    };
-
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const response = await fetch(
-      `${this.GITHUB_API_BASE}/repos/${this.GITHUB_REPO}/releases/tags/v${version}`,
-      { headers }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch release info: ${response.statusText}`);
-    }
-
-    const release: GitHubRelease = await response.json();
-    const installAsset = release.assets.find((asset) => asset.name === 'install.sh');
-
-    if (!installAsset) {
-      throw new Error('install.sh not found in release assets');
-    }
-
-    return installAsset.browser_download_url;
-  }
-
-  /**
-   * Get update script URL from GitHub release
-   */
-  private async getUpdateScriptUrl(version: string, token?: string): Promise<string> {
-    const headers: Record<string, string> = {
-      Accept: 'application/vnd.github+json',
-      'User-Agent': 'AiTer-Plugin-Manager',
-    };
-
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const response = await fetch(
-      `${this.GITHUB_API_BASE}/repos/${this.GITHUB_REPO}/releases/tags/v${version}`,
-      { headers }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch release info: ${response.statusText}`);
-    }
-
-    const release: GitHubRelease = await response.json();
-    const updateAsset = release.assets.find((asset) => asset.name === 'auto-update.sh');
-
-    if (!updateAsset) {
-      throw new Error('auto-update.sh not found in release assets');
-    }
-
-    return updateAsset.browser_download_url;
-  }
-
-  /**
    * Download file from URL
    */
   private async downloadFile(url: string, destination: string, token?: string): Promise<void> {
@@ -469,7 +402,7 @@ export class MintoInstaller implements PluginInstaller {
     };
 
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers['Authorization'] = `token ${token}`;
     }
 
     const response = await fetch(url, { headers });
