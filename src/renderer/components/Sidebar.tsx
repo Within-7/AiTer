@@ -14,15 +14,17 @@ export function Sidebar() {
   // Monitor fullscreen state changes
   useEffect(() => {
     const checkFullscreen = () => {
-      // Check multiple conditions for fullscreen
+      // In Electron, we need to check if the window takes up the entire screen
+      // by comparing innerHeight to screen.height
+      // When not fullscreen on macOS, there's a title bar (~28px) and dock space
       const isFs =
-        // Check if document is in fullscreen
+        // Check if document is in fullscreen API
         !!(document.fullscreenElement ||
            (document as any).webkitFullscreenElement ||
            (document as any).mozFullScreenElement) ||
-        // Check if window dimensions match screen (macOS fullscreen)
-        (window.outerHeight >= window.screen.height * 0.95 &&
-         window.outerWidth >= window.screen.width * 0.95)
+        // Check if window.innerHeight is very close to screen height
+        // (within 50px to account for differences in how browsers/Electron report sizes)
+        (window.innerHeight >= window.screen.height - 50)
 
       setIsFullscreen(isFs)
     }
@@ -170,7 +172,11 @@ export function Sidebar() {
                 className="btn-icon btn-terminal"
                 onClick={async (e) => {
                   e.stopPropagation()
-                  const result = await window.api.terminal.create(project.path, project.id, project.name)
+                  const result = await window.api.terminal.create(
+                    project.path,
+                    project.id,
+                    project.name
+                  )
                   if (result.success && result.terminal) {
                     dispatch({ type: 'ADD_TERMINAL', payload: result.terminal })
                   }

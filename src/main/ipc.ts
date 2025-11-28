@@ -3,11 +3,13 @@ import { v4 as uuidv4 } from 'uuid'
 import { PTYManager } from './pty'
 import { StoreManager } from './store'
 import { fileSystemManager } from './filesystem'
+import { ProjectServerManager } from './fileServer/ProjectServerManager'
 
 export function setupIPC(
   window: BrowserWindow,
   ptyManager: PTYManager,
-  storeManager: StoreManager
+  storeManager: StoreManager,
+  serverManager: ProjectServerManager
 ) {
   // Project management
   ipcMain.handle('project:add', async (_, { path, name }) => {
@@ -191,6 +193,37 @@ export function setupIPC(
     try {
       const exists = await fileSystemManager.fileExists(path)
       return { success: true, exists }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  // File server operations
+  ipcMain.handle('fileServer:getUrl', async (_, { projectId, projectPath, filePath }) => {
+    try {
+      const url = await serverManager.getFileUrl(projectId, projectPath, filePath)
+      return { success: true, url }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('fileServer:stop', async (_, { projectId }) => {
+    try {
+      await serverManager.stopServer(projectId)
+      return { success: true }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('fileServer:getStats', async () => {
+    try {
+      const stats = serverManager.getStats()
+      return { success: true, stats }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
       return { success: false, error: message }

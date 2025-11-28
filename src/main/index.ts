@@ -4,6 +4,7 @@ import { setupIPC } from './ipc'
 import { setupMenu } from './menu'
 import { PTYManager } from './pty'
 import { StoreManager } from './store'
+import { ProjectServerManager } from './fileServer/ProjectServerManager'
 
 // Set application name
 app.setName('AiTer')
@@ -11,6 +12,7 @@ app.setName('AiTer')
 let mainWindow: BrowserWindow | null = null
 let ptyManager: PTYManager | null = null
 let storeManager: StoreManager | null = null
+let serverManager: ProjectServerManager | null = null
 
 async function initialize() {
   try {
@@ -20,6 +22,9 @@ async function initialize() {
     // Initialize PTY manager
     ptyManager = new PTYManager()
 
+    // Initialize file server manager
+    serverManager = new ProjectServerManager()
+
     // Create main window
     mainWindow = createMainWindow()
 
@@ -27,7 +32,7 @@ async function initialize() {
     setupMenu()
 
     // Setup IPC handlers
-    setupIPC(mainWindow, ptyManager, storeManager)
+    setupIPC(mainWindow, ptyManager, storeManager, serverManager)
 
     // Handle window closed
     mainWindow.on('closed', () => {
@@ -59,9 +64,12 @@ app.on('activate', () => {
 })
 
 // Cleanup on quit
-app.on('before-quit', () => {
+app.on('before-quit', async () => {
   if (ptyManager) {
     ptyManager.killAll()
+  }
+  if (serverManager) {
+    await serverManager.stopAllServers()
   }
 })
 

@@ -183,6 +183,11 @@
   justify-content: center;
 }
 
+/* Add right margin on Windows to avoid window controls */
+.mode-toggle-button.windows-platform {
+  margin-right: 140px;
+}
+
 .mode-toggle-button:hover:not(.disabled) {
   background: #3e3e42;
 }

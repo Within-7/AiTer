@@ -126,7 +126,17 @@ export function appReducer(state: AppState, action: AppAction): AppState {
 
     case 'ADD_EDITOR_TAB': {
       // Check if tab already exists for this file
-      const existing = state.editorTabs.find(t => t.filePath === action.payload.filePath)
+      // For HTML files with serverUrl (which may have query params), compare both filePath and serverUrl
+      // For regular files, just compare filePath
+      const existing = state.editorTabs.find(t => {
+        if (action.payload.serverUrl && t.serverUrl) {
+          // Both have serverUrl, compare the full URL (includes query params)
+          return t.serverUrl === action.payload.serverUrl
+        }
+        // No serverUrl, just compare filePath
+        return t.filePath === action.payload.filePath
+      })
+
       if (existing) {
         return {
           ...state,

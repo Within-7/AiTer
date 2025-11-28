@@ -31,6 +31,7 @@ export interface EditorTab {
   content: string
   isDirty: boolean
   cursorPosition?: { line: number; column: number }
+  serverUrl?: string // HTTP server URL for HTML preview
 }
 
 export interface GitRepository {

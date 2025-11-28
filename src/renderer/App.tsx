@@ -2,6 +2,7 @@ import { useEffect, useReducer } from 'react'
 import { AppContext, appReducer, initialState } from './context/AppContext'
 import { Sidebar } from './components/Sidebar'
 import { WorkArea } from './components/WorkArea'
+import { StatusBar } from './components/StatusBar'
 import './styles/App.css'
 
 function App() {
@@ -61,8 +62,11 @@ function App() {
   return (
     <AppContext.Provider value={{ state, dispatch }}>
       <div className="app">
-        <Sidebar />
-        <WorkArea />
+        <div className="app-main">
+          <Sidebar />
+          <WorkArea />
+        </div>
+        <StatusBar />
       </div>
     </AppContext.Provider>
   )

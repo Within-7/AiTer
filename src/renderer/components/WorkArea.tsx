@@ -26,6 +26,9 @@ export const WorkArea: React.FC = () => {
   const [draggedTabId, setDraggedTabId] = useState<string | null>(null)
   const [dragOverTabId, setDragOverTabId] = useState<string | null>(null)
 
+  // Detect platform for Windows-specific styling
+  const isWindows = navigator.platform.toLowerCase().includes('win')
+
   // Derive active tab ID from global state
   const activeTabId = state.activeEditorTabId
     ? `editor-${state.activeEditorTabId}`
@@ -233,7 +236,7 @@ export const WorkArea: React.FC = () => {
           })}
         </div>
         <button
-          className={`mode-toggle-button ${!supportsPreview ? 'disabled' : ''}`}
+          className={`mode-toggle-button ${!supportsPreview ? 'disabled' : ''} ${isWindows ? 'windows-platform' : ''}`}
           onClick={toggleMode}
           disabled={!supportsPreview}
           title={
@@ -264,6 +267,7 @@ export const WorkArea: React.FC = () => {
                 onChange={handleContentChange}
                 onSave={handleSave}
                 mode={currentMode}
+                currentFilePath={activeEditorTab.filePath}
               />
             ) : (
               <MonacoEditor

@@ -30,7 +30,7 @@
 
 /* Add margin for macOS traffic lights in windowed mode */
 .sidebar-header h2.has-traffic-lights {
-  margin-left: 70px;
+  margin-left: 60px;
 }
 
 .sidebar-content {

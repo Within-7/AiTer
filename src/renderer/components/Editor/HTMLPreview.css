@@ -42,3 +42,18 @@
   background: #fff;
   width: 100%;
 }
+
+.html-preview-loading,
+.html-preview-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #cccccc;
+  font-size: 14px;
+  background: #1e1e1e;
+}
+
+.html-preview-error {
+  color: #f48771;
+}

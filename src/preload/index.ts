@@ -77,6 +77,16 @@ contextBridge.exposeInMainWorld('api', {
     fileExists: (path: string) => ipcRenderer.invoke('fs:fileExists', { path })
   },
 
+  // File Server APIs
+  fileServer: {
+    getUrl: (projectId: string, projectPath: string, filePath: string) =>
+      ipcRenderer.invoke('fileServer:getUrl', { projectId, projectPath, filePath }),
+    stop: (projectId: string) =>
+      ipcRenderer.invoke('fileServer:stop', { projectId }),
+    getStats: () =>
+      ipcRenderer.invoke('fileServer:getStats')
+  },
+
   // App APIs
   app: {
     onError: (callback: (error: { message: string; stack?: string }) => void) => {
@@ -153,6 +163,23 @@ export interface API {
     fileExists(
       path: string
     ): Promise<{ success: boolean; exists?: boolean; error?: string }>
+  }
+  fileServer: {
+    getUrl(
+      projectId: string,
+      projectPath: string,
+      filePath: string
+    ): Promise<{ success: boolean; url?: string; error?: string }>
+    stop(projectId: string): Promise<{ success: boolean; error?: string }>
+    getStats(): Promise<{
+      success: boolean
+      stats?: {
+        activeServers: number
+        maxServers: number
+        projects: Array<{ projectId: string; port: number; lastAccessed: Date }>
+      }
+      error?: string
+    }>
   }
   app: {
     onError(callback: (error: { message: string; stack?: string }) => void): () => void
