@@ -1,13 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useContext } from 'react'
 import { Plugin, PluginInstallProgress, PluginUpdateProgress } from '../../../types'
 import { PluginCard } from './PluginCard'
 import { MintoConfigDialog } from './MintoConfigDialog'
+import { AppContext } from '../../context/AppContext'
 import './Plugins.css'
-
-interface PluginPanelProps {
-  isOpen: boolean
-  onClose: () => void
-}
 
 interface MintoConfig {
   githubToken?: string
@@ -22,7 +18,13 @@ interface PluginCardData extends Plugin {
   platforms: string[]
 }
 
-export const PluginPanel: React.FC<PluginPanelProps> = ({ isOpen, onClose }) => {
+export const PluginPanel: React.FC = () => {
+  const { state, dispatch } = useContext(AppContext)
+  const isOpen = state.showPluginPanel
+
+  const handleClose = () => {
+    dispatch({ type: 'SET_PLUGIN_PANEL', payload: false })
+  }
   const [plugins, setPlugins] = useState<PluginCardData[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -185,7 +187,7 @@ export const PluginPanel: React.FC<PluginPanelProps> = ({ isOpen, onClose }) => 
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
-      onClose()
+      handleClose()
     }
   }
 
@@ -199,7 +201,7 @@ export const PluginPanel: React.FC<PluginPanelProps> = ({ isOpen, onClose }) => 
             <h2>Plugins</h2>
             <button
               className="plugin-panel-close"
-              onClick={onClose}
+              onClick={handleClose}
               aria-label="Close plugins panel"
             >
               ×
