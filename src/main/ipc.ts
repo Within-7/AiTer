@@ -235,7 +235,34 @@ export function setupIPC(
   ipcMain.handle('plugins:list', async () => {
     try {
       const pluginManager = PluginManager.getInstance()
-      const plugins = await pluginManager.listPlugins()
+      const pluginListItems = pluginManager.listPlugins()
+
+      // Convert PluginListItem to Plugin format expected by renderer
+      const plugins = await Promise.all(
+        pluginListItems.map(async item => {
+          const plugin = pluginManager.getPlugin(item.id)
+          const config = plugin
+            ? await pluginManager.getPluginConfiguration(item.id).catch(() => ({}))
+            : {}
+
+          return {
+            id: item.id,
+            name: item.name,
+            description: item.description,
+            version: item.latestVersion || item.installedVersion || '0.0.0',
+            author: plugin?.definition.author || 'Unknown',
+            installed: item.status === 'installed' || item.status === 'update-available',
+            installedVersion: item.installedVersion || undefined,
+            updateAvailable: item.hasUpdate,
+            enabled: item.enabled,
+            config,
+            tags: item.tags,
+            icon: item.icon,
+            homepage: plugin?.definition.homepage
+          }
+        })
+      )
+
       return { success: true, plugins }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
