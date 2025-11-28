@@ -291,5 +291,65 @@ export function setupIPC(
     }
   })
 
+  ipcMain.handle('plugins:getInstallCommand', async (_, { pluginId }) => {
+    try {
+      const pluginManager = PluginManager.getInstance()
+      const plugin = pluginManager.getPlugin(pluginId)
+      if (!plugin) {
+        return { success: false, error: `Plugin ${pluginId} not found` }
+      }
+
+      if (!plugin.installer.getInstallCommand) {
+        return { success: false, error: 'Plugin does not support terminal installation' }
+      }
+
+      const command = await plugin.installer.getInstallCommand()
+      return { success: true, command }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('plugins:getUpdateCommand', async (_, { pluginId }) => {
+    try {
+      const pluginManager = PluginManager.getInstance()
+      const plugin = pluginManager.getPlugin(pluginId)
+      if (!plugin) {
+        return { success: false, error: `Plugin ${pluginId} not found` }
+      }
+
+      if (!plugin.installer.getUpdateCommand) {
+        return { success: false, error: 'Plugin does not support terminal update' }
+      }
+
+      const command = await plugin.installer.getUpdateCommand()
+      return { success: true, command }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('plugins:getCheckUpdateCommand', async (_, { pluginId }) => {
+    try {
+      const pluginManager = PluginManager.getInstance()
+      const plugin = pluginManager.getPlugin(pluginId)
+      if (!plugin) {
+        return { success: false, error: `Plugin ${pluginId} not found` }
+      }
+
+      if (!plugin.installer.getCheckUpdateCommand) {
+        return { success: false, error: 'Plugin does not support terminal check' }
+      }
+
+      const command = await plugin.installer.getCheckUpdateCommand()
+      return { success: true, command }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
   console.log('IPC handlers registered')
 }

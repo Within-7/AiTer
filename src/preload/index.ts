@@ -107,6 +107,12 @@ contextBridge.exposeInMainWorld('api', {
     remove: (pluginId: string) => ipcRenderer.invoke('plugins:remove', { pluginId }),
     configure: (pluginId: string, config: Record<string, unknown>) =>
       ipcRenderer.invoke('plugins:configure', { pluginId, config }),
+    getInstallCommand: (pluginId: string) =>
+      ipcRenderer.invoke('plugins:getInstallCommand', { pluginId }),
+    getUpdateCommand: (pluginId: string) =>
+      ipcRenderer.invoke('plugins:getUpdateCommand', { pluginId }),
+    getCheckUpdateCommand: (pluginId: string) =>
+      ipcRenderer.invoke('plugins:getCheckUpdateCommand', { pluginId }),
     onInstallProgress: (callback: (progress: PluginInstallProgress) => void) => {
       const listener = (_: unknown, progress: PluginInstallProgress) => callback(progress)
       ipcRenderer.on('plugins:install-progress', listener)
@@ -213,6 +219,9 @@ export interface API {
       pluginId: string,
       config: Record<string, unknown>
     ): Promise<{ success: boolean; error?: string }>
+    getInstallCommand(pluginId: string): Promise<{ success: boolean; command?: string; error?: string }>
+    getUpdateCommand(pluginId: string): Promise<{ success: boolean; command?: string; error?: string }>
+    getCheckUpdateCommand(pluginId: string): Promise<{ success: boolean; command?: string; error?: string }>
     onInstallProgress(callback: (progress: PluginInstallProgress) => void): () => void
     onUpdateProgress(callback: (progress: PluginUpdateProgress) => void): () => void
   }

@@ -22,6 +22,7 @@ const execFileAsync = promisify(execFile);
 
 interface MintoConfig {
   githubToken?: string;
+  autoUpdate?: boolean;
 }
 
 interface GitHubRelease {
@@ -389,6 +390,42 @@ export class MintoInstaller implements PluginInstaller {
     }
 
     return true;
+  }
+
+  /**
+   * Generate install command for terminal execution
+   */
+  async getInstallCommand(): Promise<string> {
+    const token = await this.getGitHubToken();
+    if (!token) {
+      throw new Error('GitHub token is required. Please configure it in plugin settings.');
+    }
+
+    return `curl -fsSL -H "Authorization: token ${token}" ${this.INSTALL_SCRIPT_URL} | bash`;
+  }
+
+  /**
+   * Generate update command for terminal execution
+   */
+  async getUpdateCommand(): Promise<string> {
+    const token = await this.getGitHubToken();
+    if (!token) {
+      throw new Error('GitHub token is required. Please configure it in plugin settings.');
+    }
+
+    return `curl -fsSL -H "Authorization: token ${token}" ${this.AUTO_UPDATE_SCRIPT_URL} | bash`;
+  }
+
+  /**
+   * Generate check update command for terminal execution
+   */
+  async getCheckUpdateCommand(): Promise<string> {
+    const token = await this.getGitHubToken();
+    if (!token) {
+      throw new Error('GitHub token is required. Please configure it in plugin settings.');
+    }
+
+    return `curl -fsSL -H "Authorization: token ${token}" ${this.CHECK_UPDATE_SCRIPT_URL} | bash`;
   }
 
   // ========== Private Helper Methods ==========

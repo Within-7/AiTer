@@ -87,6 +87,24 @@ export interface PluginInstaller {
    * @returns true if valid, error message if invalid
    */
   validateConfiguration(config: Record<string, unknown>): Promise<boolean | string>;
+
+  /**
+   * Get install command for terminal execution
+   * @returns Shell command string to install the plugin
+   */
+  getInstallCommand?(): Promise<string>;
+
+  /**
+   * Get update command for terminal execution
+   * @returns Shell command string to update the plugin
+   */
+  getUpdateCommand?(): Promise<string>;
+
+  /**
+   * Get check update command for terminal execution
+   * @returns Shell command string to check for updates
+   */
+  getCheckUpdateCommand?(): Promise<string>;
 }
 
 /**
