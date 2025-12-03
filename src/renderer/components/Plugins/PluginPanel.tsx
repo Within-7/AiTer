@@ -32,6 +32,7 @@ export const PluginPanel: React.FC = () => {
   const [configDialogOpen, setConfigDialogOpen] = useState(false)
   const [configPluginId, setConfigPluginId] = useState<string | null>(null)
   const [currentConfig, setCurrentConfig] = useState<MintoConfig>({})
+  const [statusMessage, setStatusMessage] = useState<string | null>(null)
 
   // Load plugins on mount
   const loadPlugins = useCallback(async () => {
@@ -254,7 +255,11 @@ export const PluginPanel: React.FC = () => {
   }
 
   const handleCheckUpdate = async (pluginId: string) => {
+    const plugin = plugins.find(p => p.id === pluginId)
+    const pluginName = plugin?.name || pluginId
+
     setProcessingPlugins((prev) => new Set(prev).add(pluginId))
+    setStatusMessage(`Checking for updates for ${pluginName}...`)
 
     try {
       const result = await window.api.plugins.checkForUpdate(pluginId)
@@ -263,15 +268,26 @@ export const PluginPanel: React.FC = () => {
         await loadPlugins()
 
         if (result.data.hasUpdate) {
+          setStatusMessage(`✓ Update available for ${pluginName}: ${result.data.currentVersion} → ${result.data.latestVersion}`)
           console.log(`[PluginPanel] Update available for ${pluginId}: ${result.data.currentVersion} → ${result.data.latestVersion}`)
         } else {
+          setStatusMessage(`✓ ${pluginName} is up to date (v${result.data.currentVersion})`)
           console.log(`[PluginPanel] No update available for ${pluginId}`)
         }
+
+        // Auto-clear status message after 5 seconds
+        setTimeout(() => setStatusMessage(null), 5000)
       } else {
-        setError(result.error || 'Failed to check for updates')
+        const errorMsg = result.error || 'Failed to check for updates'
+        setStatusMessage(`✗ ${errorMsg}`)
+        setError(errorMsg)
+        setTimeout(() => setStatusMessage(null), 5000)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to check for updates')
+      const errorMsg = err instanceof Error ? err.message : 'Failed to check for updates'
+      setStatusMessage(`✗ ${errorMsg}`)
+      setError(errorMsg)
+      setTimeout(() => setStatusMessage(null), 5000)
     } finally {
       setProcessingPlugins((prev) => {
         const next = new Set(prev)
@@ -303,6 +319,12 @@ export const PluginPanel: React.FC = () => {
               ×
             </button>
           </div>
+
+          {statusMessage && (
+            <div className="plugin-panel-status">
+              {statusMessage}
+            </div>
+          )}
 
           <div className="plugin-panel-content">
             {isLoading ? (

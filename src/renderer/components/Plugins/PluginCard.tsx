@@ -152,7 +152,7 @@ export const PluginCard: React.FC<PluginCardProps> = ({
             disabled={isProcessing}
             title="Check for updates"
           >
-            Check Update
+            {isProcessing ? 'Checking...' : 'Check Update'}
           </button>
         )}
 

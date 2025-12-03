@@ -43,6 +43,27 @@
   color: #cccccc;
 }
 
+/* Status Message */
+.plugin-panel-status {
+  padding: 12px 20px;
+  background-color: #1e1e1e;
+  border-bottom: 1px solid #3c3c3c;
+  color: #cccccc;
+  font-size: 13px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .plugin-panel-close {
   background: none;
   border: none;
