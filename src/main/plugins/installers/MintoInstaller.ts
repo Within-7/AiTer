@@ -384,8 +384,17 @@ export class MintoInstaller implements PluginInstaller {
         return 'GitHub token must be a string';
       }
 
-      if (mintoConfig.githubToken && !mintoConfig.githubToken.startsWith('ghp_')) {
-        return 'Invalid GitHub token format (should start with ghp_)';
+      // Validate GitHub token format - support all valid GitHub token prefixes
+      // Reference: https://github.blog/2021-04-05-behind-githubs-new-authentication-token-formats/
+      if (mintoConfig.githubToken) {
+        const validPrefixes = ['ghp_', 'github_pat_', 'gho_', 'ghu_', 'ghs_', 'ghr_'];
+        const hasValidPrefix = validPrefixes.some(prefix =>
+          mintoConfig.githubToken!.startsWith(prefix)
+        );
+
+        if (!hasValidPrefix) {
+          return 'Invalid GitHub token format. Token should start with one of: ghp_, github_pat_, gho_, ghu_, ghs_, or ghr_';
+        }
       }
     }
 
