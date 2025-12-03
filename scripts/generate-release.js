@@ -59,7 +59,11 @@ function getFileInfo(fileName) {
 
 // 查找发布文件
 function findReleaseFiles() {
-  const files = fs.readdirSync(RELEASE_DIR);
+  // 检查版本子目录
+  const versionDir = path.join(RELEASE_DIR, VERSION);
+  const searchDir = fs.existsSync(versionDir) ? versionDir : RELEASE_DIR;
+
+  const files = fs.readdirSync(searchDir);
 
   // macOS arm64 (Apple Silicon)
   let macArmFile = files.find(f =>
@@ -75,6 +79,13 @@ function findReleaseFiles() {
   let winFile = files.find(f =>
     f.endsWith('.exe')
   ) || `AiTer-Setup-${VERSION}.exe`;
+
+  // 如果文件在版本子目录中，返回相对于 RELEASE_DIR 的路径
+  if (searchDir === versionDir) {
+    macArmFile = path.join(VERSION, macArmFile);
+    macIntelFile = path.join(VERSION, macIntelFile);
+    winFile = path.join(VERSION, winFile);
+  }
 
   return { macArmFile, macIntelFile, winFile };
 }
