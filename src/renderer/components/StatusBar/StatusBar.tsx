@@ -135,7 +135,7 @@ export function StatusBar({ activeTerminal }: StatusBarProps) {
         )}
       </div>
 
-      {/* Right section: Stats and settings */}
+      {/* Right section: Stats */}
       <div className="status-bar-section status-bar-right">
         {projectCount > 0 && (
           <span className="status-item" title={`${projectCount} project${projectCount !== 1 ? 's' : ''} loaded`}>
@@ -164,6 +164,7 @@ export function StatusBar({ activeTerminal }: StatusBarProps) {
           title="About AiTer"
         >
           <AiOutlineInfoCircle className="status-icon" />
+          <span className="status-text">About</span>
         </button>
       </div>
     </div>
