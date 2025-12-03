@@ -385,6 +385,17 @@ export function setupIPC(
     }
   })
 
+  ipcMain.handle('plugins:checkForUpdate', async (_, { pluginId }) => {
+    try {
+      const pluginManager = PluginManager.getInstance()
+      const result = await pluginManager.checkForUpdate(pluginId)
+      return { success: true, data: result }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
   // Update management
   ipcMain.handle('update:check', async () => {
     try {

@@ -118,6 +118,8 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.invoke('plugins:getUpdateCommand', { pluginId }),
     getCheckUpdateCommand: (pluginId: string) =>
       ipcRenderer.invoke('plugins:getCheckUpdateCommand', { pluginId }),
+    checkForUpdate: (pluginId: string) =>
+      ipcRenderer.invoke('plugins:checkForUpdate', { pluginId }),
     onInstallProgress: (callback: (progress: PluginInstallProgress) => void) => {
       const listener = (_: unknown, progress: PluginInstallProgress) => callback(progress)
       ipcRenderer.on('plugins:install-progress', listener)
@@ -261,6 +263,7 @@ export interface API {
     getInstallCommand(pluginId: string): Promise<{ success: boolean; command?: string; error?: string }>
     getUpdateCommand(pluginId: string): Promise<{ success: boolean; command?: string; error?: string }>
     getCheckUpdateCommand(pluginId: string): Promise<{ success: boolean; command?: string; error?: string }>
+    checkForUpdate(pluginId: string): Promise<{ success: boolean; data?: { hasUpdate: boolean; currentVersion: string | null; latestVersion: string | null }; error?: string }>
     onInstallProgress(callback: (progress: PluginInstallProgress) => void): () => void
     onUpdateProgress(callback: (progress: PluginUpdateProgress) => void): () => void
     onAutoUpdateAvailable(callback: (data: { pluginId: string; pluginName: string }) => void): () => void

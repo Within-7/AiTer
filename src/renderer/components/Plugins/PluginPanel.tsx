@@ -253,6 +253,34 @@ export const PluginPanel: React.FC = () => {
     await loadPlugins()
   }
 
+  const handleCheckUpdate = async (pluginId: string) => {
+    setProcessingPlugins((prev) => new Set(prev).add(pluginId))
+
+    try {
+      const result = await window.api.plugins.checkForUpdate(pluginId)
+      if (result.success && result.data) {
+        // Reload plugins to get updated status
+        await loadPlugins()
+
+        if (result.data.hasUpdate) {
+          console.log(`[PluginPanel] Update available for ${pluginId}: ${result.data.currentVersion} → ${result.data.latestVersion}`)
+        } else {
+          console.log(`[PluginPanel] No update available for ${pluginId}`)
+        }
+      } else {
+        setError(result.error || 'Failed to check for updates')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to check for updates')
+    } finally {
+      setProcessingPlugins((prev) => {
+        const next = new Set(prev)
+        next.delete(pluginId)
+        return next
+      })
+    }
+  }
+
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       handleClose()
@@ -304,6 +332,7 @@ export const PluginPanel: React.FC = () => {
                     onUpdate={handleUpdate}
                     onRemove={handleRemove}
                     onConfigure={handleConfigure}
+                    onCheckUpdate={handleCheckUpdate}
                     isProcessing={processingPlugins.has(plugin.id)}
                   />
                 ))}
@@ -311,16 +340,6 @@ export const PluginPanel: React.FC = () => {
             )}
           </div>
 
-          <div className="plugin-panel-footer">
-            <a
-              href="http://aiter.within-7.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="plugin-panel-browse"
-            >
-              Browse more plugins →
-            </a>
-          </div>
         </div>
       </div>
 

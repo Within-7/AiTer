@@ -28,6 +28,7 @@ interface PluginCardProps {
   onUpdate: (pluginId: string) => void
   onRemove: (pluginId: string) => void
   onConfigure: (pluginId: string) => void
+  onCheckUpdate: (pluginId: string) => void
   isProcessing: boolean
 }
 
@@ -37,6 +38,7 @@ export const PluginCard: React.FC<PluginCardProps> = ({
   onUpdate,
   onRemove,
   onConfigure,
+  onCheckUpdate,
   isProcessing
 }) => {
   const getStatusColor = (status: PluginStatus): string => {
@@ -140,6 +142,17 @@ export const PluginCard: React.FC<PluginCardProps> = ({
             disabled={isProcessing}
           >
             Update
+          </button>
+        )}
+
+        {isInstalled && (
+          <button
+            className="plugin-btn plugin-btn-secondary"
+            onClick={() => onCheckUpdate(plugin.id)}
+            disabled={isProcessing}
+            title="Check for updates"
+          >
+            Check Update
           </button>
         )}
 
