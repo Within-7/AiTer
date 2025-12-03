@@ -126,19 +126,19 @@ export const PluginPanel: React.FC = () => {
       }
 
       // Create a new terminal and execute the install command
-      const terminalResult = await window.api.terminal.create({
-        cwd: activeProject.path,
-        shell: state.settings?.shell || '/bin/bash',
-        projectId: activeProject.id,
-        projectName: activeProject.name
-      })
+      const terminalResult = await window.api.terminal.create(
+        activeProject.path,
+        activeProject.id,
+        activeProject.name,
+        state.settings?.shell || '/bin/bash'
+      )
 
       if (terminalResult.success && terminalResult.terminal) {
         // Write the command to the terminal
-        await window.api.terminal.write({
-          id: terminalResult.terminal.id,
-          data: commandResult.command + '\r'
-        })
+        await window.api.terminal.write(
+          terminalResult.terminal.id,
+          commandResult.command + '\r'
+        )
 
         // Close the plugin panel to show the terminal
         dispatch({ type: 'SET_PLUGIN_PANEL', payload: false })
@@ -172,19 +172,19 @@ export const PluginPanel: React.FC = () => {
       }
 
       // Create a new terminal and execute the update command
-      const terminalResult = await window.api.terminal.create({
-        cwd: activeProject.path,
-        shell: state.settings?.shell || '/bin/bash',
-        projectId: activeProject.id,
-        projectName: activeProject.name
-      })
+      const terminalResult = await window.api.terminal.create(
+        activeProject.path,
+        activeProject.id,
+        activeProject.name,
+        state.settings?.shell || '/bin/bash'
+      )
 
       if (terminalResult.success && terminalResult.terminal) {
         // Write the command to the terminal
-        await window.api.terminal.write({
-          id: terminalResult.terminal.id,
-          data: commandResult.command + '\r'
-        })
+        await window.api.terminal.write(
+          terminalResult.terminal.id,
+          commandResult.command + '\r'
+        )
 
         // Close the plugin panel to show the terminal
         dispatch({ type: 'SET_PLUGIN_PANEL', payload: false })

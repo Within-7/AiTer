@@ -1,7 +1,5 @@
 import { app, shell, BrowserWindow } from 'electron';
 import https from 'https';
-import fs from 'fs';
-import path from 'path';
 
 interface UpdateInfo {
   version: string;
