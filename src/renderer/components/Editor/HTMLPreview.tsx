@@ -160,7 +160,7 @@ export const HTMLPreview: React.FC<HTMLPreviewProps> = ({
               id: tabId,
               filePath: targetPath,
               fileName: displayFileName,
-              fileType: fileResult.fileType || 'html',
+              fileType: (fileResult.fileType || 'html') as any,
               content: fileResult.content || '',
               isDirty: false,
               serverUrl: fullUrl

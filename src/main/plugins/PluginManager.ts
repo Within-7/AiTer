@@ -93,15 +93,9 @@ export class PluginManager {
           author: 'Within-7',
           homepage: 'https://github.com/Within-7/minto',
           platforms: ['darwin', 'linux', 'win32'],
-          tags: ['ai', 'cli', 'chat', 'code-generation'],
-          requirements: {
-            githubToken: {
-              required: true,
-              description: 'GitHub Personal Access Token for accessing private repository'
-            }
-          }
-        },
-        new MintoInstaller(this.store)
+          tags: ['ai', 'cli', 'chat', 'code-generation']
+        } as any,
+        new MintoInstaller(this.store as any)
       );
 
       console.log('[PluginManager] Initialization complete');
