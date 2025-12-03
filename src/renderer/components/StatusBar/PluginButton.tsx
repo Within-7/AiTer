@@ -1,4 +1,4 @@
-import { FaPuzzlePiece } from 'react-icons/fa'
+import { VscExtensions } from 'react-icons/vsc'
 import './StatusBar.css'
 
 export type PluginStatus = 'no-plugins' | 'has-plugins' | 'update-available' | 'installing'
@@ -55,7 +55,7 @@ export function PluginButton({ pluginCount, status, hasUpdates, onClick }: Plugi
       disabled={status === 'installing'}
     >
       <span className="plugin-icon">
-        <FaPuzzlePiece />
+        <VscExtensions />
       </span>
       <span className="plugin-text">{getDisplayText()}</span>
       {showBadge && (
