@@ -89,7 +89,7 @@ export const PluginCard: React.FC<PluginCardProps> = ({
     <div className="plugin-card">
       <div className="plugin-card-header">
         <div className="plugin-card-title">
-          {plugin.icon && <span className="plugin-icon">{plugin.icon}</span>}
+          {plugin.icon && <span className="plugin-card-icon">{plugin.icon}</span>}
           <h3>{plugin.name}</h3>
         </div>
         <div className="plugin-card-status" style={{ color: getStatusColor(plugin.status) }}>
