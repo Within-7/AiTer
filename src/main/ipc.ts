@@ -317,8 +317,8 @@ export function setupIPC(
   ipcMain.handle('plugins:configure', async (_, { pluginId, config }) => {
     try {
       const pluginManager = PluginManager.getInstance()
-      const success = await pluginManager.configurePlugin(pluginId, config)
-      return { success }
+      await pluginManager.configurePlugin(pluginId, config)
+      return { success: true }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
       return { success: false, error: message }
