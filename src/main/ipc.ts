@@ -6,6 +6,9 @@ import { fileSystemManager } from './filesystem'
 import { ProjectServerManager } from './fileServer/ProjectServerManager'
 import { PluginManager } from './plugins/PluginManager'
 import { getUpdateManager } from './updater'
+import { NodeManager } from './nodejs/manager'
+import { NodeDetector } from './nodejs/detector'
+import { NodeDownloader } from './nodejs/downloader'
 
 export function setupIPC(
   window: BrowserWindow,
@@ -436,6 +439,74 @@ export function setupIPC(
     try {
       await shell.openExternal(url)
       return { success: true }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  // Node.js management
+  const nodeManager = new NodeManager()
+  const nodeDetector = new NodeDetector()
+  const nodeDownloader = new NodeDownloader()
+
+  ipcMain.handle('nodejs:checkBuiltin', async () => {
+    try {
+      const installed = await nodeManager.isInstalled()
+      const info = installed ? await nodeManager.getNodeInfo() : null
+      return { success: true, installed, info }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('nodejs:checkSystem', async () => {
+    try {
+      const systemNode = await nodeDetector.detectSystemNode()
+      return { success: true, systemNode }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('nodejs:install', async () => {
+    try {
+      const success = await nodeManager.installFromResources()
+      return { success }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('nodejs:download', async (_, { version }) => {
+    try {
+      const success = await nodeDownloader.download(version, (progress) => {
+        window.webContents.send('nodejs:download-progress', progress)
+      })
+      return { success }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('nodejs:getRecommendedVersion', async () => {
+    try {
+      const version = await nodeDetector.getRecommendedVersion()
+      return { success: true, version }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('nodejs:uninstall', async () => {
+    try {
+      const success = await nodeManager.uninstall()
+      return { success }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
       return { success: false, error: message }

@@ -161,6 +161,33 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.on('update:available', listener)
       return () => ipcRenderer.removeListener('update:available', listener)
     }
+  },
+
+  // Node.js management APIs
+  nodejs: {
+    checkBuiltin: () => ipcRenderer.invoke('nodejs:checkBuiltin'),
+    checkSystem: () => ipcRenderer.invoke('nodejs:checkSystem'),
+    install: () => ipcRenderer.invoke('nodejs:install'),
+    download: (version: string) => ipcRenderer.invoke('nodejs:download', { version }),
+    getRecommendedVersion: () => ipcRenderer.invoke('nodejs:getRecommendedVersion'),
+    uninstall: () => ipcRenderer.invoke('nodejs:uninstall'),
+    onDownloadProgress: (callback: (progress: {
+      percent: number;
+      downloaded: number;
+      total: number;
+      status: 'downloading' | 'extracting' | 'complete' | 'error';
+      message?: string;
+    }) => void) => {
+      const listener = (_: unknown, progress: {
+        percent: number;
+        downloaded: number;
+        total: number;
+        status: 'downloading' | 'extracting' | 'complete' | 'error';
+        message?: string;
+      }) => callback(progress)
+      ipcRenderer.on('nodejs:download-progress', listener)
+      return () => ipcRenderer.removeListener('nodejs:download-progress', listener)
+    }
   }
 })
 
@@ -286,6 +313,40 @@ export interface API {
       latestVersion: string;
       changelog: string[];
       releaseDate: string;
+    }) => void): () => void
+  }
+  nodejs: {
+    checkBuiltin(): Promise<{
+      success: boolean;
+      installed?: boolean;
+      info?: {
+        version: string;
+        nodePath: string;
+        npmPath: string;
+      } | null;
+      error?: string;
+    }>
+    checkSystem(): Promise<{
+      success: boolean;
+      systemNode?: {
+        installed: boolean;
+        version?: string;
+        nodePath?: string;
+        npmPath?: string;
+        npmVersion?: string;
+      };
+      error?: string;
+    }>
+    install(): Promise<{ success: boolean; error?: string }>
+    download(version: string): Promise<{ success: boolean; error?: string }>
+    getRecommendedVersion(): Promise<{ success: boolean; version?: string | null; error?: string }>
+    uninstall(): Promise<{ success: boolean; error?: string }>
+    onDownloadProgress(callback: (progress: {
+      percent: number;
+      downloaded: number;
+      total: number;
+      status: 'downloading' | 'extracting' | 'complete' | 'error';
+      message?: string;
     }) => void): () => void
   }
 }

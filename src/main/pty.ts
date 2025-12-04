@@ -1,5 +1,6 @@
 import * as pty from 'node-pty'
 import { Terminal } from '../types'
+import { NodeManager } from './nodejs/manager'
 
 interface PTYInstance {
   terminal: Terminal
@@ -12,6 +13,11 @@ interface PTYInstance {
 
 export class PTYManager {
   private instances: Map<string, PTYInstance> = new Map()
+  private nodeManager: NodeManager
+
+  constructor() {
+    this.nodeManager = new NodeManager()
+  }
 
   private getDefaultShell(): string {
     if (process.platform === 'win32') {
@@ -39,9 +45,12 @@ export class PTYManager {
     const rows = 24
 
     try {
+      // Get Node.js environment variables
+      const nodeEnv = this.nodeManager.getTerminalEnv()
+
       // Prepare environment variables to simulate a real TTY
       const ptyEnv = {
-        ...process.env,
+        ...nodeEnv, // Include Node.js paths first
         TERM: 'xterm-256color',
         COLORTERM: 'truecolor',
         // Force TTY detection for apps that check isatty()
