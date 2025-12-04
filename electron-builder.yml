@@ -9,6 +9,11 @@ files:
   - dist-renderer
 asarUnpack:
   - node_modules/node-pty/**/*
+extraResources:
+  - from: resources/nodejs/${os}-${arch}
+    to: nodejs
+    filter:
+      - '**/*'
 mac:
   target:
     - target: dmg

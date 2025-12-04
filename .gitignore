@@ -45,3 +45,5 @@ Thumbs.db
 
 # Electron
 out/
+# Node.js binaries (download using scripts/download-nodejs.sh)
+resources/nodejs/
