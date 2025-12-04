@@ -117,6 +117,7 @@ export class NodeManager {
    */
   getTerminalEnv(): NodeJS.ProcessEnv {
     const binPath = this.getNodeBinPath();
+    const rootPath = this.getNodeRootPath();
     const delimiter = this.platform === 'win32' ? ';' : ':';
 
     // 构建新的 PATH，将内置 Node.js 路径放在最前面
@@ -127,10 +128,19 @@ export class NodeManager {
       ? path.join(binPath, 'node_modules')
       : path.join(binPath, '../lib/node_modules');
 
+    // npm 全局安装路径配置
+    // 这确保 npm install -g 会安装到 AiTer 的 Node.js 目录
+    const npmPrefix = rootPath;
+    const npmConfig = path.join(rootPath, '.npmrc');
+
     return {
       ...process.env,
       PATH: newPath,
       NODE_PATH: nodePath,
+      // 设置 npm 全局安装前缀，使 npm install -g 安装到 AiTer 的 Node.js
+      npm_config_prefix: npmPrefix,
+      // 可选：设置 npm 缓存目录到 AiTer 数据目录
+      npm_config_cache: path.join(this.nodejsDir, '.npm-cache'),
     };
   }
 
