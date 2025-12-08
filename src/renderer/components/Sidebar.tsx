@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from 'react'
+import { useContext, useState, useEffect, useMemo } from 'react'
 import { VscTerminal } from 'react-icons/vsc'
 import { AppContext } from '../context/AppContext'
 import { FileTree } from './FileTree/FileTree'
@@ -46,37 +46,38 @@ export function Sidebar() {
     }
   }, [])
 
-  // Auto-expand project when its tab is selected (single-expand mode)
-  useEffect(() => {
-    // Find the project of the active tab
-    let activeProjectId: string | undefined
-
+  // Calculate which project the active tab belongs to
+  const activeProjectId = useMemo(() => {
     if (state.activeEditorTabId) {
       const activeTab = state.editorTabs.find(t => t.id === state.activeEditorTabId)
       if (activeTab) {
         // Find which project this file belongs to
-        activeProjectId = state.projects.find(p =>
+        return state.projects.find(p =>
           activeTab.filePath.startsWith(p.path)
         )?.id
       }
     } else if (state.activeTerminalId) {
       const activeTerminal = state.terminals.find(t => t.id === state.activeTerminalId)
       if (activeTerminal) {
-        activeProjectId = activeTerminal.projectId
+        return activeTerminal.projectId
       }
     }
+    return undefined
+  }, [state.activeEditorTabId, state.activeTerminalId, state.editorTabs, state.terminals, state.projects])
 
-    // Expand only the active project, collapse all others (single-expand mode)
+  // Auto-expand project when its tab is selected (single-expand mode)
+  // Only runs when activeProjectId actually changes
+  useEffect(() => {
     if (activeProjectId) {
       setExpandedProjects(prev => {
         // Only update if the state needs to change
-        if (prev.size !== 1 || !prev.has(activeProjectId!)) {
-          return new Set([activeProjectId!])
+        if (prev.size !== 1 || !prev.has(activeProjectId)) {
+          return new Set([activeProjectId])
         }
         return prev
       })
     }
-  }, [state.activeEditorTabId, state.activeTerminalId, state.editorTabs, state.terminals, state.projects])
+  }, [activeProjectId])
 
   const handleAddProject = async () => {
     const result = await window.api.dialog.openFolder()
