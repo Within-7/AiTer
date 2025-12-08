@@ -46,7 +46,7 @@ export function Sidebar() {
     }
   }, [])
 
-  // Auto-expand project when its tab is selected (but don't force collapse others)
+  // Auto-expand project when its tab is selected (single-expand mode)
   useEffect(() => {
     // Find the project of the active tab
     let activeProjectId: string | undefined
@@ -66,17 +66,13 @@ export function Sidebar() {
       }
     }
 
-    // Only expand the active project if it's currently collapsed
-    // Don't force collapse other projects - let user control them manually
+    // Expand only the active project, collapse all others (single-expand mode)
     if (activeProjectId) {
       setExpandedProjects(prev => {
-        if (!prev.has(activeProjectId!)) {
-          // Project is collapsed, auto-expand it
-          const next = new Set(prev)
-          next.add(activeProjectId!)
-          return next
+        // Only update if the state needs to change
+        if (prev.size !== 1 || !prev.has(activeProjectId!)) {
+          return new Set([activeProjectId!])
         }
-        // Project already expanded, keep current state
         return prev
       })
     }
@@ -91,8 +87,8 @@ export function Sidebar() {
       )
       if (addResult.success && addResult.project) {
         // Don't dispatch ADD_PROJECT here - the IPC 'projects:updated' event will handle it
-        // Just auto-expand the newly added project
-        setExpandedProjects(prev => new Set(prev).add(addResult.project!.id))
+        // Auto-expand the newly added project and collapse all others (single-expand mode)
+        setExpandedProjects(new Set([addResult.project!.id]))
       }
     }
   }
@@ -112,13 +108,13 @@ export function Sidebar() {
 
   const handleToggleProject = (projectId: string) => {
     setExpandedProjects(prev => {
-      const next = new Set(prev)
-      if (next.has(projectId)) {
-        next.delete(projectId)
+      if (prev.has(projectId)) {
+        // Clicking on expanded project -> collapse it (allow all projects to be collapsed)
+        return new Set()
       } else {
-        next.add(projectId)
+        // Clicking on collapsed project -> expand it and collapse all others (single-expand mode)
+        return new Set([projectId])
       }
-      return next
     })
   }
 
