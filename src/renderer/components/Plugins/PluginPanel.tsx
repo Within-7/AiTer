@@ -36,6 +36,10 @@ export const PluginPanel: React.FC = () => {
     setError(null)
 
     try {
+      console.log('[PluginPanel] Refreshing plugin status...')
+      // Refresh plugin installation status and versions
+      await window.api.plugins.refreshStatus()
+
       console.log('[PluginPanel] Loading plugins...')
       const result = await window.api.plugins.list()
       console.log('[PluginPanel] Plugins list result:', result)

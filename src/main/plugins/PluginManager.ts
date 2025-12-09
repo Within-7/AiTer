@@ -277,6 +277,74 @@ export class PluginManager {
   }
 
   /**
+   * Refresh installation status and version for a specific plugin
+   */
+  public async refreshPluginStatus(pluginId: string): Promise<void> {
+    const plugin = this.plugins.get(pluginId);
+    if (!plugin) {
+      console.warn(`[PluginManager] Plugin ${pluginId} not found for refresh`);
+      return;
+    }
+
+    console.log(`[PluginManager] Refreshing status for ${pluginId}...`);
+
+    try {
+      // Check if installed
+      const isInstalled = await plugin.installer.checkInstallation();
+
+      if (isInstalled) {
+        // Get current version with timeout
+        const currentVersion = await Promise.race([
+          plugin.installer.getCurrentVersion(),
+          new Promise<null>((resolve) => setTimeout(() => {
+            console.warn(`[PluginManager] getCurrentVersion() timed out for ${pluginId}`);
+            resolve(null);
+          }, 5000)) // 5 second timeout
+        ]);
+
+        plugin.status = 'installed';
+        plugin.installedVersion = currentVersion;
+
+        // Update registry
+        this.updateRegistry(pluginId, {
+          installedVersion: currentVersion,
+        });
+
+        console.log(`[PluginManager] ${pluginId} status: installed (v${currentVersion})`);
+      } else {
+        plugin.status = 'not-installed';
+        plugin.installedVersion = null;
+
+        // Update registry
+        this.updateRegistry(pluginId, {
+          installedVersion: null,
+        });
+
+        console.log(`[PluginManager] ${pluginId} status: not-installed`);
+      }
+    } catch (error) {
+      console.error(`[PluginManager] Error refreshing status for ${pluginId}:`, error);
+      plugin.status = 'error';
+      plugin.error = error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  /**
+   * Refresh installation status and version for all plugins
+   */
+  public async refreshAllPluginsStatus(): Promise<void> {
+    console.log('[PluginManager] Refreshing status for all plugins...');
+
+    const promises: Promise<void>[] = [];
+    for (const [pluginId] of this.plugins) {
+      promises.push(this.refreshPluginStatus(pluginId));
+    }
+
+    await Promise.allSettled(promises);
+    console.log('[PluginManager] All plugins status refreshed');
+  }
+
+  /**
    * Install a plugin
    *
    * @param pluginId Plugin identifier

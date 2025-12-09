@@ -411,6 +411,17 @@ export function setupIPC(
     }
   })
 
+  ipcMain.handle('plugins:refreshStatus', async () => {
+    try {
+      const pluginManager = PluginManager.getInstance()
+      await pluginManager.refreshAllPluginsStatus()
+      return { success: true }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
   // Update management
   ipcMain.handle('update:check', async () => {
     try {
