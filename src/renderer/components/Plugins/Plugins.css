@@ -587,12 +587,234 @@
 }
 
 /* Responsive adjustments */
+/* Plugin Panel Header Actions */
+.plugin-panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plugin-panel-add-button {
+  background-color: #0e639c;
+  border: 1px solid #0e639c;
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.plugin-panel-add-button:hover {
+  background-color: #1177bb;
+  border-color: #1177bb;
+}
+
+.plugin-panel-add-button:active {
+  background-color: #0d5a8f;
+  border-color: #0d5a8f;
+}
+
+/* Add Plugin Dialog */
+.plugin-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  backdrop-filter: blur(2px);
+}
+
+.plugin-dialog {
+  background-color: #252526;
+  border: 1px solid #3c3c3c;
+  border-radius: 8px;
+  width: 500px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.plugin-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #3c3c3c;
+  background-color: #2d2d30;
+}
+
+.plugin-dialog-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #cccccc;
+}
+
+.plugin-dialog-close {
+  background: none;
+  border: none;
+  color: #cccccc;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.plugin-dialog-close:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.plugin-dialog-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.plugin-dialog-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.plugin-dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plugin-dialog-field label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #cccccc;
+}
+
+.plugin-dialog-field input {
+  padding: 8px 12px;
+  background-color: #3c3c3c;
+  border: 1px solid #555555;
+  border-radius: 4px;
+  color: #cccccc;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.plugin-dialog-field input:focus {
+  outline: none;
+  border-color: #0e639c;
+}
+
+.plugin-dialog-field input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.plugin-dialog-hint {
+  font-size: 12px;
+  color: #999999;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.plugin-dialog-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  border-radius: 4px;
+  color: #f44336;
+  font-size: 13px;
+}
+
+.plugin-dialog-error-icon {
+  flex-shrink: 0;
+}
+
+.plugin-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.plugin-dialog-button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  border: 1px solid transparent;
+}
+
+.plugin-dialog-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.plugin-dialog-button-cancel {
+  background-color: transparent;
+  border-color: #555555;
+  color: #cccccc;
+}
+
+.plugin-dialog-button-cancel:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: #777777;
+}
+
+.plugin-dialog-button-primary {
+  background-color: #0e639c;
+  border-color: #0e639c;
+  color: #ffffff;
+}
+
+.plugin-dialog-button-primary:hover:not(:disabled) {
+  background-color: #1177bb;
+  border-color: #1177bb;
+}
+
+.plugin-dialog-button-primary:active:not(:disabled) {
+  background-color: #0d5a8f;
+  border-color: #0d5a8f;
+}
+
 @media (max-width: 500px) {
   .plugin-panel {
     width: 95vw;
   }
 
   .minto-config-dialog {
+    width: 95vw;
+  }
+
+  .plugin-dialog {
     width: 95vw;
   }
 }

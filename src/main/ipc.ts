@@ -422,6 +422,28 @@ export function setupIPC(
     }
   })
 
+  ipcMain.handle('plugins:addCustom', async (_, { urlOrPackageName }) => {
+    try {
+      const pluginManager = PluginManager.getInstance()
+      const result = await pluginManager.addCustomPlugin(urlOrPackageName)
+      return result
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('plugins:removeCustom', async (_, { pluginId }) => {
+    try {
+      const pluginManager = PluginManager.getInstance()
+      const result = await pluginManager.removeCustomPlugin(pluginId)
+      return result
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
   // Update management
   ipcMain.handle('update:check', async () => {
     try {

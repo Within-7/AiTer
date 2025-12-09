@@ -21,9 +21,21 @@ import Store from 'electron-store';
 import { BrowserWindow } from 'electron';
 import { NodeManager } from '../nodejs/manager';
 
+interface CustomPluginEntry {
+  packageName: string;
+  commandName: string;
+  name: string;
+  description: string;
+  author?: string;
+  homepage?: string;
+  version?: string;
+  tags?: string[];
+}
+
 interface PluginStoreSchema {
   plugins: {
     registry: Record<string, PluginRegistryEntry>;
+    custom: Record<string, CustomPluginEntry>;
   };
 }
 
@@ -103,6 +115,9 @@ export class PluginManager {
         new MintoInstaller(this.store as any, nodeEnv)
       );
 
+      // Load custom plugins from store
+      await this.loadCustomPlugins();
+
       console.log('[PluginManager] Initialization complete');
 
       // Notify renderer that plugins are ready
@@ -116,6 +131,56 @@ export class PluginManager {
     })();
 
     return this.initializePromise;
+  }
+
+  /**
+   * Load custom plugins from persistent storage
+   */
+  private async loadCustomPlugins(): Promise<void> {
+    const customPlugins = this.store.get('plugins.custom', {});
+    const customPluginIds = Object.keys(customPlugins);
+
+    if (customPluginIds.length === 0) {
+      console.log('[PluginManager] No custom plugins to load');
+      return;
+    }
+
+    console.log(`[PluginManager] Loading ${customPluginIds.length} custom plugins...`);
+
+    const nodeEnv = this.nodeManager.getTerminalEnv();
+    const { GenericNpmInstaller } = await import('./installers/GenericNpmInstaller');
+
+    for (const pluginId of customPluginIds) {
+      const entry = customPlugins[pluginId];
+
+      try {
+        const installer = new GenericNpmInstaller(
+          this.store as any,
+          entry.packageName,
+          entry.commandName,
+          nodeEnv
+        );
+
+        await this.registerPlugin(
+          {
+            id: pluginId,
+            name: entry.name,
+            description: entry.description,
+            icon: '📦',  // Default icon for custom plugins
+            version: entry.version || '1.0.0',
+            author: entry.author || 'Unknown',
+            homepage: entry.homepage,
+            platforms: ['darwin', 'linux', 'win32'],
+            tags: entry.tags || ['custom', 'npm']
+          } as any,
+          installer
+        );
+
+        console.log(`[PluginManager] Loaded custom plugin: ${pluginId}`);
+      } catch (error) {
+        console.error(`[PluginManager] Failed to load custom plugin ${pluginId}:`, error);
+      }
+    }
   }
 
   /**
@@ -347,6 +412,133 @@ export class PluginManager {
 
     await Promise.allSettled(promises);
     console.log('[PluginManager] All plugins status refreshed');
+  }
+
+  /**
+   * Add a custom plugin from npm package URL or package name
+   *
+   * @param urlOrPackageName npm URL (https://www.npmjs.com/package/foo) or package name
+   * @returns Result with plugin ID if successful
+   */
+  public async addCustomPlugin(urlOrPackageName: string): Promise<{
+    success: boolean;
+    pluginId?: string;
+    error?: string;
+  }> {
+    try {
+      const { parseNpmUrl, fetchNpmPackageMetadata, getCommandNameFromPackage } = await import('./npm-utils');
+
+      // Parse URL to get package name
+      const packageName = parseNpmUrl(urlOrPackageName);
+      if (!packageName) {
+        return { success: false, error: 'Invalid npm package URL or name' };
+      }
+
+      console.log(`[PluginManager] Adding custom plugin: ${packageName}`);
+
+      // Check if plugin already exists
+      const existingPlugin = Array.from(this.plugins.values()).find(
+        p => p.definition.id === packageName
+      );
+      if (existingPlugin) {
+        return { success: false, error: `Plugin ${packageName} already exists` };
+      }
+
+      // Fetch package metadata from npm registry
+      const nodeEnv = this.nodeManager.getTerminalEnv();
+      const metadata = await fetchNpmPackageMetadata(packageName, nodeEnv);
+
+      // Extract command name from package name
+      const commandName = getCommandNameFromPackage(packageName);
+
+      // Create plugin entry
+      const pluginEntry: CustomPluginEntry = {
+        packageName,
+        commandName,
+        name: metadata.name,
+        description: metadata.description,
+        author: typeof metadata.author === 'string' ? metadata.author : metadata.author?.name,
+        homepage: metadata.homepage,
+        version: metadata.version,
+        tags: metadata.keywords,
+      };
+
+      // Save to store
+      const customPlugins = this.store.get('plugins.custom', {});
+      customPlugins[packageName] = pluginEntry;
+      this.store.set('plugins.custom', customPlugins);
+
+      // Register plugin
+      const { GenericNpmInstaller } = await import('./installers/GenericNpmInstaller');
+      const installer = new GenericNpmInstaller(
+        this.store as any,
+        packageName,
+        commandName,
+        nodeEnv
+      );
+
+      await this.registerPlugin(
+        {
+          id: packageName,
+          name: metadata.name,
+          description: metadata.description,
+          icon: '📦',
+          version: metadata.version,
+          author: typeof metadata.author === 'string' ? metadata.author : metadata.author?.name || 'Unknown',
+          homepage: metadata.homepage,
+          platforms: ['darwin', 'linux', 'win32'],
+          tags: metadata.keywords || ['custom', 'npm']
+        } as any,
+        installer
+      );
+
+      console.log(`[PluginManager] Custom plugin added successfully: ${packageName}`);
+
+      return { success: true, pluginId: packageName };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[PluginManager] Failed to add custom plugin:', error);
+      return { success: false, error: message };
+    }
+  }
+
+  /**
+   * Remove a custom plugin
+   *
+   * @param pluginId Plugin identifier
+   * @returns Result indicating success or failure
+   */
+  public async removeCustomPlugin(pluginId: string): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    try {
+      // Check if plugin exists in custom plugins
+      const customPlugins = this.store.get('plugins.custom', {});
+      if (!customPlugins[pluginId]) {
+        return { success: false, error: 'Plugin is not a custom plugin' };
+      }
+
+      // Remove plugin from memory
+      this.plugins.delete(pluginId);
+
+      // Remove from store
+      delete customPlugins[pluginId];
+      this.store.set('plugins.custom', customPlugins);
+
+      // Remove from registry
+      const registry = this.store.get('plugins.registry', {});
+      delete registry[pluginId];
+      this.store.set('plugins.registry', registry);
+
+      console.log(`[PluginManager] Custom plugin removed: ${pluginId}`);
+
+      return { success: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[PluginManager] Failed to remove custom plugin:', error);
+      return { success: false, error: message };
+    }
   }
 
   /**

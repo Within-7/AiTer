@@ -3,6 +3,7 @@ import { Plugin, PluginInstallProgress, PluginUpdateProgress } from '../../../ty
 import { MintoConfig } from '../../../types/pluginConfigs'
 import { PluginCard } from './PluginCard'
 import { MintoConfigDialog } from './MintoConfigDialog'
+import { AddPluginDialog } from './AddPluginDialog'
 import { AppContext } from '../../context/AppContext'
 import './Plugins.css'
 
@@ -29,6 +30,7 @@ export const PluginPanel: React.FC = () => {
   const [configPluginId, setConfigPluginId] = useState<string | null>(null)
   const [currentConfig, setCurrentConfig] = useState<MintoConfig>({})
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [addPluginDialogOpen, setAddPluginDialogOpen] = useState(false)
 
   // Load plugins on mount
   const loadPlugins = useCallback(async () => {
@@ -285,6 +287,30 @@ export const PluginPanel: React.FC = () => {
     }
   }
 
+  const handleAddPlugin = async (urlOrPackageName: string) => {
+    setStatusMessage('Adding plugin...')
+    setError(null)
+
+    try {
+      const result = await window.api.plugins.addCustom(urlOrPackageName)
+
+      if (result.success) {
+        setStatusMessage(`✓ Plugin added successfully: ${result.pluginId}`)
+        await loadPlugins()
+        setTimeout(() => setStatusMessage(null), 5000)
+      } else {
+        const errorMsg = result.error || 'Failed to add plugin'
+        setStatusMessage(`✗ ${errorMsg}`)
+        setError(errorMsg)
+        setTimeout(() => setStatusMessage(null), 5000)
+        throw new Error(errorMsg)
+      }
+    } catch (err) {
+      // Error already handled above, just propagate
+      throw err
+    }
+  }
+
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       handleClose()
@@ -299,13 +325,22 @@ export const PluginPanel: React.FC = () => {
         <div className="plugin-panel">
           <div className="plugin-panel-header">
             <h2>Plugins</h2>
-            <button
-              className="plugin-panel-close"
-              onClick={handleClose}
-              aria-label="Close plugins panel"
-            >
-              ×
-            </button>
+            <div className="plugin-panel-header-actions">
+              <button
+                className="plugin-panel-add-button"
+                onClick={() => setAddPluginDialogOpen(true)}
+                aria-label="Add custom plugin"
+              >
+                + Add Plugin
+              </button>
+              <button
+                className="plugin-panel-close"
+                onClick={handleClose}
+                aria-label="Close plugins panel"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           {statusMessage && (
@@ -358,6 +393,12 @@ export const PluginPanel: React.FC = () => {
         currentConfig={currentConfig}
         onClose={() => setConfigDialogOpen(false)}
         onSave={handleSaveConfig}
+      />
+
+      <AddPluginDialog
+        isOpen={addPluginDialogOpen}
+        onClose={() => setAddPluginDialogOpen(false)}
+        onAdd={handleAddPlugin}
       />
     </>
   )
