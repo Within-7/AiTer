@@ -247,9 +247,21 @@ export function setupIPC(
       const plugins = await Promise.all(
         pluginListItems.map(async item => {
           const plugin = pluginManager.getPlugin(item.id)
-          const config = plugin
+          const fullConfig = plugin
             ? await pluginManager.getPluginConfiguration(item.id).catch(() => ({}))
             : {}
+
+          // Filter config to only include valid fields based on plugin
+          // For Minto, only include autoUpdate (remove deprecated githubToken, hasToken)
+          const config: Record<string, unknown> = {}
+          if (item.id === 'minto') {
+            if (fullConfig.autoUpdate !== undefined) {
+              config.autoUpdate = fullConfig.autoUpdate
+            }
+          } else {
+            // For other plugins, include all config
+            Object.assign(config, fullConfig)
+          }
 
           const result = {
             id: item.id,

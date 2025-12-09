@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react'
-
-interface MintoConfig {
-  githubToken?: string
-  autoUpdate?: boolean
-}
+import { MintoConfig } from '../../../types/pluginConfigs'
 
 interface MintoConfigDialogProps {
   isOpen: boolean
@@ -18,17 +14,14 @@ export const MintoConfigDialog: React.FC<MintoConfigDialogProps> = ({
   onClose,
   onSave
 }) => {
-  const [githubToken, setGithubToken] = useState(currentConfig.githubToken || '')
   const [autoUpdate, setAutoUpdate] = useState(
     currentConfig.autoUpdate ?? false
   )
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [showToken, setShowToken] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
-      setGithubToken(currentConfig.githubToken || '')
       setAutoUpdate(currentConfig.autoUpdate ?? false)
       setError(null)
     }
@@ -40,7 +33,6 @@ export const MintoConfigDialog: React.FC<MintoConfigDialogProps> = ({
 
     try {
       const config: MintoConfig = {
-        githubToken: githubToken.trim() || undefined,
         autoUpdate
       }
 
@@ -77,44 +69,6 @@ export const MintoConfigDialog: React.FC<MintoConfigDialogProps> = ({
         </div>
 
         <div className="minto-config-content">
-          <div className="minto-config-field">
-            <label htmlFor="github-token">
-              GitHub Personal Access Token
-              <span className="minto-config-optional">(optional)</span>
-            </label>
-            <div className="minto-config-input-wrapper">
-              <input
-                id="github-token"
-                type={showToken ? 'text' : 'password'}
-                value={githubToken}
-                onChange={(e) => setGithubToken(e.target.value)}
-                placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                className="minto-config-input"
-                disabled={isSaving}
-              />
-              <button
-                type="button"
-                className="minto-config-toggle-visibility"
-                onClick={() => setShowToken(!showToken)}
-                disabled={isSaving}
-                aria-label={showToken ? 'Hide token' : 'Show token'}
-              >
-                {showToken ? '👁️' : '👁️‍🗨️'}
-              </button>
-            </div>
-            <p className="minto-config-hint">
-              Required for private repositories and higher rate limits.{' '}
-              <a
-                href="https://github.com/settings/tokens/new?scopes=repo,read:org"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="minto-config-link"
-              >
-                Create token →
-              </a>
-            </p>
-          </div>
-
           <div className="minto-config-field">
             <label className="minto-config-checkbox-label">
               <input

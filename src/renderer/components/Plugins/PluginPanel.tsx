@@ -1,14 +1,10 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react'
 import { Plugin, PluginInstallProgress, PluginUpdateProgress } from '../../../types'
+import { MintoConfig } from '../../../types/pluginConfigs'
 import { PluginCard } from './PluginCard'
 import { MintoConfigDialog } from './MintoConfigDialog'
 import { AppContext } from '../../context/AppContext'
 import './Plugins.css'
-
-interface MintoConfig {
-  githubToken?: string
-  autoCheckUpdates?: boolean
-}
 
 // Extended plugin interface for display
 interface PluginCardData extends Plugin {
