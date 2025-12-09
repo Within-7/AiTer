@@ -68,10 +68,14 @@ export interface NpmPackageMetadata {
  */
 export async function fetchNpmPackageMetadata(
   packageName: string,
-  env?: NodeJS.ProcessEnv
+  env?: NodeJS.ProcessEnv,
+  npmPath?: string
 ): Promise<NpmPackageMetadata> {
   try {
-    const { stdout } = await execFileAsync('npm', ['view', packageName, '--json'], {
+    const npmExecutable = npmPath || 'npm';
+    console.log(`[npm-utils] Fetching metadata for ${packageName} using npm: ${npmExecutable}`);
+
+    const { stdout } = await execFileAsync(npmExecutable, ['view', packageName, '--json'], {
       env: env || process.env,
       maxBuffer: 10 * 1024 * 1024,
     });

@@ -99,7 +99,9 @@ export class PluginManager {
       // Register Minto CLI plugin
       const { MintoInstaller } = await import('./installers/MintoInstaller');
       const nodeEnv = this.nodeManager.getTerminalEnv();
+      const npmPath = this.nodeManager.getNpmExecutable();
       console.log('[PluginManager] NodeManager env PATH:', nodeEnv.PATH?.substring(0, 200));
+      console.log('[PluginManager] NodeManager npm path:', npmPath);
       await this.registerPlugin(
         {
           id: 'minto',
@@ -112,7 +114,7 @@ export class PluginManager {
           platforms: ['darwin', 'linux', 'win32'],
           tags: ['ai', 'cli', 'chat', 'code-generation']
         } as any,
-        new MintoInstaller(this.store as any, nodeEnv)
+        new MintoInstaller(this.store as any, nodeEnv, npmPath)
       );
 
       // Load custom plugins from store
@@ -148,6 +150,7 @@ export class PluginManager {
     console.log(`[PluginManager] Loading ${customPluginIds.length} custom plugins...`);
 
     const nodeEnv = this.nodeManager.getTerminalEnv();
+    const npmPath = this.nodeManager.getNpmExecutable();
     const { GenericNpmInstaller } = await import('./installers/GenericNpmInstaller');
 
     for (const pluginId of customPluginIds) {
@@ -158,7 +161,8 @@ export class PluginManager {
           this.store as any,
           entry.packageName,
           entry.commandName,
-          nodeEnv
+          nodeEnv,
+          npmPath
         );
 
         await this.registerPlugin(
@@ -446,7 +450,8 @@ export class PluginManager {
 
       // Fetch package metadata from npm registry
       const nodeEnv = this.nodeManager.getTerminalEnv();
-      const metadata = await fetchNpmPackageMetadata(packageName, nodeEnv);
+      const npmPath = this.nodeManager.getNpmExecutable();
+      const metadata = await fetchNpmPackageMetadata(packageName, nodeEnv, npmPath);
 
       // Extract command name from package name
       const commandName = getCommandNameFromPackage(packageName);
@@ -474,7 +479,8 @@ export class PluginManager {
         this.store as any,
         packageName,
         commandName,
-        nodeEnv
+        nodeEnv,
+        npmPath
       );
 
       await this.registerPlugin(

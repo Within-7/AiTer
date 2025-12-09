@@ -36,6 +36,8 @@ interface NpmPluginInstallerOptions {
   configStoreKey?: string;
   /** Environment variables for command execution (should include PATH from NodeManager) */
   env?: NodeJS.ProcessEnv;
+  /** Full path to npm executable (from NodeManager.getNpmExecutable()) */
+  npmPath?: string;
 }
 
 interface NpmPackageInfo {
@@ -55,6 +57,7 @@ export abstract class NpmPluginInstaller implements PluginInstaller {
   protected commandName: string;
   protected configStoreKey: string;
   protected env: NodeJS.ProcessEnv;
+  protected npmPath: string;
 
   constructor(options: NpmPluginInstallerOptions) {
     this.store = options.store;
@@ -63,6 +66,10 @@ export abstract class NpmPluginInstaller implements PluginInstaller {
     this.configStoreKey = options.configStoreKey || `plugins.${this.commandName}.configuration`;
     // Use provided env or fallback to process.env
     this.env = options.env || process.env;
+    // Use provided npm path or fallback to 'npm' (system npm)
+    this.npmPath = options.npmPath || 'npm';
+
+    console.log(`[NpmPluginInstaller] Initialized for ${this.packageName}, npm path: ${this.npmPath}`);
   }
 
   /**
@@ -93,7 +100,7 @@ export abstract class NpmPluginInstaller implements PluginInstaller {
    */
   async getCurrentVersion(): Promise<string | null> {
     try {
-      const { stdout } = await execFileAsync('npm', [
+      const { stdout } = await execFileAsync(this.npmPath, [
         'list',
         '-g',
         this.packageName,
@@ -116,7 +123,7 @@ export abstract class NpmPluginInstaller implements PluginInstaller {
    */
   async getLatestVersion(): Promise<string | null> {
     try {
-      const { stdout } = await execFileAsync('npm', ['view', this.packageName, 'version'], { env: this.env });
+      const { stdout } = await execFileAsync(this.npmPath, ['view', this.packageName, 'version'], { env: this.env });
       return stdout.trim() || null;
     } catch (error) {
       console.error(`[NpmPluginInstaller] Error getting latest version for ${this.packageName}:`, error);
@@ -148,7 +155,8 @@ export abstract class NpmPluginInstaller implements PluginInstaller {
 
     try {
       // Install globally with npm
-      await execFileAsync('npm', ['install', '-g', this.packageName], {
+      console.log(`[NpmPluginInstaller] Installing ${this.packageName} using npm: ${this.npmPath}`);
+      await execFileAsync(this.npmPath, ['install', '-g', this.packageName], {
         maxBuffer: 10 * 1024 * 1024,
         env: this.env,
       });
@@ -223,7 +231,8 @@ export abstract class NpmPluginInstaller implements PluginInstaller {
 
     try {
       // Update globally with npm
-      await execFileAsync('npm', ['update', '-g', this.packageName], {
+      console.log(`[NpmPluginInstaller] Updating ${this.packageName} using npm: ${this.npmPath}`);
+      await execFileAsync(this.npmPath, ['update', '-g', this.packageName], {
         maxBuffer: 10 * 1024 * 1024,
         env: this.env,
       });
@@ -276,7 +285,8 @@ export abstract class NpmPluginInstaller implements PluginInstaller {
 
     try {
       // Uninstall globally with npm
-      await execFileAsync('npm', ['uninstall', '-g', this.packageName], {
+      console.log(`[NpmPluginInstaller] Removing ${this.packageName} using npm: ${this.npmPath}`);
+      await execFileAsync(this.npmPath, ['uninstall', '-g', this.packageName], {
         maxBuffer: 10 * 1024 * 1024,
         env: this.env,
       });

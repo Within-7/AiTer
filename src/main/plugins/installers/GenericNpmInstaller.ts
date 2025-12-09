@@ -13,7 +13,8 @@ export class GenericNpmInstaller extends NpmPluginInstaller {
     store: Store,
     packageName: string,
     commandName: string,
-    env?: NodeJS.ProcessEnv
+    env?: NodeJS.ProcessEnv,
+    npmPath?: string
   ) {
     super({
       store,
@@ -21,6 +22,7 @@ export class GenericNpmInstaller extends NpmPluginInstaller {
       commandName,
       configStoreKey: `plugins.${commandName}.configuration`,
       env,
+      npmPath,
     });
   }
 
