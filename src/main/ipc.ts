@@ -247,7 +247,7 @@ export function setupIPC(
       const plugins = await Promise.all(
         pluginListItems.map(async item => {
           const plugin = pluginManager.getPlugin(item.id)
-          const fullConfig = plugin
+          const fullConfig: Record<string, unknown> = plugin
             ? await pluginManager.getPluginConfiguration(item.id).catch(() => ({}))
             : {}
 
@@ -295,10 +295,10 @@ export function setupIPC(
   ipcMain.handle('plugins:install', async (_, { pluginId }) => {
     try {
       const pluginManager = PluginManager.getInstance()
-      const success = await pluginManager.installPlugin(pluginId, (progress) => {
+      const result = await pluginManager.installPlugin(pluginId, (progress) => {
         window.webContents.send('plugins:install-progress', progress)
       })
-      return { success }
+      return result
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
       return { success: false, error: message }
@@ -308,10 +308,10 @@ export function setupIPC(
   ipcMain.handle('plugins:update', async (_, { pluginId }) => {
     try {
       const pluginManager = PluginManager.getInstance()
-      const success = await pluginManager.updatePlugin(pluginId, (progress) => {
+      const result = await pluginManager.updatePlugin(pluginId, (progress) => {
         window.webContents.send('plugins:update-progress', progress)
       })
-      return { success }
+      return result
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
       return { success: false, error: message }

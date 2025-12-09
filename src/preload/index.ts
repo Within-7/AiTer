@@ -280,8 +280,8 @@ export interface API {
   }
   plugins: {
     list(): Promise<{ success: boolean; plugins?: Plugin[]; error?: string }>
-    install(pluginId: string): Promise<{ success: boolean; error?: string }>
-    update(pluginId: string): Promise<{ success: boolean; error?: string }>
+    install(pluginId: string): Promise<{ success: boolean; version?: string; error?: string }>
+    update(pluginId: string): Promise<{ success: boolean; version?: string; error?: string }>
     remove(pluginId: string): Promise<{ success: boolean; error?: string }>
     configure(
       pluginId: string,

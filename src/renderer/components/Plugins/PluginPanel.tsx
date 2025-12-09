@@ -107,94 +107,82 @@ export const PluginPanel: React.FC = () => {
   }, [])
 
   const handleInstall = async (pluginId: string) => {
+    const plugin = plugins.find(p => p.id === pluginId)
+    const pluginName = plugin?.name || pluginId
+
+    setProcessingPlugins((prev) => new Set(prev).add(pluginId))
+    setStatusMessage(`Installing ${pluginName}...`)
+    setError(null)
+
     try {
-      // Get the install command
-      const commandResult = await window.api.plugins.getInstallCommand(pluginId)
-      if (!commandResult.success || !commandResult.command) {
-        setError(commandResult.error || 'Failed to get install command')
-        return
-      }
+      // Call backend to install plugin directly (no terminal needed)
+      const result = await window.api.plugins.install(pluginId)
 
-      // Get current active project for terminal context
-      const activeProject = state.projects.find(p => p.id === state.activeProjectId)
-      if (!activeProject) {
-        setError('No active project. Please select a project first.')
-        return
-      }
+      if (result.success) {
+        setStatusMessage(`✓ ${pluginName} installed successfully${result.version ? ` (v${result.version})` : ''}`)
 
-      // Create a new terminal and execute the install command
-      const terminalResult = await window.api.terminal.create(
-        activeProject.path,
-        activeProject.id,
-        activeProject.name,
-        state.settings?.shell || '/bin/bash'
-      )
+        // Reload plugins to update status
+        await loadPlugins()
 
-      if (terminalResult.success && terminalResult.terminal) {
-        // Write the command to the terminal
-        await window.api.terminal.write(
-          terminalResult.terminal.id,
-          commandResult.command + '\r'
-        )
-
-        // Close the plugin panel to show the terminal
-        dispatch({ type: 'SET_PLUGIN_PANEL', payload: false })
-
-        // Reload plugins after a delay to check installation status
-        setTimeout(() => {
-          loadPlugins()
-        }, 2000)
+        // Auto-clear status message after 5 seconds
+        setTimeout(() => setStatusMessage(null), 5000)
       } else {
-        setError(terminalResult.error || 'Failed to create terminal')
+        const errorMsg = result.error || 'Installation failed'
+        setStatusMessage(`✗ ${errorMsg}`)
+        setError(errorMsg)
+        setTimeout(() => setStatusMessage(null), 5000)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Installation failed')
+      const errorMsg = err instanceof Error ? err.message : 'Installation failed'
+      setStatusMessage(`✗ ${errorMsg}`)
+      setError(errorMsg)
+      setTimeout(() => setStatusMessage(null), 5000)
+    } finally {
+      setProcessingPlugins((prev) => {
+        const next = new Set(prev)
+        next.delete(pluginId)
+        return next
+      })
     }
   }
 
   const handleUpdate = async (pluginId: string) => {
+    const plugin = plugins.find(p => p.id === pluginId)
+    const pluginName = plugin?.name || pluginId
+
+    setProcessingPlugins((prev) => new Set(prev).add(pluginId))
+    setStatusMessage(`Updating ${pluginName}...`)
+    setError(null)
+
     try {
-      // Get the update command
-      const commandResult = await window.api.plugins.getUpdateCommand(pluginId)
-      if (!commandResult.success || !commandResult.command) {
-        setError(commandResult.error || 'Failed to get update command')
-        return
-      }
+      // Call backend to update plugin directly (no terminal needed)
+      const result = await window.api.plugins.update(pluginId)
 
-      // Get current active project for terminal context
-      const activeProject = state.projects.find(p => p.id === state.activeProjectId)
-      if (!activeProject) {
-        setError('No active project. Please select a project first.')
-        return
-      }
+      if (result.success) {
+        setStatusMessage(`✓ ${pluginName} updated successfully${result.version ? ` (v${result.version})` : ''}`)
 
-      // Create a new terminal and execute the update command
-      const terminalResult = await window.api.terminal.create(
-        activeProject.path,
-        activeProject.id,
-        activeProject.name,
-        state.settings?.shell || '/bin/bash'
-      )
+        // Reload plugins to update status
+        await loadPlugins()
 
-      if (terminalResult.success && terminalResult.terminal) {
-        // Write the command to the terminal
-        await window.api.terminal.write(
-          terminalResult.terminal.id,
-          commandResult.command + '\r'
-        )
-
-        // Close the plugin panel to show the terminal
-        dispatch({ type: 'SET_PLUGIN_PANEL', payload: false })
-
-        // Reload plugins after a delay to check update status
-        setTimeout(() => {
-          loadPlugins()
-        }, 2000)
+        // Auto-clear status message after 5 seconds
+        setTimeout(() => setStatusMessage(null), 5000)
       } else {
-        setError(terminalResult.error || 'Failed to create terminal')
+        const errorMsg = result.error || 'Update failed'
+        setStatusMessage(`✗ ${errorMsg}`)
+        setError(errorMsg)
+        setTimeout(() => setStatusMessage(null), 5000)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Update failed')
+      const errorMsg = err instanceof Error ? err.message : 'Update failed'
+      setStatusMessage(`✗ ${errorMsg}`)
+      setError(errorMsg)
+      setTimeout(() => setStatusMessage(null), 5000)
+    } finally {
+      setProcessingPlugins((prev) => {
+        const next = new Set(prev)
+        next.delete(pluginId)
+        return next
+      })
     }
   }
 
