@@ -1,0 +1,179 @@
+.git-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.git-view-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #1e1e1e;
+  background-color: #2d2d30;
+}
+
+.git-view-header .header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.git-view-header .header-icon {
+  font-size: 16px;
+  color: #569cd6;
+}
+
+.git-view-header h2 {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888888;
+  margin: 0;
+}
+
+.git-view-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Empty State */
+.git-view-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: #888888;
+}
+
+.git-view-empty .empty-icon {
+  font-size: 48px;
+  color: #3e3e42;
+  margin-bottom: 16px;
+}
+
+.git-view-empty p {
+  margin: 4px 0;
+  font-size: 12px;
+}
+
+.git-view-empty .empty-hint {
+  font-size: 11px;
+  color: #666666;
+}
+
+/* Git Projects List */
+.git-projects-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.git-project-item {
+  border-bottom: 1px solid #1e1e1e;
+}
+
+.git-project-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.1s;
+  background-color: #252526;
+}
+
+.git-project-header:hover {
+  background-color: #2d2d30;
+}
+
+.git-project-header.selected {
+  background-color: #37373d;
+}
+
+.git-project-header .project-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.git-project-header .project-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #cccccc;
+  margin-bottom: 4px;
+}
+
+.git-project-header .project-git-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.git-project-header .branch-name {
+  color: #569cd6;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.git-project-header .changes-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.git-project-header .ahead-indicator {
+  color: #4ec9b0;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.git-project-header .behind-indicator {
+  color: #ce9178;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.git-project-header .modified-indicator {
+  color: #f9a825;
+  font-size: 16px;
+  line-height: 1;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.git-project-header .expand-icon {
+  width: 12px;
+  font-size: 10px;
+  color: #cccccc;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+/* Scrollbar Styling */
+.git-view-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.git-view-content::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.git-view-content::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 4px;
+}
+
+.git-view-content::-webkit-scrollbar-thumb:hover {
+  background: #4e4e4e;
+}

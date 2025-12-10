@@ -1,6 +1,8 @@
 import { createContext } from 'react'
 import { Project, Terminal, AppSettings, EditorTab } from '../../types'
 
+export type SidebarView = 'explorer' | 'git'
+
 export interface AppState {
   projects: Project[]
   terminals: Terminal[]
@@ -13,6 +15,7 @@ export interface AppState {
   terminalDataBuffer: Map<string, string>
   showPluginPanel: boolean
   showAboutPanel: boolean
+  sidebarView: SidebarView
 }
 
 export type AppAction =
@@ -40,6 +43,7 @@ export type AppAction =
   | { type: 'SET_PLUGIN_PANEL'; payload: boolean }
   | { type: 'TOGGLE_ABOUT_PANEL' }
   | { type: 'SET_ABOUT_PANEL'; payload: boolean }
+  | { type: 'SET_SIDEBAR_VIEW'; payload: SidebarView }
 
 export const initialState: AppState = {
   projects: [],
@@ -59,7 +63,8 @@ export const initialState: AppState = {
   },
   terminalDataBuffer: new Map(),
   showPluginPanel: false,
-  showAboutPanel: false
+  showAboutPanel: false,
+  sidebarView: 'explorer'
 }
 
 export function appReducer(state: AppState, action: AppAction): AppState {
@@ -251,6 +256,9 @@ export function appReducer(state: AppState, action: AppAction): AppState {
 
     case 'SET_ABOUT_PANEL':
       return { ...state, showAboutPanel: action.payload }
+
+    case 'SET_SIDEBAR_VIEW':
+      return { ...state, sidebarView: action.payload }
 
     default:
       return state
