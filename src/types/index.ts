@@ -43,6 +43,11 @@ export interface GitCommit {
   timestamp: number
 }
 
+export interface FileChange {
+  path: string
+  status: 'added' | 'modified' | 'deleted' | 'untracked'
+}
+
 export interface GitStatus {
   isRepo: boolean
   currentBranch?: string
@@ -128,6 +133,8 @@ export interface IPCEvents {
   'git:getStatus': { projectPath: string }
   'git:getRecentCommits': { projectPath: string; count?: number }
   'git:initRepo': { projectPath: string }
+  'git:getFileChanges': { projectPath: string }
+  'git:commitAll': { projectPath: string; message: string }
 }
 
 // Window state

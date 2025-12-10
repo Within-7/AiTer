@@ -2,6 +2,7 @@ import { useContext, useState, useEffect, useMemo } from 'react'
 import { VscTerminal, VscSourceControl, VscGitBranch } from 'react-icons/vsc'
 import { AppContext } from '../context/AppContext'
 import { FileTree } from './FileTree/FileTree'
+import { GitHistoryPanel } from './GitHistoryPanel'
 import { FileNode, EditorTab, GitStatus } from '../../types'
 import { getProjectColor } from '../utils/projectColors'
 import '../styles/Sidebar.css'
@@ -11,6 +12,7 @@ export function Sidebar() {
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [gitStatuses, setGitStatuses] = useState<Map<string, GitStatus>>(new Map())
+  const [showGitHistory, setShowGitHistory] = useState<string | null>(null) // projectId of open history panel
 
   // Monitor fullscreen state changes
   useEffect(() => {
@@ -209,7 +211,16 @@ export function Sidebar() {
 
                 {/* Git Status Display */}
                 {gitStatus?.isRepo && (
-                  <div className="git-status">
+                  <div
+                    className="git-status"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowGitHistory(
+                        showGitHistory === project.id ? null : project.id
+                      )
+                    }}
+                    title="Click to view Git history"
+                  >
                     <VscGitBranch className="git-icon" />
                     <span className="git-branch">{gitStatus.currentBranch || 'main'}</span>
                     {gitStatus.hasChanges && (
@@ -249,17 +260,28 @@ export function Sidebar() {
               </button>
             </div>
             {expandedProjects.has(project.id) && (
-              <FileTree
-                projectId={project.id}
-                projectPath={project.path}
-                projectName={project.name}
-                onFileClick={handleFileClick}
-                activeFilePath={
-                  state.activeEditorTabId
-                    ? state.editorTabs.find(t => t.id === state.activeEditorTabId)?.filePath
-                    : undefined
-                }
-              />
+              <>
+                {showGitHistory === project.id && gitStatus?.isRepo && (
+                  <GitHistoryPanel
+                    projectId={project.id}
+                    projectPath={project.path}
+                    projectName={project.name}
+                    gitStatus={gitStatus}
+                    onClose={() => setShowGitHistory(null)}
+                  />
+                )}
+                <FileTree
+                  projectId={project.id}
+                  projectPath={project.path}
+                  projectName={project.name}
+                  onFileClick={handleFileClick}
+                  activeFilePath={
+                    state.activeEditorTabId
+                      ? state.editorTabs.find(t => t.id === state.activeEditorTabId)?.filePath
+                      : undefined
+                  }
+                />
+              </>
             )}
           </div>
         )})}

@@ -96,6 +96,12 @@
   font-size: 11px;
   color: #a9a9a9;
   flex-shrink: 0;
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.git-status:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .git-status .git-icon {

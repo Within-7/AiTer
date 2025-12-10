@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { Project, Terminal, AppSettings, FileNode, Plugin, PluginInstallProgress, PluginUpdateProgress, GitStatus, GitCommit } from '../types'
+import { Project, Terminal, AppSettings, FileNode, Plugin, PluginInstallProgress, PluginUpdateProgress, GitStatus, GitCommit, FileChange } from '../types'
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
@@ -202,7 +202,11 @@ contextBridge.exposeInMainWorld('api', {
     getRecentCommits: (projectPath: string, count?: number) =>
       ipcRenderer.invoke('git:getRecentCommits', { projectPath, count }),
     initRepo: (projectPath: string) =>
-      ipcRenderer.invoke('git:initRepo', { projectPath })
+      ipcRenderer.invoke('git:initRepo', { projectPath }),
+    getFileChanges: (projectPath: string) =>
+      ipcRenderer.invoke('git:getFileChanges', { projectPath }),
+    commitAll: (projectPath: string, message: string) =>
+      ipcRenderer.invoke('git:commitAll', { projectPath, message })
   }
 })
 
@@ -379,6 +383,15 @@ export interface API {
       error?: string;
     }>
     initRepo(projectPath: string): Promise<{
+      success: boolean;
+      error?: string;
+    }>
+    getFileChanges(projectPath: string): Promise<{
+      success: boolean;
+      changes?: FileChange[];
+      error?: string;
+    }>
+    commitAll(projectPath: string, message: string): Promise<{
       success: boolean;
       error?: string;
     }>

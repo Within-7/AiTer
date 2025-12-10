@@ -28,6 +28,11 @@ export interface GitCommit {
   timestamp: number
 }
 
+export interface FileChange {
+  path: string
+  status: 'added' | 'modified' | 'deleted' | 'untracked'
+}
+
 export class GitManager {
   /**
    * Check if a directory is a Git repository
@@ -255,6 +260,71 @@ Thumbs.db
     } catch (error) {
       console.error('Failed to get git status:', error)
       return { isRepo: true }
+    }
+  }
+
+  /**
+   * Get file changes (modified, added, deleted, untracked)
+   */
+  async getFileChanges(projectPath: string): Promise<FileChange[]> {
+    try {
+      const { stdout } = await execAsync('git status --porcelain', {
+        cwd: projectPath
+      })
+
+      if (!stdout.trim()) {
+        return []
+      }
+
+      const changes: FileChange[] = []
+      const lines = stdout.trim().split('\n')
+
+      for (const line of lines) {
+        if (!line) continue
+
+        const statusCode = line.substring(0, 2)
+        const filePath = line.substring(3).trim()
+
+        let status: FileChange['status'] = 'modified'
+
+        // Parse git status codes
+        if (statusCode.includes('??')) {
+          status = 'untracked'
+        } else if (statusCode.includes('A')) {
+          status = 'added'
+        } else if (statusCode.includes('D')) {
+          status = 'deleted'
+        } else if (statusCode.includes('M')) {
+          status = 'modified'
+        }
+
+        changes.push({ path: filePath, status })
+      }
+
+      return changes
+    } catch (error) {
+      console.error('Failed to get file changes:', error)
+      return []
+    }
+  }
+
+  /**
+   * Stage all changes and commit
+   */
+  async commitAll(projectPath: string, message: string): Promise<boolean> {
+    try {
+      // Stage all changes
+      await execAsync('git add -A', { cwd: projectPath })
+
+      // Commit with message
+      await execAsync(`git commit -m "${message.replace(/"/g, '\\"')}"`, {
+        cwd: projectPath
+      })
+
+      return true
+    } catch (error) {
+      console.error('Failed to commit:', error)
+      return false
     }
   }
 }

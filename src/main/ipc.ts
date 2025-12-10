@@ -609,5 +609,25 @@ export function setupIPC(
     }
   })
 
+  ipcMain.handle('git:getFileChanges', async (_, { projectPath }) => {
+    try {
+      const changes = await gitManager.getFileChanges(projectPath)
+      return { success: true, changes }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('git:commitAll', async (_, { projectPath, message }) => {
+    try {
+      const success = await gitManager.commitAll(projectPath, message)
+      return { success }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: errorMessage }
+    }
+  })
+
   console.log('IPC handlers registered')
 }
