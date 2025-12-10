@@ -629,5 +629,105 @@ export function setupIPC(
     }
   })
 
+  ipcMain.handle('git:getBranches', async (_, { projectPath }) => {
+    try {
+      const branches = await gitManager.getBranches(projectPath)
+      return { success: true, branches }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('git:createBranch', async (_, { projectPath, branchName }) => {
+    try {
+      const success = await gitManager.createBranch(projectPath, branchName)
+      return { success }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('git:switchBranch', async (_, { projectPath, branchName }) => {
+    try {
+      const success = await gitManager.switchBranch(projectPath, branchName)
+      return { success }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('git:deleteBranch', async (_, { projectPath, branchName, force }) => {
+    try {
+      const success = await gitManager.deleteBranch(projectPath, branchName, force)
+      return { success }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('git:pull', async (_, { projectPath }) => {
+    try {
+      const success = await gitManager.pull(projectPath)
+      return { success }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('git:push', async (_, { projectPath }) => {
+    try {
+      const success = await gitManager.push(projectPath)
+      return { success }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('git:fetch', async (_, { projectPath }) => {
+    try {
+      const success = await gitManager.fetch(projectPath)
+      return { success }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('git:stageFile', async (_, { projectPath, filePath }) => {
+    try {
+      const success = await gitManager.stageFile(projectPath, filePath)
+      return { success }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('git:unstageFile', async (_, { projectPath, filePath }) => {
+    try {
+      const success = await gitManager.unstageFile(projectPath, filePath)
+      return { success }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('git:getFileDiff', async (_, { projectPath, filePath }) => {
+    try {
+      const diff = await gitManager.getFileDiff(projectPath, filePath)
+      return { success: true, diff }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
   console.log('IPC handlers registered')
 }

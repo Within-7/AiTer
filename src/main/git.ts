@@ -327,6 +327,146 @@ Thumbs.db
       return false
     }
   }
+
+  /**
+   * Get all branches
+   */
+  async getBranches(projectPath: string): Promise<{ name: string; current: boolean }[]> {
+    try {
+      const { stdout } = await execAsync('git branch', { cwd: projectPath })
+
+      return stdout
+        .trim()
+        .split('\n')
+        .map(line => {
+          const current = line.startsWith('*')
+          const name = line.replace('*', '').trim()
+          return { name, current }
+        })
+        .filter(b => b.name)
+    } catch (error) {
+      console.error('Failed to get branches:', error)
+      return []
+    }
+  }
+
+  /**
+   * Create a new branch
+   */
+  async createBranch(projectPath: string, branchName: string): Promise<boolean> {
+    try {
+      await execAsync(`git branch "${branchName}"`, { cwd: projectPath })
+      return true
+    } catch (error) {
+      console.error('Failed to create branch:', error)
+      return false
+    }
+  }
+
+  /**
+   * Switch to a different branch
+   */
+  async switchBranch(projectPath: string, branchName: string): Promise<boolean> {
+    try {
+      await execAsync(`git checkout "${branchName}"`, { cwd: projectPath })
+      return true
+    } catch (error) {
+      console.error('Failed to switch branch:', error)
+      return false
+    }
+  }
+
+  /**
+   * Delete a branch
+   */
+  async deleteBranch(projectPath: string, branchName: string, force: boolean = false): Promise<boolean> {
+    try {
+      const flag = force ? '-D' : '-d'
+      await execAsync(`git branch ${flag} "${branchName}"`, { cwd: projectPath })
+      return true
+    } catch (error) {
+      console.error('Failed to delete branch:', error)
+      return false
+    }
+  }
+
+  /**
+   * Pull from remote
+   */
+  async pull(projectPath: string): Promise<boolean> {
+    try {
+      await execAsync('git pull', { cwd: projectPath })
+      return true
+    } catch (error) {
+      console.error('Failed to pull:', error)
+      return false
+    }
+  }
+
+  /**
+   * Push to remote
+   */
+  async push(projectPath: string): Promise<boolean> {
+    try {
+      await execAsync('git push', { cwd: projectPath })
+      return true
+    } catch (error) {
+      console.error('Failed to push:', error)
+      return false
+    }
+  }
+
+  /**
+   * Fetch from remote
+   */
+  async fetch(projectPath: string): Promise<boolean> {
+    try {
+      await execAsync('git fetch', { cwd: projectPath })
+      return true
+    } catch (error) {
+      console.error('Failed to fetch:', error)
+      return false
+    }
+  }
+
+  /**
+   * Stage a specific file
+   */
+  async stageFile(projectPath: string, filePath: string): Promise<boolean> {
+    try {
+      await execAsync(`git add "${filePath}"`, { cwd: projectPath })
+      return true
+    } catch (error) {
+      console.error('Failed to stage file:', error)
+      return false
+    }
+  }
+
+  /**
+   * Unstage a specific file
+   */
+  async unstageFile(projectPath: string, filePath: string): Promise<boolean> {
+    try {
+      await execAsync(`git reset HEAD "${filePath}"`, { cwd: projectPath })
+      return true
+    } catch (error) {
+      console.error('Failed to unstage file:', error)
+      return false
+    }
+  }
+
+  /**
+   * Get diff for a file
+   */
+  async getFileDiff(projectPath: string, filePath: string): Promise<string> {
+    try {
+      const { stdout } = await execAsync(`git diff "${filePath}"`, { cwd: projectPath })
+      return stdout
+    } catch (error) {
+      console.error('Failed to get file diff:', error)
+      return ''
+    }
+  }
 }
 
 // Singleton instance

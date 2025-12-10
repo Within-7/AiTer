@@ -206,7 +206,27 @@ contextBridge.exposeInMainWorld('api', {
     getFileChanges: (projectPath: string) =>
       ipcRenderer.invoke('git:getFileChanges', { projectPath }),
     commitAll: (projectPath: string, message: string) =>
-      ipcRenderer.invoke('git:commitAll', { projectPath, message })
+      ipcRenderer.invoke('git:commitAll', { projectPath, message }),
+    getBranches: (projectPath: string) =>
+      ipcRenderer.invoke('git:getBranches', { projectPath }),
+    createBranch: (projectPath: string, branchName: string) =>
+      ipcRenderer.invoke('git:createBranch', { projectPath, branchName }),
+    switchBranch: (projectPath: string, branchName: string) =>
+      ipcRenderer.invoke('git:switchBranch', { projectPath, branchName }),
+    deleteBranch: (projectPath: string, branchName: string, force?: boolean) =>
+      ipcRenderer.invoke('git:deleteBranch', { projectPath, branchName, force }),
+    pull: (projectPath: string) =>
+      ipcRenderer.invoke('git:pull', { projectPath }),
+    push: (projectPath: string) =>
+      ipcRenderer.invoke('git:push', { projectPath }),
+    fetch: (projectPath: string) =>
+      ipcRenderer.invoke('git:fetch', { projectPath }),
+    stageFile: (projectPath: string, filePath: string) =>
+      ipcRenderer.invoke('git:stageFile', { projectPath, filePath }),
+    unstageFile: (projectPath: string, filePath: string) =>
+      ipcRenderer.invoke('git:unstageFile', { projectPath, filePath }),
+    getFileDiff: (projectPath: string, filePath: string) =>
+      ipcRenderer.invoke('git:getFileDiff', { projectPath, filePath })
   }
 })
 
@@ -393,6 +413,48 @@ export interface API {
     }>
     commitAll(projectPath: string, message: string): Promise<{
       success: boolean;
+      error?: string;
+    }>
+    getBranches(projectPath: string): Promise<{
+      success: boolean;
+      branches?: Array<{ name: string; current: boolean }>;
+      error?: string;
+    }>
+    createBranch(projectPath: string, branchName: string): Promise<{
+      success: boolean;
+      error?: string;
+    }>
+    switchBranch(projectPath: string, branchName: string): Promise<{
+      success: boolean;
+      error?: string;
+    }>
+    deleteBranch(projectPath: string, branchName: string, force?: boolean): Promise<{
+      success: boolean;
+      error?: string;
+    }>
+    pull(projectPath: string): Promise<{
+      success: boolean;
+      error?: string;
+    }>
+    push(projectPath: string): Promise<{
+      success: boolean;
+      error?: string;
+    }>
+    fetch(projectPath: string): Promise<{
+      success: boolean;
+      error?: string;
+    }>
+    stageFile(projectPath: string, filePath: string): Promise<{
+      success: boolean;
+      error?: string;
+    }>
+    unstageFile(projectPath: string, filePath: string): Promise<{
+      success: boolean;
+      error?: string;
+    }>
+    getFileDiff(projectPath: string, filePath: string): Promise<{
+      success: boolean;
+      diff?: string;
       error?: string;
     }>
   }

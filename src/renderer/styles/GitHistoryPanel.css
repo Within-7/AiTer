@@ -292,3 +292,362 @@
 .file-changes-list::-webkit-scrollbar-thumb:hover {
   background: #4e4e4e;
 }
+
+/* Git Operations Bar */
+.git-operations-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: #252526;
+  border-bottom: 1px solid #3e3e42;
+}
+
+/* Branch Selector */
+.branch-selector {
+  position: relative;
+  flex: 1;
+}
+
+.branch-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #3c3c3c;
+  border: 1px solid #3e3e42;
+  border-radius: 3px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: #cccccc;
+  cursor: pointer;
+  transition: all 0.1s;
+  min-width: 120px;
+}
+
+.branch-button:hover:not(:disabled) {
+  background-color: #4e4e4e;
+  border-color: #569cd6;
+}
+
+.branch-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.branch-button .branch-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.branch-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background-color: #2d2d30;
+  border: 1px solid #3e3e42;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  min-width: 200px;
+  max-width: 300px;
+  z-index: 100;
+}
+
+.branch-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid #3e3e42;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #888888;
+}
+
+.branch-dropdown-header .btn-text {
+  background: none;
+  border: none;
+  color: #569cd6;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 2px;
+  transition: background-color 0.1s;
+}
+
+.branch-dropdown-header .btn-text:hover {
+  background-color: rgba(86, 156, 214, 0.1);
+}
+
+.new-branch-input {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #3e3e42;
+}
+
+.new-branch-input input {
+  flex: 1;
+  background-color: #3c3c3c;
+  border: 1px solid #3e3e42;
+  border-radius: 3px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: #cccccc;
+  font-family: inherit;
+}
+
+.new-branch-input input:focus {
+  outline: none;
+  border-color: #007acc;
+}
+
+.new-branch-input .btn-create {
+  background-color: #0e639c;
+  border: none;
+  border-radius: 3px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.new-branch-input .btn-create:hover:not(:disabled) {
+  background-color: #1177bb;
+}
+
+.new-branch-input .btn-create:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.branch-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.branch-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-bottom: 1px solid rgba(62, 62, 66, 0.3);
+  transition: background-color 0.1s;
+}
+
+.branch-item:hover {
+  background-color: #3e3e42;
+}
+
+.branch-item:last-child {
+  border-bottom: none;
+}
+
+.branch-item.current {
+  background-color: rgba(86, 156, 214, 0.1);
+}
+
+.branch-name-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: none;
+  border: none;
+  color: #cccccc;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.branch-name-btn:hover:not(:disabled) {
+  color: #ffffff;
+}
+
+.branch-name-btn:disabled {
+  cursor: default;
+}
+
+.btn-delete-branch {
+  background: none;
+  border: none;
+  color: #888888;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 2px;
+  transition: all 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-delete-branch:hover:not(:disabled) {
+  background-color: rgba(244, 135, 113, 0.2);
+  color: #f48771;
+}
+
+.btn-delete-branch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Remote Operations */
+.remote-operations {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.btn-remote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #3c3c3c;
+  border: 1px solid #3e3e42;
+  border-radius: 3px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #cccccc;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.btn-remote:hover:not(:disabled) {
+  background-color: #4e4e4e;
+  border-color: #569cd6;
+  color: #569cd6;
+}
+
+.btn-remote:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* File Actions */
+.file-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.btn-file-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #888888;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 2px;
+  transition: all 0.1s;
+  font-size: 12px;
+}
+
+.btn-file-action:hover:not(:disabled) {
+  background-color: rgba(86, 156, 214, 0.2);
+  color: #569cd6;
+}
+
+.btn-file-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Diff Modal */
+.diff-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.diff-modal {
+  background-color: #1e1e1e;
+  border: 1px solid #3e3e42;
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  max-width: 800px;
+  max-height: 80vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.diff-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: #2d2d30;
+  border-bottom: 1px solid #3e3e42;
+}
+
+.diff-modal-header h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #cccccc;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diff-modal-header .btn-icon {
+  font-size: 20px;
+}
+
+.diff-modal-content {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+}
+
+.diff-content {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #cccccc;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.no-diff {
+  font-size: 11px;
+  color: #888888;
+  text-align: center;
+  padding: 32px;
+}
+
+.diff-modal-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.diff-modal-content::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.diff-modal-content::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 4px;
+}
+
+.diff-modal-content::-webkit-scrollbar-thumb:hover {
+  background: #4e4e4e;
+}
