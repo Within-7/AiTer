@@ -156,6 +156,9 @@ export interface PluginDefinition {
 
   /** Minimum AiTer version required */
   minAiTerVersion?: string;
+
+  /** Whether this is a built-in system plugin */
+  isBuiltIn?: boolean;
 }
 
 /**
@@ -232,4 +235,5 @@ export interface PluginListItem {
   enabled: boolean;
   platforms: string[];
   tags?: string[];
+  isBuiltIn?: boolean;
 }

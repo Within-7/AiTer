@@ -369,18 +369,43 @@ export const PluginPanel: React.FC = () => {
               </div>
             ) : (
               <div className="plugin-panel-list">
-                {plugins.map((plugin) => (
-                  <PluginCard
-                    key={plugin.id}
-                    plugin={plugin}
-                    onInstall={handleInstall}
-                    onUpdate={handleUpdate}
-                    onRemove={handleRemove}
-                    onConfigure={handleConfigure}
-                    onCheckUpdate={handleCheckUpdate}
-                    isProcessing={processingPlugins.has(plugin.id)}
-                  />
-                ))}
+                {/* Built-in plugins section */}
+                {plugins.some(p => p.isBuiltIn) && (
+                  <div className="plugin-section">
+                    <h3 className="plugin-section-title">Built-in Plugins</h3>
+                    {plugins.filter(p => p.isBuiltIn).map((plugin) => (
+                      <PluginCard
+                        key={plugin.id}
+                        plugin={plugin}
+                        onInstall={handleInstall}
+                        onUpdate={handleUpdate}
+                        onRemove={handleRemove}
+                        onConfigure={handleConfigure}
+                        onCheckUpdate={handleCheckUpdate}
+                        isProcessing={processingPlugins.has(plugin.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Custom plugins section */}
+                {plugins.some(p => !p.isBuiltIn) && (
+                  <div className="plugin-section">
+                    <h3 className="plugin-section-title">Custom Plugins</h3>
+                    {plugins.filter(p => !p.isBuiltIn).map((plugin) => (
+                      <PluginCard
+                        key={plugin.id}
+                        plugin={plugin}
+                        onInstall={handleInstall}
+                        onUpdate={handleUpdate}
+                        onRemove={handleRemove}
+                        onConfigure={handleConfigure}
+                        onCheckUpdate={handleCheckUpdate}
+                        isProcessing={processingPlugins.has(plugin.id)}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

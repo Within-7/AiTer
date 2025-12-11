@@ -112,7 +112,8 @@ export class PluginManager {
           author: 'Within-7',
           homepage: 'https://github.com/Within-7/minto',
           platforms: ['darwin', 'linux', 'win32'],
-          tags: ['ai', 'cli', 'strategic-thinking', 'research']
+          tags: ['ai', 'cli', 'strategic-thinking', 'research'],
+          isBuiltIn: true
         } as any,
         new MintoInstaller(this.store as any, nodeEnv, npmPath)
       );
@@ -328,6 +329,7 @@ export class PluginManager {
         enabled: plugin.enabled,
         platforms: plugin.definition.platforms,
         tags: plugin.definition.tags,
+        isBuiltIn: plugin.definition.isBuiltIn || false,
       });
     }
 
@@ -358,6 +360,7 @@ export class PluginManager {
         enabled: plugin.enabled,
         platforms: plugin.definition.platforms,
         tags: plugin.definition.tags,
+        isBuiltIn: plugin.definition.isBuiltIn || false,
       });
     }
 
@@ -541,6 +544,12 @@ export class PluginManager {
     error?: string;
   }> {
     try {
+      // Check if this is a built-in plugin
+      const plugin = this.plugins.get(pluginId);
+      if (plugin?.definition.isBuiltIn) {
+        return { success: false, error: 'Cannot remove built-in system plugins' };
+      }
+
       // Check if plugin exists in custom plugins
       const customPlugins = this.store.get('plugins.custom', {});
       if (!customPlugins[pluginId]) {

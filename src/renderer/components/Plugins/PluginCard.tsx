@@ -20,6 +20,7 @@ interface PluginCardData {
   latestVersion: string | null
   hasUpdate: boolean
   platforms: string[]
+  isBuiltIn?: boolean
 }
 
 interface PluginCardProps {
@@ -84,7 +85,7 @@ export const PluginCard: React.FC<PluginCardProps> = ({
   const isInstalled = plugin.status === 'installed' || plugin.status === 'update-available'
   const canInstall = plugin.status === 'not-installed' && !isProcessing
   const canUpdate = plugin.hasUpdate && !isProcessing
-  const canRemove = isInstalled && !isProcessing
+  const canRemove = isInstalled && !isProcessing && !plugin.isBuiltIn
   const canConfigure = isInstalled && !isProcessing
 
   return (
@@ -93,6 +94,11 @@ export const PluginCard: React.FC<PluginCardProps> = ({
         <div className="plugin-card-title">
           {plugin.icon && <span className="plugin-card-icon">{plugin.icon}</span>}
           <h3>{plugin.name}</h3>
+          {plugin.isBuiltIn && (
+            <span className="plugin-builtin-badge" title="Built-in system plugin">
+              Built-in
+            </span>
+          )}
         </div>
         <div className="plugin-card-status" style={{ color: getStatusColor(plugin.status) }}>
           {getStatusText(plugin.status)}

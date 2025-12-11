@@ -96,7 +96,24 @@
 .plugin-panel-list {
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+/* Plugin Section */
+.plugin-section {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+}
+
+.plugin-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888888;
+  margin: 0 0 4px 0;
+  padding: 0 4px;
 }
 
 /* Loading State */
@@ -227,6 +244,19 @@
   font-size: 14px;
   font-weight: 600;
   color: #cccccc;
+}
+
+.plugin-builtin-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-color: #0e639c;
+  color: #ffffff;
+  border-radius: 3px;
+  margin-left: 6px;
 }
 
 .plugin-card-status {
