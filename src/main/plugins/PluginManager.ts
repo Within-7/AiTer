@@ -197,7 +197,8 @@ export class PluginManager {
             author: entry.author || 'Unknown',
             homepage: entry.homepage,
             platforms: ['darwin', 'linux', 'win32'],
-            tags: entry.tags || ['custom', 'npm']
+            tags: entry.tags || ['custom', 'npm'],
+            isBuiltIn: false  // Mark as custom plugin
           } as any,
           installer
         );
