@@ -296,7 +296,8 @@ export function setupIPC(
             config,
             tags: item.tags,
             icon: item.icon,
-            homepage: plugin?.definition.homepage
+            homepage: plugin?.definition.homepage,
+            isBuiltIn: plugin?.definition.isBuiltIn || false
           }
           console.log('[IPC] Converted plugin:', result)
           return result
