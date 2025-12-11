@@ -6,6 +6,7 @@
 
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import https from 'node:https';
 
 const execFileAsync = promisify(execFile);
 
@@ -103,10 +104,18 @@ export async function fetchNpmPackageMetadata(
       }
     }
 
+    // Try to get description, fallback to npmjs.com page if needed
+    let description = data.description;
+    if (!description || description.trim() === '') {
+      console.log(`[npm-utils] No description from npm registry, trying npmjs.com page...`);
+      const pageDescription = await fetchDescriptionFromNpmjsPage(packageName);
+      description = pageDescription || 'No description available';
+    }
+
     return {
       name: data.name,
       version: data.version,
-      description: data.description || 'No description available',
+      description,
       author: data.author,
       homepage,
       repository: data.repository,
@@ -161,4 +170,54 @@ export function getCommandNameFromMetadata(metadata: NpmPackageMetadata): string
 
   // Fallback
   return getCommandNameFromPackage(metadata.name);
+}
+
+/**
+ * Fetch package description from npmjs.com webpage
+ * This is used as a fallback when npm registry API doesn't provide a good description
+ */
+export async function fetchDescriptionFromNpmjsPage(packageName: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    const url = `https://www.npmjs.com/package/${packageName}`;
+    console.log(`[npm-utils] Fetching description from npmjs.com: ${url}`);
+
+    https.get(url, (res) => {
+      let data = '';
+
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+
+      res.on('end', () => {
+        try {
+          // Look for the description meta tag
+          const metaDescMatch = data.match(/<meta name="description" content="([^"]+)"/);
+          if (metaDescMatch && metaDescMatch[1]) {
+            console.log(`[npm-utils] Found description from meta tag: ${metaDescMatch[1]}`);
+            resolve(metaDescMatch[1]);
+            return;
+          }
+
+          // Look for the description in the page content
+          // npmjs.com typically has a <p> tag with the description
+          const descMatch = data.match(/<p[^>]*class="[^"]*\b(?:package-description|description)\b[^"]*"[^>]*>([^<]+)<\/p>/);
+          if (descMatch && descMatch[1]) {
+            const cleanDesc = descMatch[1].trim();
+            console.log(`[npm-utils] Found description from page content: ${cleanDesc}`);
+            resolve(cleanDesc);
+            return;
+          }
+
+          console.log('[npm-utils] Could not extract description from npmjs.com page');
+          resolve(null);
+        } catch (error) {
+          console.error('[npm-utils] Error parsing npmjs.com page:', error);
+          resolve(null);
+        }
+      });
+    }).on('error', (error) => {
+      console.error(`[npm-utils] Error fetching from npmjs.com:`, error);
+      resolve(null);
+    });
+  });
 }

@@ -106,13 +106,13 @@ export class PluginManager {
         {
           id: 'minto',
           name: 'Minto CLI',
-          description: 'AI-powered CLI tool for chat and code generation in terminal',
+          description: 'A powerful AI assistant for strategic thinking and research planning',
           icon: '🤖',
           version: '1.0.0',
           author: 'Within-7',
           homepage: 'https://github.com/Within-7/minto',
           platforms: ['darwin', 'linux', 'win32'],
-          tags: ['ai', 'cli', 'chat', 'code-generation']
+          tags: ['ai', 'cli', 'strategic-thinking', 'research']
         } as any,
         new MintoInstaller(this.store as any, nodeEnv, npmPath)
       );
