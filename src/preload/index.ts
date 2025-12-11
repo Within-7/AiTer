@@ -326,6 +326,9 @@ export interface API {
   shell: {
     openExternal(url: string): Promise<{ success: boolean; error?: string }>
   }
+  menu: {
+    onShowAbout(callback: () => void): () => void
+  }
   plugins: {
     list(): Promise<{ success: boolean; plugins?: Plugin[]; error?: string }>
     install(pluginId: string): Promise<{ success: boolean; version?: string; error?: string }>

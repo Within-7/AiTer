@@ -161,6 +161,7 @@ export interface Plugin {
   tags?: string[]
   icon?: string
   homepage?: string
+  isBuiltIn?: boolean
 }
 
 export interface PluginInstallProgress {
