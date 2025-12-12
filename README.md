@@ -77,8 +77,22 @@ airter/
 
 ## License
 
-MIT License
+**PROPRIETARY SOFTWARE - ALL RIGHTS RESERVED**
 
 Copyright © 2025-2026 Within-7.com - 任小姐出海战略咨询
+
+This software is proprietary and confidential. Unauthorized copying, distribution, modification, or use of this software, via any medium, is strictly prohibited.
+
+**RESTRICTIONS:**
+- ❌ **NOT Open Source** - Source code is proprietary and confidential
+- ❌ **NO Commercial Use** - Commercial use is strictly prohibited
+- ❌ **NO Redistribution** - May not be copied, distributed, or shared
+- ❌ **NO Modifications** - May not be modified, adapted, or reverse engineered
+- ❌ **NO Derivative Works** - Creating derivative works is prohibited
+- ✅ **Personal Use Only** - Licensed for personal, non-commercial use only
+
+For licensing inquiries or permission requests, please contact: dev@within-7.com
+
+See [LICENSE](LICENSE) file for complete terms and conditions.
 
 Developed by Lib
