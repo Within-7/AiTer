@@ -11,7 +11,7 @@ asarUnpack:
   - node_modules/node-pty/**/*
 extraResources:
   - from: resources/nodejs/${os}-${arch}
-    to: nodejs
+    to: nodejs/${os}-${arch}
     filter:
       - '**/*'
 mac:
