@@ -57,7 +57,7 @@ download_nodejs "darwin" "x64" "tar.gz"
 download_nodejs "darwin" "arm64" "tar.gz"
 
 # Download for Windows (x64)
-download_nodejs "win" "x64" "zip"
+download_nodejs "win32" "x64" "zip"
 
 echo ""
 echo "✓ All Node.js binaries downloaded successfully!"
