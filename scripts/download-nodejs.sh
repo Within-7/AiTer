@@ -48,14 +48,29 @@ download_nodejs() {
     # Create target directory
     mkdir -p "${target_dir}"
 
-    # Download file
+    # Download file with retry and verification
+    echo "Downloading to: ${temp_file}"
     if command -v curl &> /dev/null; then
-        curl -# -L "${url}" -o "${temp_file}"
+        # Use curl with follow redirects and fail on error
+        curl -f -L --retry 3 --retry-delay 2 "${url}" -o "${temp_file}"
     elif command -v wget &> /dev/null; then
-        wget -q --show-progress "${url}" -O "${temp_file}"
+        wget --retry-connrefused --waitretry=2 --read-timeout=20 --timeout=15 -t 3 "${url}" -O "${temp_file}"
     else
         echo "Error: Neither curl nor wget found"
         exit 1
+    fi
+
+    # Verify file was downloaded
+    if [ ! -f "${temp_file}" ]; then
+        echo "Error: Downloaded file not found: ${temp_file}"
+        exit 1
+    fi
+
+    # Check file size
+    local file_size=$(stat -f%z "${temp_file}" 2>/dev/null || stat -c%s "${temp_file}" 2>/dev/null || echo "0")
+    echo "Downloaded file size: ${file_size} bytes"
+    if [ "${file_size}" -lt 10000000 ]; then
+        echo "Warning: File size seems too small (< 10MB)"
     fi
 
     # Extract based on extension
@@ -64,17 +79,41 @@ download_nodejs() {
         tar -xzf "${temp_file}" -C "${target_dir}" --strip-components=1
     elif [ "${ext}" = "zip" ]; then
         echo "Extracting ${filename}..."
+        echo "Archive file: ${temp_file}"
+        echo "Target directory: ${target_dir}"
+
+        # Test zip file integrity first
         if command -v unzip &> /dev/null; then
+            # Test the zip file
+            echo "Testing zip file integrity..."
+            if ! unzip -t "${temp_file}" > /dev/null 2>&1; then
+                echo "Error: ZIP file is corrupted or incomplete"
+                ls -lh "${temp_file}"
+                exit 1
+            fi
+
+            echo "ZIP file is valid, extracting..."
             unzip -q "${temp_file}" -d "${target_dir}"
         else
-            # Fallback for Windows runners without unzip
+            # Fallback for Windows runners without unzip - use PowerShell
+            echo "Using PowerShell to extract..."
+            # Get absolute paths
+            local abs_temp_file=$(cd "$(dirname "${temp_file}")" && pwd)/$(basename "${temp_file}")
+            local abs_target_dir=$(cd "$(dirname "${target_dir}")" && pwd)/$(basename "${target_dir}")
+
             # Convert Unix path to Windows path for PowerShell
-            local win_temp_file=$(cygpath -w "${temp_file}" 2>/dev/null || echo "${temp_file}")
-            local win_target_dir=$(cygpath -w "${target_dir}" 2>/dev/null || echo "${target_dir}")
+            local win_temp_file=$(cygpath -w "${abs_temp_file}" 2>/dev/null || echo "${abs_temp_file}")
+            local win_target_dir=$(cygpath -w "${abs_target_dir}" 2>/dev/null || echo "${abs_target_dir}")
+
+            echo "PowerShell source: ${win_temp_file}"
+            echo "PowerShell target: ${win_target_dir}"
+
             powershell.exe -Command "Expand-Archive -Path '${win_temp_file}' -DestinationPath '${win_target_dir}' -Force"
         fi
+
         # Move files from nested directory
         if [ -d "${target_dir}/node-${NODE_VERSION}-${platform}-${arch}" ]; then
+            echo "Moving files from nested directory..."
             mv "${target_dir}/node-${NODE_VERSION}-${platform}-${arch}"/* "${target_dir}/" 2>/dev/null || true
             rmdir "${target_dir}/node-${NODE_VERSION}-${platform}-${arch}" 2>/dev/null || true
         fi
