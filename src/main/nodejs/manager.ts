@@ -128,24 +128,41 @@ export class NodeManager {
       ? path.join(binPath, 'node_modules')
       : path.join(binPath, '../lib/node_modules');
 
-    // npm 全局安装路径配置
-    // 这确保 npm install -g 会安装到 AiTer 的 Node.js 目录
-    const npmPrefix = rootPath;
-    const npmConfig = path.join(rootPath, '.npmrc');
+    // 创建环境变量副本，移除可能与 nvm/fnm/asdf 冲突的变量
+    const env = { ...process.env };
 
-    return {
-      ...process.env,
+    // 检测用户是否使用版本管理器（nvm/fnm/asdf）
+    const hasNvm = !!process.env.NVM_DIR;
+    const hasFnm = !!process.env.FNM_DIR;
+    const hasAsdf = !!process.env.ASDF_DIR;
+    const hasVersionManager = hasNvm || hasFnm || hasAsdf;
+
+    // 删除版本管理器相关的环境变量，防止冲突
+    delete env.NVM_DIR;
+    delete env.NVM_BIN;
+    delete env.NVM_INC;
+    delete env.NVM_CD_FLAGS;
+    delete env.NVM_RC_VERSION;
+    delete env.FNM_DIR;
+    delete env.FNM_MULTISHELL_PATH;
+    delete env.FNM_VERSION_FILE_STRATEGY;
+    delete env.ASDF_DIR;
+    delete env.ASDF_DATA_DIR;
+
+    const result: NodeJS.ProcessEnv = {
+      ...env,
       PATH: newPath,
       NODE_PATH: nodePath,
-      // 设置 npm 全局安装前缀，使 npm install -g 安装到 AiTer 的 Node.js
-      npm_config_prefix: npmPrefix,
-      // 可选：设置 npm 缓存目录到 AiTer 数据目录
       npm_config_cache: path.join(this.nodejsDir, '.npm-cache'),
-      // 禁用 nvm，防止它覆盖我们的 Node.js 配置
-      NVM_DIR: undefined,
-      // 告诉 shell 不要初始化版本管理器
-      SKIP_NVM_INIT: '1',
     };
+
+    // 只有在用户没有使用版本管理器时，才设置 npm_config_prefix
+    // 这避免了与 nvm 的冲突警告
+    if (!hasVersionManager) {
+      result.npm_config_prefix = rootPath;
+    }
+
+    return result;
   }
 
   /**
