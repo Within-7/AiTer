@@ -62,6 +62,8 @@ declare global {
             message: string
           }) => void
         ): () => void
+        onInitialized(callback: () => void): () => void
+        onStatusChanged(callback: () => void): () => void
       }
     }
   }

@@ -153,6 +153,11 @@ contextBridge.exposeInMainWorld('api', {
       const listener = () => callback()
       ipcRenderer.on('plugins:initialized', listener)
       return () => ipcRenderer.removeListener('plugins:initialized', listener)
+    },
+    onStatusChanged: (callback: () => void) => {
+      const listener = () => callback()
+      ipcRenderer.on('plugins:status-changed', listener)
+      return () => ipcRenderer.removeListener('plugins:status-changed', listener)
     }
   },
 

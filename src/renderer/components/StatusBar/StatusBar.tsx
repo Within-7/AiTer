@@ -61,6 +61,11 @@ export function StatusBar({ activeTerminal }: StatusBarProps) {
       }
     })
 
+    // Listen for plugin status changes (after install/uninstall/update)
+    const cleanupStatusChanged = window.api.plugins.onStatusChanged(() => {
+      checkPluginStatus()
+    })
+
     // Auto-refresh every hour (3600000ms)
     const intervalId = setInterval(checkPluginStatus, 3600000)
 
@@ -68,6 +73,7 @@ export function StatusBar({ activeTerminal }: StatusBarProps) {
       clearInterval(intervalId)
       cleanupInstall()
       cleanupUpdate()
+      cleanupStatusChanged()
     }
   }, [])
 

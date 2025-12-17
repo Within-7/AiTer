@@ -319,6 +319,12 @@ export function setupIPC(
       const result = await pluginManager.installPlugin(pluginId, (progress) => {
         window.webContents.send('plugins:install-progress', progress)
       })
+
+      // After successful installation, send event to refresh status bar
+      if (result.success) {
+        window.webContents.send('plugins:status-changed')
+      }
+
       return result
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
@@ -332,6 +338,12 @@ export function setupIPC(
       const result = await pluginManager.updatePlugin(pluginId, (progress) => {
         window.webContents.send('plugins:update-progress', progress)
       })
+
+      // After successful update, send event to refresh status bar
+      if (result.success) {
+        window.webContents.send('plugins:status-changed')
+      }
+
       return result
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
@@ -343,6 +355,12 @@ export function setupIPC(
     try {
       const pluginManager = PluginManager.getInstance()
       const success = await pluginManager.removePlugin(pluginId)
+
+      // After successful removal, send event to refresh status bar
+      if (success) {
+        window.webContents.send('plugins:status-changed')
+      }
+
       return { success }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
