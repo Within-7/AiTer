@@ -154,16 +154,14 @@ export class NodeManager {
       PATH: newPath,
       NODE_PATH: nodePath,
       npm_config_cache: path.join(this.nodejsDir, '.npm-cache'),
+      // CRITICAL: Always set npm prefix to use bundled Node.js directory
+      // This prevents npm from using system-wide configuration (e.g., nvm paths)
+      // which can cause installation hangs due to permission issues
+      npm_config_prefix: rootPath,
       // 标记这是 AiTer 的终端环境，用于 shell 初始化脚本检测
       AITER_TERMINAL: '1',
       AITER_NODE_PATH: binPath,
     };
-
-    // 只有在用户没有使用版本管理器时，才设置 npm_config_prefix
-    // 这避免了与 nvm 的冲突警告
-    if (!hasVersionManager) {
-      result.npm_config_prefix = rootPath;
-    }
 
     return result;
   }
