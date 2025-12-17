@@ -184,11 +184,33 @@ export class NodeManager {
       } else {
         // 生产模式：尝试多个可能的位置
         const possiblePaths = [
+          // electron-builder extraResources 默认位置
           path.join(process.resourcesPath, 'nodejs', this.getPlatformId()),
+          // 备用位置
+          path.join(app.getAppPath(), '..', 'Resources', 'nodejs', this.getPlatformId()),
           path.join(app.getAppPath(), 'resources', 'nodejs', this.getPlatformId()),
         ];
 
-        resourcesPath = possiblePaths.find(p => fs.existsSync(p)) || possiblePaths[0];
+        console.log(`[NodeManager] Searching for Node.js binaries in production mode...`);
+        console.log(`[NodeManager] process.resourcesPath: ${process.resourcesPath}`);
+        console.log(`[NodeManager] app.getAppPath(): ${app.getAppPath()}`);
+        console.log(`[NodeManager] Platform ID: ${this.getPlatformId()}`);
+
+        for (const p of possiblePaths) {
+          console.log(`[NodeManager] Checking path: ${p}`);
+          if (fs.existsSync(p)) {
+            console.log(`[NodeManager] ✓ Found at: ${p}`);
+            resourcesPath = p;
+            break;
+          } else {
+            console.log(`[NodeManager] ✗ Not found at: ${p}`);
+          }
+        }
+
+        if (!resourcesPath) {
+          resourcesPath = possiblePaths[0];
+          console.warn(`[NodeManager] No valid path found, using default: ${resourcesPath}`);
+        }
       }
 
       console.log(`[NodeManager] Installing from resources: ${resourcesPath}`);
