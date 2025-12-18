@@ -111,6 +111,11 @@ contextBridge.exposeInMainWorld('api', {
       const listener = () => callback()
       ipcRenderer.on('menu:show-about', listener)
       return () => ipcRenderer.removeListener('menu:show-about', listener)
+    },
+    onShowSettings: (callback: () => void) => {
+      const listener = () => callback()
+      ipcRenderer.on('menu:show-settings', listener)
+      return () => ipcRenderer.removeListener('menu:show-settings', listener)
     }
   },
 
@@ -339,6 +344,7 @@ export interface API {
   }
   menu: {
     onShowAbout(callback: () => void): () => void
+    onShowSettings(callback: () => void): () => void
   }
   plugins: {
     list(): Promise<{ success: boolean; plugins?: Plugin[]; error?: string }>

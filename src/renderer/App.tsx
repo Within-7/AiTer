@@ -5,6 +5,7 @@ import { WorkArea } from './components/WorkArea'
 import { StatusBar } from './components/StatusBar'
 import { PluginPanel } from './components/Plugins/PluginPanel'
 import { AboutPanel } from './components/About/AboutPanel'
+import { SettingsPanel } from './components/Settings/SettingsPanel'
 import { UpdateNotification } from './components/UpdateNotification'
 import './styles/App.css'
 
@@ -62,6 +63,10 @@ function App() {
 
       window.api.menu.onShowAbout(() => {
         dispatch({ type: 'TOGGLE_ABOUT_PANEL' })
+      }),
+
+      window.api.menu.onShowSettings(() => {
+        dispatch({ type: 'TOGGLE_SETTINGS_PANEL' })
       }),
 
       window.api.plugins.onAutoUpdateAvailable(async (data) => {
@@ -129,6 +134,7 @@ function App() {
         <StatusBar activeTerminal={activeTerminal} />
         <PluginPanel />
         <AboutPanel />
+        <SettingsPanel />
         <UpdateNotification />
       </div>
     </AppContext.Provider>

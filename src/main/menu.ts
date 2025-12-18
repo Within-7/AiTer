@@ -22,6 +22,17 @@ export function setupMenu() {
               },
               { type: 'separator' as const },
               {
+                label: '设置...',
+                accelerator: 'CmdOrCtrl+,',
+                click: () => {
+                  const focusedWindow = BrowserWindow.getFocusedWindow()
+                  if (focusedWindow) {
+                    focusedWindow.webContents.send('menu:show-settings')
+                  }
+                }
+              },
+              { type: 'separator' as const },
+              {
                 label: '服务',
                 role: 'services' as const
               },
