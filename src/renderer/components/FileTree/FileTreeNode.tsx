@@ -1,5 +1,5 @@
 import React from 'react'
-import { FileNode } from '../../../types'
+import { FileNode, FileChange } from '../../../types'
 
 interface FileTreeNodeProps {
   node: FileNode
@@ -7,6 +7,7 @@ interface FileTreeNodeProps {
   onToggle: (node: FileNode) => void
   onClick: (node: FileNode) => void
   activeFilePath?: string
+  gitChanges?: Map<string, FileChange['status']>
 }
 
 const getFileIcon = (node: FileNode): string => {
@@ -156,7 +157,8 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   level,
   onToggle,
   onClick,
-  activeFilePath
+  activeFilePath,
+  gitChanges
 }) => {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -167,9 +169,11 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({
     }
   }
 
+  // Get git status from gitChanges map or fall back to node.gitStatus
+  const effectiveGitStatus = gitChanges?.get(node.path) || node.gitStatus
   const icon = getFileIcon(node)
-  const gitStatus = getGitStatusIcon(node.gitStatus)
-  const gitStatusClass = getGitStatusClass(node.gitStatus)
+  const gitStatus = getGitStatusIcon(effectiveGitStatus)
+  const gitStatusClass = getGitStatusClass(effectiveGitStatus)
   const isActive = node.type === 'file' && activeFilePath === node.path
 
   return (
@@ -199,6 +203,7 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({
               onToggle={onToggle}
               onClick={onClick}
               activeFilePath={activeFilePath}
+              gitChanges={gitChanges}
             />
           ))}
         </div>

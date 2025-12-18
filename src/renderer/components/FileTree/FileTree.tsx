@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { FileNode } from '../../../types'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { FileNode, FileChange } from '../../../types'
 import { FileTreeNode } from './FileTreeNode'
 import './FileTree.css'
 
@@ -19,10 +19,40 @@ export const FileTree: React.FC<FileTreeProps> = ({
   const [nodes, setNodes] = useState<FileNode[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [gitChanges, setGitChanges] = useState<Map<string, FileChange['status']>>(new Map())
+  const gitPollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Load git file changes
+  const loadGitChanges = useCallback(async () => {
+    try {
+      const result = await window.api.git.getFileChanges(projectPath)
+      if (result.success && result.changes) {
+        const changesMap = new Map<string, FileChange['status']>()
+        result.changes.forEach(change => {
+          // Store full path for matching
+          const fullPath = `${projectPath}/${change.path}`
+          changesMap.set(fullPath, change.status)
+        })
+        setGitChanges(changesMap)
+      }
+    } catch (err) {
+      // Silently ignore git errors (project might not be a git repo)
+    }
+  }, [projectPath])
 
   useEffect(() => {
     loadDirectory(projectPath)
-  }, [projectPath])
+    loadGitChanges()
+
+    // Poll git status every 3 seconds
+    gitPollIntervalRef.current = setInterval(loadGitChanges, 3000)
+
+    return () => {
+      if (gitPollIntervalRef.current) {
+        clearInterval(gitPollIntervalRef.current)
+      }
+    }
+  }, [projectPath, loadGitChanges])
 
   const loadDirectory = async (path: string) => {
     setLoading(true)
@@ -117,6 +147,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
             onToggle={handleToggle}
             onClick={onFileClick}
             activeFilePath={activeFilePath}
+            gitChanges={gitChanges}
           />
         ))}
       </div>
