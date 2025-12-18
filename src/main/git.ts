@@ -506,10 +506,12 @@ Thumbs.db
 
   /**
    * Get diff for a file (uncommitted changes)
+   * Uses git diff HEAD to show both staged and unstaged changes
    */
   async getFileDiff(projectPath: string, filePath: string): Promise<string> {
     try {
-      const { stdout } = await execAsync(`git diff "${filePath}"`, { cwd: projectPath })
+      // Use HEAD to show all uncommitted changes (both staged and unstaged)
+      const { stdout } = await execAsync(`git diff HEAD -- "${filePath}"`, { cwd: projectPath })
       return stdout
     } catch (error) {
       console.error('Failed to get file diff:', error)
