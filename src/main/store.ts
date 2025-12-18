@@ -12,7 +12,8 @@ const defaultSettings: AppSettings = {
   fontFamily: 'Menlo, Monaco, "Courier New", monospace',
   scrollbackLines: 1000,
   cursorBlink: true,
-  cursorStyle: 'block'
+  cursorStyle: 'block',
+  terminalTheme: 'homebrew'
 }
 
 export class StoreManager {

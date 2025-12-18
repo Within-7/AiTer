@@ -1,8 +1,9 @@
 import { useContext, useState, useEffect } from 'react'
-import { VscFiles, VscSourceControl } from 'react-icons/vsc'
+import { VscFiles, VscSourceControl, VscSettingsGear } from 'react-icons/vsc'
 import { AppContext } from '../context/AppContext'
 import { ExplorerView } from './ExplorerView'
 import { GitView } from './GitView'
+import { SettingsView } from './SettingsView'
 import '../styles/Sidebar.css'
 
 export function Sidebar() {
@@ -57,11 +58,20 @@ export function Sidebar() {
         >
           <VscSourceControl />
         </button>
+        <button
+          className={`view-button ${state.sidebarView === 'settings' ? 'active' : ''}`}
+          onClick={() => dispatch({ type: 'SET_SIDEBAR_VIEW', payload: 'settings' })}
+          title="Settings"
+        >
+          <VscSettingsGear />
+        </button>
       </div>
 
       {/* View Content */}
       <div className="sidebar-content">
-        {state.sidebarView === 'explorer' ? <ExplorerView /> : <GitView />}
+        {state.sidebarView === 'explorer' && <ExplorerView />}
+        {state.sidebarView === 'git' && <GitView />}
+        {state.sidebarView === 'settings' && <SettingsView />}
       </div>
     </div>
   )

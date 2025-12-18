@@ -86,6 +86,8 @@ export interface Terminal {
   pid?: number
 }
 
+export type TerminalThemeName = 'homebrew' | 'vscode-dark' | 'dracula' | 'solarized-dark'
+
 export interface AppSettings {
   theme: 'dark' | 'light'
   fontSize: number
@@ -94,6 +96,7 @@ export interface AppSettings {
   scrollbackLines: number
   cursorBlink: boolean
   cursorStyle: 'block' | 'underline' | 'bar'
+  terminalTheme: TerminalThemeName
 }
 
 export interface AppState {

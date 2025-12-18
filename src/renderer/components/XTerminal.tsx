@@ -6,6 +6,7 @@ import { WebglAddon } from '@xterm/addon-webgl'
 import { CanvasAddon } from '@xterm/addon-canvas'
 import { Unicode11Addon } from '@xterm/addon-unicode11'
 import { Terminal as TerminalType, AppSettings } from '../../types'
+import { getTerminalTheme } from '../themes/terminalThemes'
 import '@xterm/xterm/css/xterm.css'
 import '../styles/XTerminal.css'
 
@@ -75,29 +76,7 @@ export const XTerminal = memo(function XTerminal({ terminal, settings, isActive 
       rescaleOverlappingGlyphs: true, // Better handling of special characters
       drawBoldTextInBrightColors: false, // Reduce color changes that cause repaints
       overviewRulerWidth: 0, // Disable overview ruler for performance
-      theme: {
-        background: '#1e1e1e',
-        foreground: '#cccccc',
-        cursor: '#ffffff',
-        cursorAccent: '#000000',
-        selectionBackground: 'rgba(255, 255, 255, 0.3)',
-        black: '#000000',
-        red: '#cd3131',
-        green: '#0dbc79',
-        yellow: '#e5e510',
-        blue: '#2472c8',
-        magenta: '#bc3fbc',
-        cyan: '#11a8cd',
-        white: '#e5e5e5',
-        brightBlack: '#666666',
-        brightRed: '#f14c4c',
-        brightGreen: '#23d18b',
-        brightYellow: '#f5f543',
-        brightBlue: '#3b8eea',
-        brightMagenta: '#d670d6',
-        brightCyan: '#29b8db',
-        brightWhite: '#ffffff'
-      }
+      theme: getTerminalTheme(settings.terminalTheme)
     })
 
     // Add addons
@@ -323,6 +302,13 @@ export const XTerminal = memo(function XTerminal({ terminal, settings, isActive 
     settings.fontSize,
     settings.fontFamily
   ])
+
+  // Update terminal theme when it changes
+  useEffect(() => {
+    if (xtermRef.current) {
+      xtermRef.current.options.theme = getTerminalTheme(settings.terminalTheme)
+    }
+  }, [settings.terminalTheme])
 
   return <div ref={terminalRef} className="xterm-wrapper" />
 })

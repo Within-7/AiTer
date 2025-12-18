@@ -1,7 +1,7 @@
 import { createContext } from 'react'
 import { Project, Terminal, AppSettings, EditorTab } from '../../types'
 
-export type SidebarView = 'explorer' | 'git'
+export type SidebarView = 'explorer' | 'git' | 'settings'
 
 export interface AppState {
   projects: Project[]
@@ -59,7 +59,8 @@ export const initialState: AppState = {
     fontFamily: 'Menlo, Monaco, "Courier New", monospace',
     scrollbackLines: 1000,
     cursorBlink: true,
-    cursorStyle: 'block'
+    cursorStyle: 'block',
+    terminalTheme: 'homebrew'
   },
   terminalDataBuffer: new Map(),
   showPluginPanel: false,
