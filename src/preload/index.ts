@@ -354,6 +354,7 @@ export interface API {
     onUpdateProgress(callback: (progress: PluginUpdateProgress) => void): () => void
     onAutoUpdateAvailable(callback: (data: { pluginId: string; pluginName: string }) => void): () => void
     onInitialized(callback: () => void): () => void
+    onStatusChanged(callback: () => void): () => void
   }
   update: {
     check(): Promise<{

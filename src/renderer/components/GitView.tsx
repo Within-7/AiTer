@@ -1,32 +1,91 @@
-import { useContext, useState, useEffect } from 'react'
+import { useContext, useState, useEffect, useRef } from 'react'
 import { VscSourceControl } from 'react-icons/vsc'
 import { AppContext } from '../context/AppContext'
 import { GitHistoryPanel } from './GitHistoryPanel'
 import { GitStatus } from '../../types'
 import '../styles/GitView.css'
 
+// Helper to compare git statuses for equality
+const isGitStatusEqual = (a: GitStatus | undefined, b: GitStatus | undefined): boolean => {
+  if (a === b) return true
+  if (!a || !b) return false
+  return (
+    a.isRepo === b.isRepo &&
+    a.currentBranch === b.currentBranch &&
+    a.hasChanges === b.hasChanges &&
+    a.ahead === b.ahead &&
+    a.behind === b.behind
+  )
+}
+
 export function GitView() {
   const { state } = useContext(AppContext)
   const [gitStatuses, setGitStatuses] = useState<Map<string, GitStatus>>(new Map())
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
 
+  // Refs to prevent concurrent loads and state updates after unmount
+  const loadingRef = useRef(false)
+  const mountedRef = useRef(true)
+  const gitStatusesRef = useRef(gitStatuses)
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    gitStatusesRef.current = gitStatuses
+  }, [gitStatuses])
+
   // Load Git status for all projects
   useEffect(() => {
+    mountedRef.current = true
+
+    // Load function defined inside useEffect to capture current projects
     const loadGitStatuses = async () => {
-      const statusMap = new Map<string, GitStatus>()
+      // Prevent concurrent loads
+      if (loadingRef.current) return
+      loadingRef.current = true
 
-      for (const project of state.projects) {
-        try {
-          const result = await window.api.git.getStatus(project.path)
-          if (result.success && result.status) {
-            statusMap.set(project.id, result.status)
+      try {
+        const statusMap = new Map<string, GitStatus>()
+        const currentStatuses = gitStatusesRef.current
+
+        for (const project of state.projects) {
+          // Check if still mounted before each async operation
+          if (!mountedRef.current) return
+
+          try {
+            const result = await window.api.git.getStatus(project.path)
+            if (result.success && result.status) {
+              statusMap.set(project.id, result.status)
+            }
+          } catch (error) {
+            console.error(`Failed to get git status for ${project.name}:`, error)
+            // Keep existing status on error to prevent flicker
+            const existingStatus = currentStatuses.get(project.id)
+            if (existingStatus) {
+              statusMap.set(project.id, existingStatus)
+            }
           }
-        } catch (error) {
-          console.error(`Failed to get git status for ${project.name}:`, error)
         }
-      }
 
-      setGitStatuses(statusMap)
+        // Only update state if mounted and if there are actual changes
+        if (mountedRef.current) {
+          setGitStatuses(prev => {
+            // Check if anything actually changed
+            let hasChanges = prev.size !== statusMap.size
+            if (!hasChanges) {
+              for (const [id, newStatus] of statusMap) {
+                if (!isGitStatusEqual(prev.get(id), newStatus)) {
+                  hasChanges = true
+                  break
+                }
+              }
+            }
+            // Only return new Map if there are actual changes
+            return hasChanges ? statusMap : prev
+          })
+        }
+      } finally {
+        loadingRef.current = false
+      }
     }
 
     if (state.projects.length > 0) {
@@ -34,9 +93,16 @@ export function GitView() {
 
       // Refresh git statuses every 10 seconds
       const interval = setInterval(loadGitStatuses, 10000)
-      return () => clearInterval(interval)
+      return () => {
+        mountedRef.current = false
+        clearInterval(interval)
+      }
     }
-  }, [state.projects])
+
+    return () => {
+      mountedRef.current = false
+    }
+  }, [state.projects]) // Depend on projects array
 
   const gitProjects = state.projects.filter(project => {
     const status = gitStatuses.get(project.id)
