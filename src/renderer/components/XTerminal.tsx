@@ -235,20 +235,25 @@ export const XTerminal = memo(function XTerminal({ terminal, settings, isActive 
     }
   }, [isActive])
 
-  // Handle terminal data updates with batching and RAF throttling
-  // This prevents flickering when high-frequency data arrives
+  // Handle terminal data updates with batching and double-buffered throttling
+  // Uses a 32ms window (~2 frames) to batch high-frequency data from REPL apps
   useEffect(() => {
     let dataBuffer = ''
+    let timeoutId: NodeJS.Timeout | null = null
     let rafId: number | null = null
     // Use ref to track current active state without re-registering listener
     const isActiveRef = { current: isActive }
     isActiveRef.current = isActive
 
+    // Batch window in ms - 32ms allows ~2 frames worth of data to accumulate
+    const BATCH_WINDOW_MS = 32
+
     const flushBuffer = () => {
       rafId = null
+      timeoutId = null
       if (dataBuffer && xtermRef.current) {
         if (isActiveRef.current) {
-          // Active terminal: render immediately
+          // Active terminal: render the batched data
           xtermRef.current.write(dataBuffer)
         } else {
           // Inactive terminal: accumulate in inactive buffer for later
@@ -258,20 +263,29 @@ export const XTerminal = memo(function XTerminal({ terminal, settings, isActive 
       }
     }
 
+    const scheduleFlush = () => {
+      // Use RAF to sync with browser's render cycle
+      rafId = requestAnimationFrame(flushBuffer)
+    }
+
     const cleanup = window.api.terminal.onData((id, data) => {
       if (id === terminal.id) {
         // Accumulate data in buffer
         dataBuffer += data
 
-        // Schedule a single render on next animation frame
-        if (rafId === null) {
-          rafId = requestAnimationFrame(flushBuffer)
+        // Schedule flush after batch window expires
+        // This allows multiple data events to be batched together
+        if (timeoutId === null && rafId === null) {
+          timeoutId = setTimeout(scheduleFlush, BATCH_WINDOW_MS)
         }
       }
     })
 
     return () => {
       cleanup()
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId)
+      }
       if (rafId !== null) {
         cancelAnimationFrame(rafId)
       }

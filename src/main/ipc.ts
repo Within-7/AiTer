@@ -17,6 +17,49 @@ export function setupIPC(
   storeManager: StoreManager,
   serverManager: ProjectServerManager
 ) {
+  // Throttle terminal name updates to reduce UI flickering
+  // For REPL apps like Claude Code CLI that send frequent commands
+  const terminalNameThrottle = new Map<string, { lastSent: number; pendingName: string | null; timeout: NodeJS.Timeout | null }>()
+  const NAME_UPDATE_THROTTLE_MS = 500 // Only update name every 500ms max
+
+  const sendThrottledNameUpdate = (id: string, name: string) => {
+    const now = Date.now()
+    let state = terminalNameThrottle.get(id)
+
+    if (!state) {
+      state = { lastSent: 0, pendingName: null, timeout: null }
+      terminalNameThrottle.set(id, state)
+    }
+
+    const timeSinceLastSent = now - state.lastSent
+
+    if (timeSinceLastSent >= NAME_UPDATE_THROTTLE_MS) {
+      // Enough time has passed, send immediately
+      window.webContents.send('terminal:name-updated', { id, name })
+      state.lastSent = now
+      state.pendingName = null
+      if (state.timeout) {
+        clearTimeout(state.timeout)
+        state.timeout = null
+      }
+    } else {
+      // Too soon, schedule for later
+      state.pendingName = name
+      if (!state.timeout) {
+        const delay = NAME_UPDATE_THROTTLE_MS - timeSinceLastSent
+        state.timeout = setTimeout(() => {
+          const currentState = terminalNameThrottle.get(id)
+          if (currentState && currentState.pendingName) {
+            window.webContents.send('terminal:name-updated', { id, name: currentState.pendingName })
+            currentState.lastSent = Date.now()
+            currentState.pendingName = null
+            currentState.timeout = null
+          }
+        }, delay)
+      }
+    }
+  }
+
   // Project management
   ipcMain.handle('project:add', async (_, { path, name }) => {
     try {
@@ -107,10 +150,11 @@ export function setupIPC(
     try {
       const success = ptyManager.write(id, data)
       // Check if terminal name changed (after command execution)
+      // Use throttled update to reduce UI flickering for REPL apps
       if (success && data === '\r') {
         const terminalName = ptyManager.getTerminalName(id)
         if (terminalName) {
-          window.webContents.send('terminal:name-updated', { id, name: terminalName })
+          sendThrottledNameUpdate(id, terminalName)
         }
       }
       return { success }
