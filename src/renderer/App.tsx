@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react'
+import { useEffect, useReducer, useRef } from 'react'
 import { AppContext, appReducer, initialState } from './context/AppContext'
 import { Sidebar } from './components/Sidebar'
 import { WorkArea } from './components/WorkArea'
@@ -10,6 +10,11 @@ import './styles/App.css'
 
 function App() {
   const [state, dispatch] = useReducer(appReducer, initialState)
+
+  // Use refs to access current state values in callbacks without adding them as dependencies
+  // This prevents event listeners from being re-registered on every state change
+  const stateRef = useRef(state)
+  stateRef.current = state
 
   useEffect(() => {
     // Load initial data
@@ -35,9 +40,8 @@ function App() {
         dispatch({ type: 'SET_PROJECTS', payload: projects })
       }),
 
-      window.api.terminal.onData((id, data) => {
-        dispatch({ type: 'TERMINAL_DATA', payload: { id, data } })
-      }),
+      // Note: Terminal data is handled directly by XTerminal component via its own listener
+      // to avoid unnecessary global state updates that cause re-renders and flickering
 
       window.api.terminal.onExit((id, exitCode) => {
         dispatch({ type: 'TERMINAL_EXIT', payload: { id, exitCode } })
@@ -70,8 +74,9 @@ function App() {
           return
         }
 
-        // Get current active project for terminal context
-        const activeProject = state.projects.find(p => p.id === state.activeProjectId)
+        // Get current active project for terminal context using ref to avoid dependency
+        const currentState = stateRef.current
+        const activeProject = currentState.projects.find(p => p.id === currentState.activeProjectId)
         if (!activeProject) {
           console.warn('[App] No active project for auto-update. Skipping.')
           return
@@ -82,7 +87,7 @@ function App() {
           activeProject.path,
           activeProject.id,
           activeProject.name,
-          state.settings?.shell || '/bin/bash'
+          currentState.settings?.shell || '/bin/bash'
         )
 
         if (terminalResult.success && terminalResult.terminal) {
@@ -108,7 +113,8 @@ function App() {
     return () => {
       cleanups.forEach((cleanup) => cleanup())
     }
-  }, [state.projects, state.activeProjectId, state.settings])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Empty deps: listeners registered once, use stateRef for current values
 
   // Get active terminal for StatusBar
   const activeTerminal = state.terminals.find(t => t.id === state.activeTerminalId)

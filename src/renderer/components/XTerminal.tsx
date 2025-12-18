@@ -1,10 +1,9 @@
-import { useEffect, useRef, useContext, useState } from 'react'
+import { useEffect, useRef, useState, memo } from 'react'
 import { Terminal as XTerm } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import { CanvasAddon } from '@xterm/addon-canvas'
 import { Terminal as TerminalType, AppSettings } from '../../types'
-import { AppContext } from '../context/AppContext'
 import '@xterm/xterm/css/xterm.css'
 import '../styles/XTerminal.css'
 
@@ -13,11 +12,11 @@ interface XTerminalProps {
   settings: AppSettings
 }
 
-export function XTerminal({ terminal, settings }: XTerminalProps) {
+// Memoize the component to prevent unnecessary re-renders from parent state changes
+export const XTerminal = memo(function XTerminal({ terminal, settings }: XTerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null)
   const xtermRef = useRef<XTerm | null>(null)
   const fitAddonRef = useRef<FitAddon | null>(null)
-  const { state } = useContext(AppContext)
   const [isVisible, setIsVisible] = useState(false)
 
   // Check visibility periodically until container is visible
@@ -143,13 +142,6 @@ export function XTerminal({ terminal, settings }: XTerminalProps) {
       window.api.terminal.write(terminal.id, data)
     })
 
-    // Handle terminal data from backend
-    const bufferedData = state.terminalDataBuffer.get(terminal.id)
-    if (bufferedData) {
-      xterm.write(bufferedData)
-      state.terminalDataBuffer.delete(terminal.id)
-    }
-
     // Handle resize with debouncing and size change detection to prevent flickering
     let resizeTimeout: NodeJS.Timeout | null = null
     let lastWidth = 0
@@ -243,4 +235,4 @@ export function XTerminal({ terminal, settings }: XTerminalProps) {
   ])
 
   return <div ref={terminalRef} className="xterm-wrapper" />
-}
+})
