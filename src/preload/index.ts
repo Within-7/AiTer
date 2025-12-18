@@ -101,7 +101,8 @@ contextBridge.exposeInMainWorld('api', {
 
   // Shell APIs
   shell: {
-    openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', { url })
+    openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', { url }),
+    openPath: (path: string) => ipcRenderer.invoke('shell:openPath', { path })
   },
 
   // Menu APIs
@@ -334,6 +335,7 @@ export interface API {
   }
   shell: {
     openExternal(url: string): Promise<{ success: boolean; error?: string }>
+    openPath(path: string): Promise<{ success: boolean; error?: string }>
   }
   menu: {
     onShowAbout(callback: () => void): () => void

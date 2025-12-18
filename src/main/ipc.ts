@@ -529,6 +529,21 @@ export function setupIPC(
     }
   })
 
+  ipcMain.handle('shell:openPath', async (_, { path }) => {
+    try {
+      const result = await shell.openPath(path)
+      // openPath returns empty string on success, or error message on failure
+      if (result === '') {
+        return { success: true }
+      } else {
+        return { success: false, error: result }
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
   // Node.js management
   const nodeManager = new NodeManager()
   const nodeDetector = new NodeDetector()

@@ -1,0 +1,196 @@
+.office-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: #1e1e1e;
+  overflow: auto;
+}
+
+.office-viewer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 40px 20px;
+  gap: 32px;
+}
+
+.office-icon {
+  width: 120px;
+  height: 120px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  animation: fadeInScale 0.4s ease-out;
+}
+
+.office-info {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.office-filename {
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+  word-break: break-word;
+  max-width: 600px;
+}
+
+.office-filetype {
+  font-size: 16px;
+  color: #cccccc;
+  margin: 0;
+}
+
+.office-extension {
+  font-size: 14px;
+  color: #858585;
+  margin: 0;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+.office-filesize {
+  font-size: 14px;
+  color: #858585;
+  margin: 0;
+}
+
+.office-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.office-open-button {
+  padding: 12px 24px;
+  background: #0e639c;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 240px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.office-open-button:hover:not(:disabled) {
+  background: #1177bb;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+.office-open-button:active:not(:disabled) {
+  background: #0d5a8f;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transform: translateY(0);
+}
+
+.office-open-button:disabled {
+  background: #4a4a4a;
+  color: #858585;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.office-hint {
+  font-size: 12px;
+  color: #858585;
+  margin: 0;
+  max-width: 400px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.office-features {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  max-width: 400px;
+  width: 100%;
+  animation: fadeInUp 0.7s ease-out;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #cccccc;
+  font-size: 14px;
+}
+
+.feature-icon {
+  width: 20px;
+  height: 20px;
+  color: #4ec9b0;
+  flex-shrink: 0;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .office-viewer-content {
+    padding: 20px 16px;
+    gap: 24px;
+  }
+
+  .office-icon {
+    width: 80px;
+    height: 80px;
+  }
+
+  .office-filename {
+    font-size: 20px;
+  }
+
+  .office-filetype {
+    font-size: 14px;
+  }
+
+  .office-features {
+    max-width: 100%;
+  }
+}
