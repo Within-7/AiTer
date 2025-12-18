@@ -27,11 +27,17 @@ export interface EditorTab {
   id: string
   filePath: string
   fileName: string
-  fileType: 'html' | 'markdown' | 'json' | 'javascript' | 'typescript' | 'css' | 'text' | 'other'
+  fileType: 'html' | 'markdown' | 'json' | 'javascript' | 'typescript' | 'css' | 'text' | 'other' | 'diff'
   content: string
   isDirty: boolean
   cursorPosition?: { line: number; column: number }
   serverUrl?: string // HTTP server URL for HTML preview
+  // Diff view properties
+  isDiff?: boolean
+  diffContent?: string
+  commitHash?: string
+  commitMessage?: string
+  projectPath?: string
 }
 
 export interface GitCommit {

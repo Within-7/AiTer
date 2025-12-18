@@ -701,6 +701,18 @@
   background-color: #2d2d30;
 }
 
+.commit-file-item.clickable {
+  cursor: pointer;
+}
+
+.commit-file-item.clickable:hover {
+  background-color: #37373d;
+}
+
+.commit-file-item.clickable:active {
+  background-color: #3e3e42;
+}
+
 .commit-file-item .status-icon {
   font-size: 12px;
   flex-shrink: 0;

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import { VscGitCommit, VscRefresh, VscCheck, VscFile, VscDiffAdded, VscDiffModified, VscDiffRemoved, VscCloudUpload, VscCloudDownload, VscSync, VscAdd, VscRemove, VscDiff, VscChevronDown, VscChevronRight } from 'react-icons/vsc'
-import { GitCommit, GitStatus } from '../../types'
+import { GitCommit, GitStatus, EditorTab } from '../../types'
+import { AppContext } from '../context/AppContext'
 import '../styles/GitHistoryPanel.css'
 
 interface GitHistoryPanelProps {
@@ -27,6 +28,7 @@ interface Branch {
 }
 
 export function GitHistoryPanel({ projectId, projectPath, projectName, gitStatus, onClose }: GitHistoryPanelProps) {
+  const { dispatch } = useContext(AppContext)
   const [commits, setCommits] = useState<GitCommit[]>([])
   const [fileChanges, setFileChanges] = useState<FileChange[]>([])
   const [branches, setBranches] = useState<Branch[]>([])
@@ -307,6 +309,41 @@ export function GitHistoryPanel({ projectId, projectPath, projectName, gitStatus
     }
   }
 
+  // Open diff tab for a file in a commit
+  const handleOpenCommitFileDiff = async (commit: GitCommit, file: CommitFile) => {
+    try {
+      const result = await window.api.git.getCommitFileDiff(projectPath, commit.hash, file.path)
+      if (result.success && result.diff !== undefined) {
+        // Extract file name from path
+        const fileName = file.path.split('/').pop() || file.path
+
+        // Create a unique ID for this diff tab
+        const tabId = `diff-${commit.shortHash}-${file.path.replace(/[^a-zA-Z0-9]/g, '-')}`
+
+        // Create editor tab for diff view
+        const diffTab: EditorTab = {
+          id: tabId,
+          filePath: file.path,
+          fileName: `${fileName} (${commit.shortHash})`,
+          fileType: 'diff',
+          content: '',
+          isDirty: false,
+          isDiff: true,
+          diffContent: result.diff,
+          commitHash: commit.hash,
+          commitMessage: commit.message,
+          projectPath: projectPath
+        }
+
+        dispatch({ type: 'ADD_EDITOR_TAB', payload: diffTab })
+      } else {
+        console.error('Failed to get commit file diff:', result.error)
+      }
+    } catch (error) {
+      console.error('Failed to open commit file diff:', error)
+    }
+  }
+
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp)
     const now = new Date()
@@ -580,9 +617,14 @@ export function GitHistoryPanel({ projectId, projectPath, projectName, gitStatus
                       <div className="commit-files">
                         {files.length > 0 ? (
                           files.map((file, index) => (
-                            <div key={index} className="commit-file-item">
+                            <div
+                              key={index}
+                              className="commit-file-item clickable"
+                              onClick={() => handleOpenCommitFileDiff(commit, file)}
+                              title={`Click to view diff: ${file.path}`}
+                            >
                               {getCommitFileStatusIcon(file.status)}
-                              <span className="commit-file-path" title={file.path}>
+                              <span className="commit-file-path">
                                 {file.path}
                               </span>
                               <span className={`commit-file-status ${file.status}`}>

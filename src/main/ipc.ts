@@ -758,5 +758,15 @@ export function setupIPC(
     }
   })
 
+  ipcMain.handle('git:getCommitFileDiff', async (_, { projectPath, commitHash, filePath }) => {
+    try {
+      const diff = await gitManager.getCommitFileDiff(projectPath, commitHash, filePath)
+      return { success: true, diff }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
   console.log('IPC handlers registered')
 }

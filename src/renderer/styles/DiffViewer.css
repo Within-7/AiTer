@@ -1,0 +1,212 @@
+.diff-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #1e1e1e;
+  color: #cccccc;
+  overflow: hidden;
+}
+
+.diff-viewer-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diff-viewer-empty p {
+  color: #888888;
+  font-size: 14px;
+}
+
+.diff-viewer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: #252526;
+  border-bottom: 1px solid #3e3e42;
+  flex-shrink: 0;
+}
+
+.diff-file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.diff-file-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #cccccc;
+}
+
+.diff-commit-hash {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 11px;
+  background-color: #3c3c3c;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #888888;
+}
+
+.diff-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+}
+
+.diff-additions {
+  color: #4ec9b0;
+  font-weight: 600;
+}
+
+.diff-deletions {
+  color: #f48771;
+  font-weight: 600;
+}
+
+.diff-commit-message {
+  padding: 8px 16px;
+  background-color: #2d2d30;
+  border-bottom: 1px solid #3e3e42;
+  font-size: 12px;
+  color: #888888;
+  font-style: italic;
+  flex-shrink: 0;
+}
+
+.diff-content {
+  flex: 1;
+  overflow: auto;
+}
+
+.diff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.diff-line {
+  height: 20px;
+}
+
+.diff-line-number {
+  width: 50px;
+  min-width: 50px;
+  padding: 0 8px;
+  text-align: right;
+  color: #5a5a5a;
+  background-color: #1e1e1e;
+  user-select: none;
+  border-right: 1px solid #2d2d30;
+  vertical-align: top;
+}
+
+.diff-line-marker {
+  width: 20px;
+  min-width: 20px;
+  text-align: center;
+  user-select: none;
+  color: #888888;
+  vertical-align: top;
+}
+
+.diff-line-content {
+  padding: 0 8px;
+  white-space: pre;
+  vertical-align: top;
+}
+
+.diff-line-content pre {
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  white-space: pre;
+}
+
+/* Line type styles */
+.diff-line-added {
+  background-color: rgba(78, 201, 176, 0.15);
+}
+
+.diff-line-added .diff-line-number {
+  background-color: rgba(78, 201, 176, 0.2);
+  color: #4ec9b0;
+}
+
+.diff-line-added .diff-line-marker {
+  color: #4ec9b0;
+}
+
+.diff-line-added .diff-line-content {
+  color: #4ec9b0;
+}
+
+.diff-line-removed {
+  background-color: rgba(244, 135, 113, 0.15);
+}
+
+.diff-line-removed .diff-line-number {
+  background-color: rgba(244, 135, 113, 0.2);
+  color: #f48771;
+}
+
+.diff-line-removed .diff-line-marker {
+  color: #f48771;
+}
+
+.diff-line-removed .diff-line-content {
+  color: #f48771;
+}
+
+.diff-line-context {
+  background-color: #1e1e1e;
+}
+
+.diff-line-header {
+  background-color: #252526;
+}
+
+.diff-line-header .diff-line-content {
+  color: #569cd6;
+  font-weight: 600;
+}
+
+.diff-line-hunk {
+  background-color: #2d2d30;
+}
+
+.diff-line-hunk .diff-line-content {
+  color: #ce9178;
+}
+
+.diff-line-hunk .diff-line-number {
+  background-color: #2d2d30;
+}
+
+/* Scrollbar styling */
+.diff-content::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.diff-content::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.diff-content::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 5px;
+}
+
+.diff-content::-webkit-scrollbar-thumb:hover {
+  background: #4e4e4e;
+}
+
+.diff-content::-webkit-scrollbar-corner {
+  background: #1e1e1e;
+}

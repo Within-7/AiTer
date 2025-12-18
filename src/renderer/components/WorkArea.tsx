@@ -3,6 +3,7 @@ import { AppContext } from '../context/AppContext'
 import { MonacoEditor } from './Editor/MonacoEditor'
 import { MarkdownEditor } from './Editor/MarkdownEditor'
 import { HTMLPreview } from './Editor/HTMLPreview'
+import { DiffViewer } from './Editor/DiffViewer'
 import { TerminalContainer } from './TerminalContainer'
 import { getProjectColor } from '../utils/projectColors'
 import '../styles/WorkArea.css'
@@ -171,8 +172,8 @@ export const WorkArea: React.FC = () => {
   // Get current mode for active editor tab
   const currentMode = activeEditorTab ? (editorModes[activeEditorTab.id] || 'preview') : 'preview'
 
-  // Check if active tab supports preview mode
-  const supportsPreview = activeEditorTab && (activeEditorTab.fileType === 'markdown' || activeEditorTab.fileType === 'html')
+  // Check if active tab supports preview mode (diff tabs don't support preview toggle)
+  const supportsPreview = activeEditorTab && !activeEditorTab.isDiff && (activeEditorTab.fileType === 'markdown' || activeEditorTab.fileType === 'html')
 
   // Toggle between preview and edit modes
   const toggleMode = () => {
@@ -254,7 +255,14 @@ export const WorkArea: React.FC = () => {
       <div className="work-area-content">
         {activeEditorTab && (
           <div className={`editor-container ${isTerminalActive ? 'hidden' : ''}`}>
-            {activeEditorTab.fileType === 'markdown' ? (
+            {activeEditorTab.isDiff ? (
+              <DiffViewer
+                diffContent={activeEditorTab.diffContent || ''}
+                fileName={activeEditorTab.fileName}
+                commitHash={activeEditorTab.commitHash}
+                commitMessage={activeEditorTab.commitMessage}
+              />
+            ) : activeEditorTab.fileType === 'markdown' ? (
               <MarkdownEditor
                 value={activeEditorTab.content}
                 onChange={handleContentChange}

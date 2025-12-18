@@ -505,7 +505,7 @@ Thumbs.db
   }
 
   /**
-   * Get diff for a file
+   * Get diff for a file (uncommitted changes)
    */
   async getFileDiff(projectPath: string, filePath: string): Promise<string> {
     try {
@@ -513,6 +513,23 @@ Thumbs.db
       return stdout
     } catch (error) {
       console.error('Failed to get file diff:', error)
+      return ''
+    }
+  }
+
+  /**
+   * Get diff for a specific file in a specific commit
+   */
+  async getCommitFileDiff(projectPath: string, commitHash: string, filePath: string): Promise<string> {
+    try {
+      // Show diff of this commit compared to its parent
+      const { stdout } = await execAsync(
+        `git show ${commitHash} -- "${filePath}"`,
+        { cwd: projectPath }
+      )
+      return stdout
+    } catch (error) {
+      console.error('Failed to get commit file diff:', error)
       return ''
     }
   }

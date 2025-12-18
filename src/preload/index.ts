@@ -242,7 +242,9 @@ contextBridge.exposeInMainWorld('api', {
     getFileDiff: (projectPath: string, filePath: string) =>
       ipcRenderer.invoke('git:getFileDiff', { projectPath, filePath }),
     getCommitFiles: (projectPath: string, commitHash: string) =>
-      ipcRenderer.invoke('git:getCommitFiles', { projectPath, commitHash })
+      ipcRenderer.invoke('git:getCommitFiles', { projectPath, commitHash }),
+    getCommitFileDiff: (projectPath: string, commitHash: string, filePath: string) =>
+      ipcRenderer.invoke('git:getCommitFileDiff', { projectPath, commitHash, filePath })
   }
 })
 
@@ -480,6 +482,11 @@ export interface API {
     getCommitFiles(projectPath: string, commitHash: string): Promise<{
       success: boolean;
       files?: Array<{ path: string; status: 'added' | 'modified' | 'deleted' | 'renamed' }>;
+      error?: string;
+    }>
+    getCommitFileDiff(projectPath: string, commitHash: string, filePath: string): Promise<{
+      success: boolean;
+      diff?: string;
       error?: string;
     }>
   }
