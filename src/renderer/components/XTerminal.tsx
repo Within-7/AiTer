@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, memo } from 'react'
 import { Terminal as XTerm } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
+import { WebglAddon } from '@xterm/addon-webgl'
 import { CanvasAddon } from '@xterm/addon-canvas'
 import { Terminal as TerminalType, AppSettings } from '../../types'
 import '@xterm/xterm/css/xterm.css'
@@ -94,7 +95,6 @@ export const XTerminal = memo(function XTerminal({ terminal, settings }: XTermin
     // Add addons
     const fitAddon = new FitAddon()
     const webLinksAddon = new WebLinksAddon()
-    const canvasAddon = new CanvasAddon()
 
     xterm.loadAddon(fitAddon)
     xterm.loadAddon(webLinksAddon)
@@ -102,11 +102,27 @@ export const XTerminal = memo(function XTerminal({ terminal, settings }: XTermin
     // Open terminal
     xterm.open(terminalRef.current)
 
-    // Load canvas renderer after opening for better performance and reduced flickering
+    // Try WebGL first (fastest), fallback to Canvas, then DOM renderer
+    let rendererLoaded = false
     try {
-      xterm.loadAddon(canvasAddon)
+      const webglAddon = new WebglAddon()
+      // Handle context loss gracefully
+      webglAddon.onContextLoss(() => {
+        webglAddon.dispose()
+      })
+      xterm.loadAddon(webglAddon)
+      rendererLoaded = true
     } catch (error) {
-      console.warn('Failed to load canvas renderer, falling back to DOM renderer:', error)
+      console.warn('WebGL renderer not available, trying Canvas:', error)
+    }
+
+    if (!rendererLoaded) {
+      try {
+        const canvasAddon = new CanvasAddon()
+        xterm.loadAddon(canvasAddon)
+      } catch (error) {
+        console.warn('Canvas renderer not available, using DOM renderer:', error)
+      }
     }
 
     // Fit terminal after DOM is ready - use requestAnimationFrame for better timing
@@ -204,15 +220,42 @@ export const XTerminal = memo(function XTerminal({ terminal, settings }: XTermin
     }
   }, [terminal.id, isVisible])
 
-  // Handle terminal data updates
+  // Handle terminal data updates with batching and RAF throttling
+  // This prevents flickering when high-frequency data arrives
   useEffect(() => {
+    let dataBuffer = ''
+    let rafId: number | null = null
+
+    const flushBuffer = () => {
+      rafId = null
+      if (dataBuffer && xtermRef.current) {
+        xtermRef.current.write(dataBuffer)
+        dataBuffer = ''
+      }
+    }
+
     const cleanup = window.api.terminal.onData((id, data) => {
-      if (id === terminal.id && xtermRef.current) {
-        xtermRef.current.write(data)
+      if (id === terminal.id) {
+        // Accumulate data in buffer
+        dataBuffer += data
+
+        // Schedule a single render on next animation frame
+        if (rafId === null) {
+          rafId = requestAnimationFrame(flushBuffer)
+        }
       }
     })
 
-    return cleanup
+    return () => {
+      cleanup()
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId)
+      }
+      // Flush any remaining data
+      if (dataBuffer && xtermRef.current) {
+        xtermRef.current.write(dataBuffer)
+      }
+    }
   }, [terminal.id])
 
   // Update settings - only when specific values change
