@@ -1,0 +1,163 @@
+.image-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: #1e1e1e;
+  overflow: hidden;
+}
+
+.image-viewer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #2d2d30;
+  border-bottom: 1px solid #3e3e42;
+  gap: 12px;
+  min-height: 45px;
+  flex-shrink: 0;
+}
+
+.image-viewer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.image-viewer-filename {
+  font-size: 13px;
+  font-weight: 600;
+  color: #cccccc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.image-viewer-meta {
+  font-size: 11px;
+  color: #888888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.image-viewer-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.image-viewer-zoom-label {
+  font-size: 12px;
+  color: #cccccc;
+  font-weight: 500;
+  min-width: 45px;
+  text-align: right;
+  user-select: none;
+}
+
+.image-viewer-button {
+  padding: 6px 12px;
+  background: #3e3e42;
+  color: #cccccc;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.2s;
+  user-select: none;
+}
+
+.image-viewer-button:hover:not(:disabled) {
+  background: #4e4e52;
+}
+
+.image-viewer-button:active:not(:disabled) {
+  background: #007acc;
+}
+
+.image-viewer-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.image-viewer-canvas {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  user-select: none;
+
+  /* Checkerboard pattern for transparency */
+  background-image:
+    linear-gradient(45deg, #2d2d30 25%, transparent 25%),
+    linear-gradient(-45deg, #2d2d30 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #2d2d30 75%),
+    linear-gradient(-45deg, transparent 75%, #2d2d30 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+.image-viewer-image {
+  max-width: none;
+  max-height: none;
+  display: block;
+  transition: transform 0.1s ease-out;
+  image-rendering: auto;
+  pointer-events: none;
+}
+
+/* Custom scrollbar for consistency */
+.image-viewer::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.image-viewer::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.image-viewer::-webkit-scrollbar-thumb {
+  background: #3e3e42;
+  border-radius: 4px;
+}
+
+.image-viewer::-webkit-scrollbar-thumb:hover {
+  background: #4e4e52;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .image-viewer-toolbar {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .image-viewer-meta {
+    font-size: 10px;
+  }
+
+  .image-viewer-button {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .image-viewer-zoom-label {
+    min-width: 40px;
+    font-size: 11px;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .image-viewer-image {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
