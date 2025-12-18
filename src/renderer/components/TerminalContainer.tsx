@@ -15,16 +15,21 @@ export function TerminalContainer({
 }: TerminalContainerProps) {
   return (
     <div className="terminal-container">
-      {terminals.map((terminal) => (
-        <div
-          key={terminal.id}
-          className={`terminal-wrapper ${
-            terminal.id === activeTerminalId ? 'active' : 'hidden'
-          }`}
-        >
-          <XTerminal terminal={terminal} settings={settings} />
-        </div>
-      ))}
+      {terminals.map((terminal) => {
+        const isActive = terminal.id === activeTerminalId
+        return (
+          <div
+            key={terminal.id}
+            className={`terminal-wrapper ${isActive ? 'active' : 'hidden'}`}
+          >
+            <XTerminal
+              terminal={terminal}
+              settings={settings}
+              isActive={isActive}
+            />
+          </div>
+        )
+      })}
     </div>
   )
 }

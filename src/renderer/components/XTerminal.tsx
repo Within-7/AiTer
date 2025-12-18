@@ -11,14 +11,17 @@ import '../styles/XTerminal.css'
 interface XTerminalProps {
   terminal: TerminalType
   settings: AppSettings
+  isActive?: boolean
 }
 
 // Memoize the component to prevent unnecessary re-renders from parent state changes
-export const XTerminal = memo(function XTerminal({ terminal, settings }: XTerminalProps) {
+export const XTerminal = memo(function XTerminal({ terminal, settings, isActive = true }: XTerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null)
   const xtermRef = useRef<XTerm | null>(null)
   const fitAddonRef = useRef<FitAddon | null>(null)
   const [isVisible, setIsVisible] = useState(false)
+  // Buffer for inactive terminal data
+  const inactiveBufferRef = useRef<string>('')
 
   // Check visibility periodically until container is visible
   useEffect(() => {
@@ -64,9 +67,13 @@ export const XTerminal = memo(function XTerminal({ terminal, settings }: XTermin
       // Prevent cursor/input line flickering
       windowsMode: false,
       convertEol: false,
-      // Optimize rendering
+      // Optimize rendering for REPL applications
       disableStdin: false,
       allowTransparency: false,
+      minimumContrastRatio: 1, // Disable contrast adjustment to reduce color calculations
+      rescaleOverlappingGlyphs: true, // Better handling of special characters
+      drawBoldTextInBrightColors: false, // Reduce color changes that cause repaints
+      overviewRulerWidth: 0, // Disable overview ruler for performance
       theme: {
         background: '#1e1e1e',
         foreground: '#cccccc',
@@ -220,16 +227,33 @@ export const XTerminal = memo(function XTerminal({ terminal, settings }: XTermin
     }
   }, [terminal.id, isVisible])
 
+  // Flush inactive buffer when terminal becomes active
+  useEffect(() => {
+    if (isActive && xtermRef.current && inactiveBufferRef.current) {
+      xtermRef.current.write(inactiveBufferRef.current)
+      inactiveBufferRef.current = ''
+    }
+  }, [isActive])
+
   // Handle terminal data updates with batching and RAF throttling
   // This prevents flickering when high-frequency data arrives
   useEffect(() => {
     let dataBuffer = ''
     let rafId: number | null = null
+    // Use ref to track current active state without re-registering listener
+    const isActiveRef = { current: isActive }
+    isActiveRef.current = isActive
 
     const flushBuffer = () => {
       rafId = null
       if (dataBuffer && xtermRef.current) {
-        xtermRef.current.write(dataBuffer)
+        if (isActiveRef.current) {
+          // Active terminal: render immediately
+          xtermRef.current.write(dataBuffer)
+        } else {
+          // Inactive terminal: accumulate in inactive buffer for later
+          inactiveBufferRef.current += dataBuffer
+        }
         dataBuffer = ''
       }
     }
@@ -253,10 +277,14 @@ export const XTerminal = memo(function XTerminal({ terminal, settings }: XTermin
       }
       // Flush any remaining data
       if (dataBuffer && xtermRef.current) {
-        xtermRef.current.write(dataBuffer)
+        if (isActiveRef.current) {
+          xtermRef.current.write(dataBuffer)
+        } else {
+          inactiveBufferRef.current += dataBuffer
+        }
       }
     }
-  }, [terminal.id])
+  }, [terminal.id, isActive])
 
   // Update settings - only when specific values change
   useEffect(() => {
