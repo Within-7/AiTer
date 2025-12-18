@@ -92,6 +92,18 @@
   background-color: #2d2d30;
 }
 
+.file-change-item.clickable {
+  cursor: pointer;
+}
+
+.file-change-item.clickable:hover {
+  background-color: #37373d;
+}
+
+.file-change-item.clickable:active {
+  background-color: #3e3e42;
+}
+
 .file-change-item .status-icon {
   font-size: 12px;
   flex-shrink: 0;

@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react'
-import { VscGitCommit, VscRefresh, VscCheck, VscFile, VscDiffAdded, VscDiffModified, VscDiffRemoved, VscCloudUpload, VscCloudDownload, VscSync, VscAdd, VscRemove, VscDiff, VscChevronDown, VscChevronRight } from 'react-icons/vsc'
+import { VscGitCommit, VscRefresh, VscCheck, VscFile, VscDiffAdded, VscDiffModified, VscDiffRemoved, VscCloudUpload, VscCloudDownload, VscSync, VscAdd, VscRemove, VscChevronDown, VscChevronRight } from 'react-icons/vsc'
 import { GitCommit, GitStatus, EditorTab } from '../../types'
 import { AppContext } from '../context/AppContext'
 import '../styles/GitHistoryPanel.css'
@@ -39,7 +39,6 @@ export function GitHistoryPanel({ projectId, projectPath, projectName, gitStatus
   const [newBranchName, setNewBranchName] = useState('')
   const [showNewBranchInput, setShowNewBranchInput] = useState(false)
   const [operationInProgress, setOperationInProgress] = useState<string | null>(null)
-  const [selectedFileDiff, setSelectedFileDiff] = useState<{ path: string; diff: string } | null>(null)
   const [expandedCommits, setExpandedCommits] = useState<Set<string>>(new Set())
   const [commitFiles, setCommitFiles] = useState<Map<string, CommitFile[]>>(new Map())
 
@@ -252,23 +251,6 @@ export function GitHistoryPanel({ projectId, projectPath, projectName, gitStatus
     }
   }
 
-  const handleViewDiff = async (filePath: string) => {
-    setOperationInProgress(`diff-${filePath}`)
-    try {
-      const result = await window.api.git.getFileDiff(projectPath, filePath)
-      if (result.success && result.diff !== undefined) {
-        setSelectedFileDiff({ path: filePath, diff: result.diff })
-      } else {
-        alert(`Failed to get diff: ${result.error}`)
-      }
-    } catch (error) {
-      console.error('Failed to get diff:', error)
-      alert('Failed to get diff')
-    } finally {
-      setOperationInProgress(null)
-    }
-  }
-
   const handleToggleCommit = async (commitHash: string) => {
     const newExpanded = new Set(expandedCommits)
 
@@ -341,6 +323,41 @@ export function GitHistoryPanel({ projectId, projectPath, projectName, gitStatus
       }
     } catch (error) {
       console.error('Failed to open commit file diff:', error)
+    }
+  }
+
+  // Open diff tab for an uncommitted file change
+  const handleOpenUncommittedFileDiff = async (change: FileChange) => {
+    try {
+      const result = await window.api.git.getFileDiff(projectPath, change.path)
+      if (result.success && result.diff !== undefined) {
+        // Extract file name from path
+        const fileName = change.path.split('/').pop() || change.path
+
+        // Create a unique ID for this diff tab
+        const tabId = `diff-uncommitted-${change.path.replace(/[^a-zA-Z0-9]/g, '-')}`
+
+        // Create editor tab for diff view
+        const diffTab: EditorTab = {
+          id: tabId,
+          filePath: change.path,
+          fileName: `${fileName} (uncommitted)`,
+          fileType: 'diff',
+          content: '',
+          isDirty: false,
+          isDiff: true,
+          diffContent: result.diff || `[${change.status.toUpperCase()}] ${change.path}\n\nNo diff available for ${change.status} files.`,
+          commitHash: undefined,
+          commitMessage: `Uncommitted changes - ${change.status}`,
+          projectPath: projectPath
+        }
+
+        dispatch({ type: 'ADD_EDITOR_TAB', payload: diffTab })
+      } else {
+        console.error('Failed to get file diff:', result.error)
+      }
+    } catch (error) {
+      console.error('Failed to open uncommitted file diff:', error)
     }
   }
 
@@ -514,27 +531,27 @@ export function GitHistoryPanel({ projectId, projectPath, projectName, gitStatus
               <>
                 <div className="file-changes-list">
                   {fileChanges.map((change, index) => (
-                    <div key={index} className="file-change-item">
+                    <div
+                      key={index}
+                      className="file-change-item clickable"
+                      onClick={() => handleOpenUncommittedFileDiff(change)}
+                      title={`Click to view diff: ${change.path}`}
+                    >
                       {getStatusIcon(change.status)}
-                      <span className="file-path" title={change.path}>
+                      <span className="file-path">
                         {change.path}
                       </span>
                       <span className={`status-badge ${change.status}`}>
                         {change.status}
                       </span>
                       <div className="file-actions">
-                        <button
-                          className="btn-file-action"
-                          onClick={() => handleViewDiff(change.path)}
-                          disabled={operationInProgress !== null}
-                          title="View diff"
-                        >
-                          <VscDiff />
-                        </button>
                         {change.status !== 'untracked' && (
                           <button
                             className="btn-file-action"
-                            onClick={() => handleStageFile(change.path)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleStageFile(change.path)
+                            }}
                             disabled={operationInProgress !== null}
                             title="Stage file"
                           >
@@ -646,31 +663,6 @@ export function GitHistoryPanel({ projectId, projectPath, projectName, gitStatus
           )}
         </div>
       </div>
-
-      {/* Diff Modal */}
-      {selectedFileDiff && (
-        <div className="diff-modal-overlay" onClick={() => setSelectedFileDiff(null)}>
-          <div className="diff-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="diff-modal-header">
-              <h4>{selectedFileDiff.path}</h4>
-              <button
-                className="btn-icon"
-                onClick={() => setSelectedFileDiff(null)}
-                title="Close"
-              >
-                ×
-              </button>
-            </div>
-            <div className="diff-modal-content">
-              {selectedFileDiff.diff ? (
-                <pre className="diff-content">{selectedFileDiff.diff}</pre>
-              ) : (
-                <p className="no-diff">No changes to display</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
