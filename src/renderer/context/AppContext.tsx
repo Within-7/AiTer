@@ -1,5 +1,19 @@
 import { createContext } from 'react'
-import { Project, Terminal, AppSettings, EditorTab } from '../../types'
+import { Project, Terminal, AppSettings, EditorTab, ShortcutConfig } from '../../types'
+
+// Default keyboard shortcuts (same as store.ts)
+const defaultShortcuts: ShortcutConfig[] = [
+  { action: 'newTerminal', label: '新建终端', shortcut: { key: 't', metaKey: true }, enabled: true },
+  { action: 'closeTab', label: '关闭标签页', shortcut: { key: 'w', metaKey: true }, enabled: true },
+  { action: 'saveFile', label: '保存文件', shortcut: { key: 's', metaKey: true }, enabled: true },
+  { action: 'openSettings', label: '打开设置', shortcut: { key: ',', metaKey: true }, enabled: true },
+  { action: 'newWindow', label: '新窗口', shortcut: { key: 'n', metaKey: true, shiftKey: true }, enabled: true },
+  { action: 'toggleSidebar', label: '切换侧边栏', shortcut: { key: 'b', metaKey: true }, enabled: true },
+  { action: 'nextTab', label: '下一个标签页', shortcut: { key: ']', metaKey: true, shiftKey: true }, enabled: true },
+  { action: 'prevTab', label: '上一个标签页', shortcut: { key: '[', metaKey: true, shiftKey: true }, enabled: true },
+  { action: 'focusTerminal', label: '聚焦终端', shortcut: { key: '`', ctrlKey: true }, enabled: true },
+  { action: 'focusEditor', label: '聚焦编辑器', shortcut: { key: 'e', metaKey: true, shiftKey: true }, enabled: true }
+]
 
 export type SidebarView = 'explorer' | 'git'
 
@@ -73,7 +87,9 @@ export const initialState: AppState = {
     nodeSource: 'builtin',
     preserveVersionManagers: false,
     // Windows-specific
-    windowsUseUtf8: true
+    windowsUseUtf8: true,
+    // Keyboard shortcuts
+    shortcuts: defaultShortcuts
   },
   terminalDataBuffer: new Map(),
   showPluginPanel: false,

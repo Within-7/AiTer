@@ -206,3 +206,106 @@
   font-weight: 500;
   color: var(--accent-color, #007acc);
 }
+
+/* Keyboard Shortcuts Styles */
+.shortcuts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-color, #3c3c3c);
+}
+
+.shortcut-item:last-child {
+  border-bottom: none;
+}
+
+.shortcut-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shortcut-toggle {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent-color, #007acc);
+}
+
+.shortcut-label {
+  font-size: 13px;
+  color: var(--text-color, #ccc);
+}
+
+.shortcut-label.disabled {
+  color: var(--text-muted, #888);
+}
+
+/* ShortcutInput button */
+.shortcut-input {
+  background: var(--input-bg, #2d2d2d);
+  border: 1px solid var(--border-color, #3c3c3c);
+  border-radius: 4px;
+  color: var(--text-color, #ccc);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-family: 'SF Mono', Menlo, Monaco, monospace;
+  min-width: 100px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.shortcut-input:hover:not(.disabled) {
+  border-color: var(--accent-color, #007acc);
+}
+
+.shortcut-input:focus {
+  outline: none;
+  border-color: var(--accent-color, #007acc);
+  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
+}
+
+.shortcut-input.recording {
+  background: var(--accent-color, #007acc);
+  color: white;
+  border-color: var(--accent-color, #007acc);
+}
+
+.shortcut-input.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.shortcut-display {
+  letter-spacing: 1px;
+}
+
+.recording-text {
+  font-style: italic;
+  font-family: inherit;
+}
+
+.reset-shortcuts-button {
+  margin-top: 16px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--border-color, #3c3c3c);
+  border-radius: 4px;
+  color: var(--text-muted, #888);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.reset-shortcuts-button:hover {
+  border-color: var(--text-color, #ccc);
+  color: var(--text-color, #ccc);
+}

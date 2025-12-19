@@ -1,5 +1,19 @@
 import Store from 'electron-store'
-import { Project, AppSettings } from '../types'
+import { Project, AppSettings, ShortcutConfig } from '../types'
+
+// Default keyboard shortcuts
+const defaultShortcuts: ShortcutConfig[] = [
+  { action: 'newTerminal', label: '新建终端', shortcut: { key: 't', metaKey: true }, enabled: true },
+  { action: 'closeTab', label: '关闭标签页', shortcut: { key: 'w', metaKey: true }, enabled: true },
+  { action: 'saveFile', label: '保存文件', shortcut: { key: 's', metaKey: true }, enabled: true },
+  { action: 'openSettings', label: '打开设置', shortcut: { key: ',', metaKey: true }, enabled: true },
+  { action: 'newWindow', label: '新窗口', shortcut: { key: 'n', metaKey: true, shiftKey: true }, enabled: true },
+  { action: 'toggleSidebar', label: '切换侧边栏', shortcut: { key: 'b', metaKey: true }, enabled: true },
+  { action: 'nextTab', label: '下一个标签页', shortcut: { key: ']', metaKey: true, shiftKey: true }, enabled: true },
+  { action: 'prevTab', label: '上一个标签页', shortcut: { key: '[', metaKey: true, shiftKey: true }, enabled: true },
+  { action: 'focusTerminal', label: '聚焦终端', shortcut: { key: '`', ctrlKey: true }, enabled: true },
+  { action: 'focusEditor', label: '聚焦编辑器', shortcut: { key: 'e', metaKey: true, shiftKey: true }, enabled: true }
+]
 
 interface StoreSchema {
   projects: Project[]
@@ -26,7 +40,10 @@ const defaultSettings: AppSettings = {
   preserveVersionManagers: false,    // Don't preserve version manager vars by default
 
   // Windows-specific
-  windowsUseUtf8: true               // Enable UTF-8 on Windows by default
+  windowsUseUtf8: true,              // Enable UTF-8 on Windows by default
+
+  // Keyboard shortcuts
+  shortcuts: defaultShortcuts
 }
 
 export class StoreManager {

@@ -7,6 +7,7 @@ import { PluginPanel } from './components/Plugins/PluginPanel'
 import { AboutPanel } from './components/About/AboutPanel'
 import { SettingsPanel } from './components/Settings/SettingsPanel'
 import { UpdateNotification } from './components/UpdateNotification'
+import { KeyboardShortcutsHandler } from './components/KeyboardShortcutsHandler'
 import './styles/App.css'
 
 function App() {
@@ -136,6 +137,7 @@ function App() {
         <AboutPanel />
         <SettingsPanel />
         <UpdateNotification />
+        <KeyboardShortcutsHandler />
       </div>
     </AppContext.Provider>
   )

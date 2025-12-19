@@ -1,8 +1,23 @@
-import React, { useContext, useState, useEffect } from 'react'
+import React, { useContext, useState, useEffect, useCallback } from 'react'
 import { AppContext } from '../../context/AppContext'
 import { getTerminalThemeNames } from '../../themes/terminalThemes'
-import { TerminalThemeName, DetectedShell, VersionManagerInfo, ShellType } from '../../../types'
+import { TerminalThemeName, DetectedShell, VersionManagerInfo, ShellType, ShortcutConfig, KeyboardShortcut } from '../../../types'
+import { ShortcutInput, formatShortcut } from './ShortcutInput'
 import './SettingsPanel.css'
+
+// Default shortcuts for reset
+const defaultShortcuts: ShortcutConfig[] = [
+  { action: 'newTerminal', label: '新建终端', shortcut: { key: 't', metaKey: true }, enabled: true },
+  { action: 'closeTab', label: '关闭标签页', shortcut: { key: 'w', metaKey: true }, enabled: true },
+  { action: 'saveFile', label: '保存文件', shortcut: { key: 's', metaKey: true }, enabled: true },
+  { action: 'openSettings', label: '打开设置', shortcut: { key: ',', metaKey: true }, enabled: true },
+  { action: 'newWindow', label: '新窗口', shortcut: { key: 'n', metaKey: true, shiftKey: true }, enabled: true },
+  { action: 'toggleSidebar', label: '切换侧边栏', shortcut: { key: 'b', metaKey: true }, enabled: true },
+  { action: 'nextTab', label: '下一个标签页', shortcut: { key: ']', metaKey: true, shiftKey: true }, enabled: true },
+  { action: 'prevTab', label: '上一个标签页', shortcut: { key: '[', metaKey: true, shiftKey: true }, enabled: true },
+  { action: 'focusTerminal', label: '聚焦终端', shortcut: { key: '`', ctrlKey: true }, enabled: true },
+  { action: 'focusEditor', label: '聚焦编辑器', shortcut: { key: 'e', metaKey: true, shiftKey: true }, enabled: true }
+]
 
 export const SettingsPanel: React.FC = () => {
   const { state, dispatch } = useContext(AppContext)
@@ -81,6 +96,30 @@ export const SettingsPanel: React.FC = () => {
   }
 
   const themeOptions = getTerminalThemeNames()
+
+  // Get current shortcuts or use defaults
+  const shortcuts = settings.shortcuts || defaultShortcuts
+
+  // Update a specific shortcut
+  const handleShortcutChange = useCallback((action: string, newShortcut: KeyboardShortcut) => {
+    const updatedShortcuts = shortcuts.map(s =>
+      s.action === action ? { ...s, shortcut: newShortcut } : s
+    )
+    handleSettingChange('shortcuts', updatedShortcuts)
+  }, [shortcuts, handleSettingChange])
+
+  // Toggle shortcut enabled state
+  const handleShortcutToggle = useCallback((action: string, enabled: boolean) => {
+    const updatedShortcuts = shortcuts.map(s =>
+      s.action === action ? { ...s, enabled } : s
+    )
+    handleSettingChange('shortcuts', updatedShortcuts)
+  }, [shortcuts, handleSettingChange])
+
+  // Reset all shortcuts to default
+  const handleResetShortcuts = useCallback(() => {
+    handleSettingChange('shortcuts', defaultShortcuts)
+  }, [handleSettingChange])
 
   // Format path for display (shorten home directory)
   const formatPath = (path: string): string => {
@@ -229,6 +268,42 @@ export const SettingsPanel: React.FC = () => {
               </div>
             </section>
           )}
+
+          {/* Keyboard Shortcuts Section */}
+          <section className="settings-section">
+            <h3>快捷键</h3>
+
+            <div className="shortcuts-list">
+              {shortcuts.map(shortcutConfig => (
+                <div key={shortcutConfig.action} className="shortcut-item">
+                  <div className="shortcut-info">
+                    <input
+                      type="checkbox"
+                      checked={shortcutConfig.enabled}
+                      onChange={(e) => handleShortcutToggle(shortcutConfig.action, e.target.checked)}
+                      className="shortcut-toggle"
+                    />
+                    <span className={`shortcut-label ${!shortcutConfig.enabled ? 'disabled' : ''}`}>
+                      {shortcutConfig.label}
+                    </span>
+                  </div>
+                  <ShortcutInput
+                    value={shortcutConfig.shortcut}
+                    onChange={(newShortcut) => handleShortcutChange(shortcutConfig.action, newShortcut)}
+                    disabled={!shortcutConfig.enabled}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              className="reset-shortcuts-button"
+              onClick={handleResetShortcuts}
+            >
+              恢复默认快捷键
+            </button>
+          </section>
 
           {/* Terminal Appearance Section */}
           <section className="settings-section">

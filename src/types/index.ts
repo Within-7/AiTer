@@ -111,6 +111,9 @@ export interface AppSettings {
 
   // Windows-specific
   windowsUseUtf8: boolean           // Enable UTF-8 encoding for Windows terminals
+
+  // Keyboard shortcuts
+  shortcuts?: ShortcutConfig[]      // Custom keyboard shortcuts
 }
 
 // Shell type identifier
@@ -223,6 +226,34 @@ export interface PluginUpdateProgress {
   message?: string
   fromVersion?: string
   toVersion?: string
+}
+
+// Keyboard shortcut types
+export type ShortcutAction =
+  | 'newTerminal'      // 新建终端
+  | 'closeTab'         // 关闭当前标签页
+  | 'saveFile'         // 保存文件
+  | 'openSettings'     // 打开设置
+  | 'newWindow'        // 新窗口
+  | 'toggleSidebar'    // 切换侧边栏
+  | 'nextTab'          // 下一个标签页
+  | 'prevTab'          // 上一个标签页
+  | 'focusTerminal'    // 聚焦终端
+  | 'focusEditor'      // 聚焦编辑器
+
+export interface KeyboardShortcut {
+  key: string              // 主键 (例如: 't', 's', 'n')
+  ctrlKey?: boolean        // Ctrl 键
+  metaKey?: boolean        // Cmd/Meta 键
+  altKey?: boolean         // Alt/Option 键
+  shiftKey?: boolean       // Shift 键
+}
+
+export interface ShortcutConfig {
+  action: ShortcutAction
+  label: string            // 显示名称
+  shortcut: KeyboardShortcut
+  enabled: boolean         // 是否启用
 }
 
 // Workspace system for multi-instance support
