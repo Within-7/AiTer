@@ -25,8 +25,8 @@ extraResources:
 # ==========================================
 publish:
   provider: github
-  owner: within-7
-  repo: airter
+  owner: Within-7
+  repo: aiter
   releaseType: release
   # 如果是私有仓库，需要设置 token
   # token: ${GH_TOKEN}
