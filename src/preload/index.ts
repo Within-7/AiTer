@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { Project, Terminal, AppSettings, FileNode, Plugin, PluginInstallProgress, PluginUpdateProgress, GitStatus, GitCommit, FileChange } from '../types'
+import { Project, Terminal, AppSettings, FileNode, Plugin, PluginInstallProgress, PluginUpdateProgress, GitStatus, GitCommit, FileChange, DetectedShell, VersionManagerInfo, ShellType } from '../types'
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
@@ -102,7 +102,22 @@ contextBridge.exposeInMainWorld('api', {
   // Shell APIs
   shell: {
     openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', { url }),
-    openPath: (path: string) => ipcRenderer.invoke('shell:openPath', { path })
+    openPath: (path: string) => ipcRenderer.invoke('shell:openPath', { path }),
+    // Shell detection APIs
+    detectAvailable: (): Promise<{ success: boolean; shells?: DetectedShell[]; error?: string }> =>
+      ipcRenderer.invoke('shell:detectAvailable'),
+    getConfigFiles: (shellType: ShellType): Promise<{ success: boolean; files?: string[]; error?: string }> =>
+      ipcRenderer.invoke('shell:getConfigFiles', { shellType }),
+    getDefaultShell: (): Promise<{ success: boolean; defaultShell?: string; error?: string }> =>
+      ipcRenderer.invoke('shell:getDefaultShell')
+  },
+
+  // Version Manager APIs
+  versionManager: {
+    detect: (): Promise<{ success: boolean; managers?: VersionManagerInfo[]; error?: string }> =>
+      ipcRenderer.invoke('versionManager:detect'),
+    getDetected: (): Promise<{ success: boolean; managers?: VersionManagerInfo[]; error?: string }> =>
+      ipcRenderer.invoke('versionManager:getDetected')
   },
 
   // Menu APIs
@@ -341,6 +356,13 @@ export interface API {
   shell: {
     openExternal(url: string): Promise<{ success: boolean; error?: string }>
     openPath(path: string): Promise<{ success: boolean; error?: string }>
+    detectAvailable(): Promise<{ success: boolean; shells?: DetectedShell[]; error?: string }>
+    getConfigFiles(shellType: ShellType): Promise<{ success: boolean; files?: string[]; error?: string }>
+    getDefaultShell(): Promise<{ success: boolean; defaultShell?: string; error?: string }>
+  }
+  versionManager: {
+    detect(): Promise<{ success: boolean; managers?: VersionManagerInfo[]; error?: string }>
+    getDetected(): Promise<{ success: boolean; managers?: VersionManagerInfo[]; error?: string }>
   }
   menu: {
     onShowAbout(callback: () => void): () => void

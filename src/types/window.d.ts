@@ -1,10 +1,22 @@
 import { PluginListItem } from './plugin'
+import { DetectedShell, VersionManagerInfo, ShellType } from './index'
 
-// Extend the Window API interface to include plugins
+// Extend the Window API interface to include plugins, shell detection, and version managers
 declare global {
   interface Window {
     api: {
       // ... existing API properties
+      shell: {
+        openExternal(url: string): Promise<{ success: boolean; error?: string }>
+        openPath(path: string): Promise<{ success: boolean; error?: string }>
+        detectAvailable(): Promise<{ success: boolean; shells?: DetectedShell[]; error?: string }>
+        getConfigFiles(shellType: ShellType): Promise<{ success: boolean; files?: string[]; error?: string }>
+        getDefaultShell(): Promise<{ success: boolean; defaultShell?: string; error?: string }>
+      }
+      versionManager: {
+        detect(): Promise<{ success: boolean; managers?: VersionManagerInfo[]; error?: string }>
+        getDetected(): Promise<{ success: boolean; managers?: VersionManagerInfo[]; error?: string }>
+      }
       plugins?: {
         list(): Promise<{
           success: boolean

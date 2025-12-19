@@ -10,6 +10,8 @@ import { NodeManager } from './nodejs/manager'
 import { NodeDetector } from './nodejs/detector'
 import { NodeDownloader } from './nodejs/downloader'
 import { gitManager } from './git'
+import { ShellDetector } from './shell/ShellDetector'
+import { VersionManagerDetector } from './shell/VersionManagerDetector'
 
 export function setupIPC(
   window: BrowserWindow,
@@ -123,12 +125,16 @@ export function setupIPC(
     try {
       const id = uuidv4()
 
+      // Get current settings to pass to PTY
+      const settings = storeManager.getSettings()
+
       const terminal = ptyManager.create(
         id,
         cwd,
         projectId,
         projectName,
         shell,
+        settings,  // Pass settings for login shell mode, etc.
         // onData callback
         (data) => {
           window.webContents.send('terminal:data', { id, data })
@@ -821,6 +827,61 @@ export function setupIPC(
     try {
       const diff = await gitManager.getCommitFileDiff(projectPath, commitHash, filePath)
       return { success: true, diff }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  // Shell detection
+  const shellDetector = new ShellDetector()
+  const versionManagerDetector = new VersionManagerDetector()
+
+  ipcMain.handle('shell:detectAvailable', async () => {
+    try {
+      const shells = await shellDetector.detectAvailableShells()
+      return { success: true, shells }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('shell:getConfigFiles', async (_, { shellType }) => {
+    try {
+      const files = shellDetector.getConfigFiles(shellType)
+      return { success: true, files }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('shell:getDefaultShell', async () => {
+    try {
+      const defaultShell = shellDetector.getDefaultShell()
+      return { success: true, defaultShell }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  // Version manager detection
+  ipcMain.handle('versionManager:detect', async () => {
+    try {
+      const managers = await versionManagerDetector.detectAll()
+      return { success: true, managers }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('versionManager:getDetected', async () => {
+    try {
+      const managers = await versionManagerDetector.getDetected()
+      return { success: true, managers }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
       return { success: false, error: message }

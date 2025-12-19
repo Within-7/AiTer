@@ -63,7 +63,14 @@ export const initialState: AppState = {
     scrollbackLines: 1000,
     cursorBlink: true,
     cursorStyle: 'block',
-    terminalTheme: 'homebrew'
+    terminalTheme: 'homebrew',
+    // Shell configuration
+    shellLoginMode: true,
+    // Node.js configuration
+    nodeSource: 'builtin',
+    preserveVersionManagers: false,
+    // Windows-specific
+    windowsUseUtf8: true
   },
   terminalDataBuffer: new Map(),
   showPluginPanel: false,

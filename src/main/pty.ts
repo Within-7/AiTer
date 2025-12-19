@@ -1,6 +1,8 @@
 import * as pty from 'node-pty'
-import { Terminal } from '../types'
+import * as path from 'path'
+import { Terminal, AppSettings, ShellType } from '../types'
 import { NodeManager } from './nodejs/manager'
+import { ShellDetector } from './shell/ShellDetector'
 
 interface PTYInstance {
   terminal: Terminal
@@ -14,16 +16,57 @@ interface PTYInstance {
 export class PTYManager {
   private instances: Map<string, PTYInstance> = new Map()
   private nodeManager: NodeManager
+  private shellDetector: ShellDetector
 
   constructor() {
     this.nodeManager = new NodeManager()
+    this.shellDetector = new ShellDetector()
   }
 
   private getDefaultShell(): string {
-    if (process.platform === 'win32') {
-      return process.env.COMSPEC || 'cmd.exe'
+    return this.shellDetector.getDefaultShell()
+  }
+
+  /**
+   * Get shell type from shell path
+   */
+  private getShellType(shellPath: string): ShellType {
+    const shellName = path.basename(shellPath).toLowerCase()
+    if (shellName.includes('zsh')) return 'zsh'
+    if (shellName.includes('bash') && !shellName.includes('git')) return 'bash'
+    if (shellName.includes('fish')) return 'fish'
+    if (shellName === 'pwsh' || shellName === 'pwsh.exe') return 'pwsh'
+    if (shellName.includes('powershell')) return 'powershell'
+    if (shellName.includes('cmd')) return 'cmd'
+    if (shellName.includes('git') && shellName.includes('bash')) return 'gitbash'
+    if (shellName.includes('wsl')) return 'wsl'
+    return 'other'
+  }
+
+  /**
+   * Get shell arguments based on settings
+   */
+  private getShellArgs(shellPath: string, settings: AppSettings): string[] {
+    const args: string[] = []
+    const shellType = this.getShellType(shellPath)
+
+    // Handle login shell mode for Unix-like systems
+    if (process.platform !== 'win32' && settings.shellLoginMode) {
+      if (this.shellDetector.supportsLoginMode(shellType)) {
+        args.push('-l')
+      }
     }
-    return process.env.SHELL || '/bin/bash'
+
+    // Handle Windows shells
+    if (process.platform === 'win32') {
+      if (shellType === 'powershell' || shellType === 'pwsh') {
+        // -NoLogo reduces startup noise
+        args.push('-NoLogo')
+      }
+      // For CMD with UTF-8, we'll send 'chcp 65001' after spawn
+    }
+
+    return args
   }
 
   create(
@@ -32,6 +75,7 @@ export class PTYManager {
     projectId: string,
     projectName: string,
     shell?: string,
+    settings?: AppSettings,
     onData?: (data: string) => void,
     onExit?: (exitCode: number) => void
   ): Terminal {
@@ -44,9 +88,24 @@ export class PTYManager {
     const cols = 80
     const rows = 24
 
+    // Use default settings if not provided
+    const effectiveSettings: AppSettings = settings || {
+      theme: 'dark',
+      fontSize: 14,
+      fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+      scrollbackLines: 1000,
+      cursorBlink: true,
+      cursorStyle: 'block',
+      terminalTheme: 'homebrew',
+      shellLoginMode: true,
+      nodeSource: 'builtin',
+      preserveVersionManagers: false,
+      windowsUseUtf8: true
+    }
+
     try {
-      // Get Node.js environment variables
-      const nodeEnv = this.nodeManager.getTerminalEnv()
+      // Get Node.js environment variables with settings
+      const nodeEnv = this.nodeManager.getTerminalEnv(effectiveSettings)
 
       // Prepare environment variables to simulate a real TTY
       const ptyEnv = {
@@ -60,13 +119,27 @@ export class PTYManager {
         TERM_PROGRAM_VERSION: '0.1.0'
       } as { [key: string]: string }
 
-      const ptyProcess = pty.spawn(shellPath, [], {
+      // Get shell arguments based on settings (login shell mode, etc.)
+      const shellArgs = this.getShellArgs(shellPath, effectiveSettings)
+
+      const ptyProcess = pty.spawn(shellPath, shellArgs, {
         name: 'xterm-256color',
         cols,
         rows,
         cwd,
         env: ptyEnv
       })
+
+      // For Windows CMD with UTF-8 enabled, set code page
+      if (process.platform === 'win32' && effectiveSettings.windowsUseUtf8) {
+        const shellType = this.getShellType(shellPath)
+        if (shellType === 'cmd') {
+          // Send command to change code page to UTF-8
+          setTimeout(() => {
+            ptyProcess.write('chcp 65001 > nul\r')
+          }, 100)
+        }
+      }
 
       const terminal: Terminal = {
         id,

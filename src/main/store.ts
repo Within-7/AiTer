@@ -13,7 +13,17 @@ const defaultSettings: AppSettings = {
   scrollbackLines: 1000,
   cursorBlink: true,
   cursorStyle: 'block',
-  terminalTheme: 'homebrew'
+  terminalTheme: 'homebrew',
+
+  // Shell configuration
+  shellLoginMode: true,              // Enable login shell by default (load ~/.zshrc etc.)
+
+  // Node.js configuration
+  nodeSource: 'builtin',             // Use built-in Node.js by default
+  preserveVersionManagers: false,    // Don't preserve version manager vars by default
+
+  // Windows-specific
+  windowsUseUtf8: true               // Enable UTF-8 on Windows by default
 }
 
 export class StoreManager {

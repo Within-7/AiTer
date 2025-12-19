@@ -1,6 +1,8 @@
 import path from 'path';
 import { app } from 'electron';
 import fs from 'fs-extra';
+import { AppSettings } from '../../types';
+import { VersionManagerDetector } from '../shell/VersionManagerDetector';
 
 export interface NodeInfo {
   version: string;
@@ -113,57 +115,104 @@ export class NodeManager {
   }
 
   /**
-   * 获取终端环境变量（包含内置 Node.js 路径）
+   * 获取终端环境变量（根据设置决定 Node.js 来源和版本管理器处理）
    */
-  getTerminalEnv(): NodeJS.ProcessEnv {
+  getTerminalEnv(settings?: AppSettings): NodeJS.ProcessEnv {
     const binPath = this.getNodeBinPath();
     const rootPath = this.getNodeRootPath();
     const delimiter = this.platform === 'win32' ? ';' : ':';
 
-    // 构建新的 PATH，将内置 Node.js 路径放在最前面
-    const newPath = `${binPath}${delimiter}${process.env.PATH || ''}`;
-
-    // Node.js 全局模块路径
-    const nodePath = this.platform === 'win32'
-      ? path.join(binPath, 'node_modules')
-      : path.join(binPath, '../lib/node_modules');
-
-    // 创建环境变量副本，移除可能与 nvm/fnm/asdf 冲突的变量
+    // 创建环境变量副本
     const env = { ...process.env };
 
-    // 检测用户是否使用版本管理器（nvm/fnm/asdf）
-    const hasNvm = !!process.env.NVM_DIR;
-    const hasFnm = !!process.env.FNM_DIR;
-    const hasAsdf = !!process.env.ASDF_DIR;
-    const hasVersionManager = hasNvm || hasFnm || hasAsdf;
+    // 使用默认设置如果未提供
+    const nodeSource = settings?.nodeSource ?? 'builtin';
+    const preserveVersionManagers = settings?.preserveVersionManagers ?? false;
 
-    // 删除版本管理器相关的环境变量，防止冲突
-    delete env.NVM_DIR;
-    delete env.NVM_BIN;
-    delete env.NVM_INC;
-    delete env.NVM_CD_FLAGS;
-    delete env.NVM_RC_VERSION;
-    delete env.FNM_DIR;
-    delete env.FNM_MULTISHELL_PATH;
-    delete env.FNM_VERSION_FILE_STRATEGY;
-    delete env.ASDF_DIR;
-    delete env.ASDF_DATA_DIR;
+    // 处理版本管理器环境变量
+    if (!preserveVersionManagers) {
+      // 删除版本管理器相关的环境变量，防止冲突
+      const varsToClean = VersionManagerDetector.getEnvVarsToClean();
+      for (const varName of varsToClean) {
+        delete env[varName];
+      }
+    }
 
-    const result: NodeJS.ProcessEnv = {
-      ...env,
-      PATH: newPath,
-      NODE_PATH: nodePath,
-      npm_config_cache: path.join(this.nodejsDir, '.npm-cache'),
+    // 根据 nodeSource 设置决定 PATH 和 Node.js 相关变量
+    let finalPath = env.PATH || '';
+    const result: NodeJS.ProcessEnv = { ...env };
+
+    if (nodeSource === 'builtin') {
+      // 使用内置 Node.js：将内置 Node.js 路径放在最前面
+      finalPath = `${binPath}${delimiter}${finalPath}`;
+
+      // Node.js 全局模块路径
+      const nodePath = this.platform === 'win32'
+        ? path.join(binPath, 'node_modules')
+        : path.join(binPath, '../lib/node_modules');
+
+      result.NODE_PATH = nodePath;
+      result.npm_config_cache = path.join(this.nodejsDir, '.npm-cache');
       // CRITICAL: Always set npm prefix to use bundled Node.js directory
       // This prevents npm from using system-wide configuration (e.g., nvm paths)
       // which can cause installation hangs due to permission issues
-      npm_config_prefix: rootPath,
-      // 标记这是 AiTer 的终端环境，用于 shell 初始化脚本检测
-      AITER_TERMINAL: '1',
-      AITER_NODE_PATH: binPath,
-    };
+      result.npm_config_prefix = rootPath;
+      result.AITER_NODE_PATH = binPath;
+    } else if (nodeSource === 'system') {
+      // 使用系统 Node.js：不修改 PATH，删除我们的 npm 配置
+      // 保留系统的 NODE_PATH 和 npm 配置
+    } else if (nodeSource === 'auto') {
+      // 自动检测：检查系统 Node.js 是否存在
+      const hasSystemNode = this.checkSystemNode();
+      if (!hasSystemNode) {
+        // 系统没有 Node.js，使用内置的
+        finalPath = `${binPath}${delimiter}${finalPath}`;
+        const nodePath = this.platform === 'win32'
+          ? path.join(binPath, 'node_modules')
+          : path.join(binPath, '../lib/node_modules');
+
+        result.NODE_PATH = nodePath;
+        result.npm_config_cache = path.join(this.nodejsDir, '.npm-cache');
+        result.npm_config_prefix = rootPath;
+        result.AITER_NODE_PATH = binPath;
+      }
+      // 如果系统有 Node.js，保持原样
+    }
+
+    result.PATH = finalPath;
+    // 标记这是 AiTer 的终端环境
+    result.AITER_TERMINAL = '1';
 
     return result;
+  }
+
+  /**
+   * 检查系统是否安装了 Node.js（不使用内置版本）
+   */
+  private checkSystemNode(): boolean {
+    try {
+      const { execFileSync } = require('child_process');
+      // 尝试在不包含我们内置 Node.js 的 PATH 中查找 node
+      const originalPath = process.env.PATH || '';
+      const binPath = this.getNodeBinPath();
+
+      // 从 PATH 中移除我们的内置 Node.js 路径
+      const delimiter = this.platform === 'win32' ? ';' : ':';
+      const paths = originalPath.split(delimiter).filter((p: string) => !p.includes(binPath));
+      const cleanPath = paths.join(delimiter);
+
+      // 使用干净的 PATH 检查 node 是否存在
+      const env = { ...process.env, PATH: cleanPath };
+
+      if (this.platform === 'win32') {
+        execFileSync('where', ['node'], { env, stdio: 'ignore' });
+      } else {
+        execFileSync('which', ['node'], { env, stdio: 'ignore' });
+      }
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**

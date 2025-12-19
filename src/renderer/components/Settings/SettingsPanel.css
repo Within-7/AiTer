@@ -150,3 +150,59 @@
 .setting-item input[type="number"] {
   -moz-appearance: textfield;
 }
+
+/* Checkbox layout with hint */
+.setting-item-checkbox {
+  flex-wrap: wrap;
+}
+
+.setting-item-checkbox label {
+  flex-shrink: 0;
+}
+
+.setting-item-checkbox input[type="checkbox"] {
+  margin-left: auto;
+}
+
+.setting-hint {
+  width: 100%;
+  font-size: 11px;
+  color: var(--text-muted, #888);
+  margin-top: 4px;
+  padding-left: 0;
+}
+
+/* Info box for config files and detected items */
+.setting-info {
+  padding: 10px 12px;
+  background: var(--bg-tertiary, #1e1e1e);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-muted, #888);
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.setting-info-label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--text-color, #ccc);
+}
+
+.config-files-list {
+  margin: 0;
+  padding-left: 16px;
+  list-style-type: disc;
+}
+
+.config-files-list li {
+  margin: 2px 0;
+  font-family: 'SF Mono', Menlo, Monaco, monospace;
+  font-size: 11px;
+}
+
+.detected-items {
+  font-weight: 500;
+  color: var(--accent-color, #007acc);
+}
