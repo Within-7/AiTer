@@ -12,26 +12,46 @@
   animation: overlayFadeIn 0.15s ease-out;
 }
 
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .confirm-dialog {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
+  background: var(--bg-primary, #1e1e1e);
+  border: 1px solid var(--border-color, #3c3c3c);
   border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   min-width: 320px;
   max-width: 400px;
   animation: dialogSlideIn 0.15s ease-out;
 }
 
+@keyframes dialogSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .confirm-dialog-header {
   padding: 16px 20px 12px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color, #3c3c3c);
 }
 
 .confirm-dialog-header h3 {
   margin: 0;
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-primary, #cccccc);
 }
 
 .confirm-dialog-content {
@@ -41,7 +61,7 @@
 .confirm-dialog-content p {
   margin: 0;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #999999);
   line-height: 1.5;
 }
 
@@ -62,13 +82,13 @@
 }
 
 .confirm-dialog-actions .btn-secondary {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
+  background: var(--bg-secondary, #2d2d30);
+  border: 1px solid var(--border-color, #3c3c3c);
+  color: var(--text-primary, #cccccc);
 }
 
 .confirm-dialog-actions .btn-secondary:hover {
-  background: var(--bg-hover);
+  background: var(--bg-hover, #3e3e42);
 }
 
 .confirm-dialog-actions .btn-primary {
