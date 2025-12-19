@@ -166,6 +166,12 @@ export class AutoUpdateManager {
    * 检查更新
    */
   async checkForUpdates(): Promise<void> {
+    // 开发环境下跳过更新检查
+    if (!app.isPackaged) {
+      log.info('[AutoUpdater] Skipping update check in development mode')
+      return
+    }
+
     if (this.isCheckingForUpdate) {
       log.info('[AutoUpdater] Already checking for updates')
       return
@@ -304,6 +310,12 @@ export class AutoUpdateManager {
    * 启动自动检查更新（每 6 小时）
    */
   startAutoCheck() {
+    // 开发环境下不启动自动更新
+    if (!app.isPackaged) {
+      log.info('[AutoUpdater] Auto-update disabled in development mode')
+      return
+    }
+
     // 启动时清理旧的更新缓存（来自上次更新）
     setTimeout(() => {
       this.clearUpdateCache()
