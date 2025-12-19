@@ -404,6 +404,57 @@ export const FileTree: React.FC<FileTreeProps> = ({
     setFileDragState({ draggedPath: null, dropTargetPath: null })
   }, [])
 
+  // Handle drop on project root (file-tree-content area)
+  const handleRootDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    if (fileDragState.draggedPath) {
+      e.dataTransfer.dropEffect = 'move'
+      setFileDragState(prev => ({ ...prev, dropTargetPath: projectPath }))
+    }
+  }, [fileDragState.draggedPath, projectPath])
+
+  const handleRootDragLeave = useCallback((e: React.DragEvent) => {
+    // Only clear if leaving the root area, not entering a child
+    const relatedTarget = e.relatedTarget as HTMLElement
+    if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
+      setFileDragState(prev => ({ ...prev, dropTargetPath: null }))
+    }
+  }, [])
+
+  const handleRootDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault()
+
+    const draggedPath = e.dataTransfer.getData('application/x-file-path')
+    if (!draggedPath) {
+      setFileDragState({ draggedPath: null, dropTargetPath: null })
+      return
+    }
+
+    // Check if already in root directory
+    const parentDir = draggedPath.substring(0, draggedPath.lastIndexOf('/'))
+    if (parentDir === projectPath) {
+      setFileDragState({ draggedPath: null, dropTargetPath: null })
+      return
+    }
+
+    // Get the file/folder name
+    const name = draggedPath.substring(draggedPath.lastIndexOf('/') + 1)
+    const newPath = `${projectPath}/${name}`
+
+    try {
+      const result = await window.api.fs.rename(draggedPath, newPath)
+      if (result.success) {
+        loadDirectory(projectPath)
+      } else {
+        console.error('Failed to move file:', result.error)
+      }
+    } catch (err) {
+      console.error('Error moving file:', err)
+    }
+
+    setFileDragState({ draggedPath: null, dropTargetPath: null })
+  }, [projectPath])
+
   if (loading && nodes.length === 0) {
     return (
       <div className="file-tree">
@@ -420,12 +471,19 @@ export const FileTree: React.FC<FileTreeProps> = ({
     )
   }
 
+  const isRootDropTarget = fileDragState.dropTargetPath === projectPath
+
   return (
     <div
       className="file-tree"
       onContextMenu={(e) => handleContextMenu(e, null, true)}
     >
-      <div className="file-tree-content">
+      <div
+        className={`file-tree-content ${isRootDropTarget ? 'root-drop-target' : ''}`}
+        onDragOver={handleRootDragOver}
+        onDragLeave={handleRootDragLeave}
+        onDrop={handleRootDrop}
+      >
         {nodes.map(node => (
           <FileTreeNode
             key={node.id}
