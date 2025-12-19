@@ -146,21 +146,21 @@ export function GitView() {
                           <span className="branch-name">
                             {gitStatus.currentBranch || 'main'}
                           </span>
+                          {/* Ahead/behind indicators - show regardless of local changes */}
+                          {gitStatus.ahead && gitStatus.ahead > 0 && (
+                            <span className="ahead-indicator" title={`${gitStatus.ahead} commits ahead of remote`}>
+                              ↑{gitStatus.ahead}
+                            </span>
+                          )}
+                          {gitStatus.behind && gitStatus.behind > 0 && (
+                            <span className="behind-indicator" title={`${gitStatus.behind} commits behind remote`}>
+                              ↓{gitStatus.behind}
+                            </span>
+                          )}
+                          {/* Uncommitted changes indicator */}
                           {gitStatus.hasChanges && (
-                            <span className="changes-indicator">
-                              {gitStatus.ahead && gitStatus.ahead > 0 && (
-                                <span className="ahead-indicator" title={`${gitStatus.ahead} commits ahead`}>
-                                  ↑{gitStatus.ahead}
-                                </span>
-                              )}
-                              {gitStatus.behind && gitStatus.behind > 0 && (
-                                <span className="behind-indicator" title={`${gitStatus.behind} commits behind`}>
-                                  ↓{gitStatus.behind}
-                                </span>
-                              )}
-                              <span className="modified-indicator" title="Uncommitted changes">
-                                •
-                              </span>
+                            <span className="modified-indicator" title="Uncommitted changes">
+                              •
                             </span>
                           )}
                         </div>
