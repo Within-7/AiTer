@@ -2,7 +2,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
 
 // 读取 package.json 获取版本号
 const packageJson = JSON.parse(
@@ -22,17 +21,6 @@ if (!fs.existsSync(RELEASE_DIR)) {
   process.exit(1);
 }
 
-// 计算文件 SHA256
-function calculateSHA256(filePath) {
-  if (!fs.existsSync(filePath)) {
-    return '';
-  }
-  const fileBuffer = fs.readFileSync(filePath);
-  const hashSum = crypto.createHash('sha256');
-  hashSum.update(fileBuffer);
-  return hashSum.digest('hex');
-}
-
 // 格式化文件大小
 function formatFileSize(bytes) {
   if (bytes === 0) return '0 B';
@@ -47,13 +35,12 @@ function getFileInfo(fileName) {
   const filePath = path.join(RELEASE_DIR, fileName);
   if (!fs.existsSync(filePath)) {
     console.warn(`Warning: ${fileName} not found`);
-    return { exists: false, size: '0 B', sha256: '' };
+    return { exists: false, size: '0 B' };
   }
   const stats = fs.statSync(filePath);
   return {
     exists: true,
     size: formatFileSize(stats.size),
-    sha256: calculateSHA256(filePath),
   };
 }
 
@@ -156,54 +143,31 @@ function generateReleaseFiles() {
 
   const changelog = extractChangelog();
 
-  // 生成 HTML 页面
-  let htmlTemplate = fs.readFileSync(
-    path.join(TEMPLATE_DIR, 'index.html'),
-    'utf-8'
-  );
+  // 检查模板目录和文件是否存在
+  const htmlTemplatePath = path.join(TEMPLATE_DIR, 'index.html');
+  if (!fs.existsSync(htmlTemplatePath)) {
+    console.warn('Warning: release-template/index.html not found, skipping HTML generation');
+  } else {
+    // 生成 HTML 页面
+    let htmlTemplate = fs.readFileSync(htmlTemplatePath, 'utf-8');
 
-  // 生成 changelog HTML 列表
-  const changelogHTML = changelog.items.map(item => `<li>${item}</li>`).join('\n            ');
+    // 生成 changelog HTML 列表
+    const changelogHTML = changelog.items.map(item => `<li>${item}</li>`).join('\n            ');
 
-  htmlTemplate = htmlTemplate
-    .replace(/{{VERSION}}/g, VERSION)
-    .replace(/{{RELEASE_DATE}}/g, RELEASE_DATE)
-    .replace(/{{MAC_ARM_FILE}}/g, macArmFile)
-    .replace(/{{MAC_ARM_SIZE}}/g, macArmInfo.size)
-    .replace(/{{MAC_INTEL_FILE}}/g, macIntelFile)
-    .replace(/{{MAC_INTEL_SIZE}}/g, macIntelInfo.size)
-    .replace(/{{WIN_FILE}}/g, winFile)
-    .replace(/{{WIN_SIZE}}/g, winInfo.size)
-    .replace(/{{CHANGELOG_ITEMS}}/g, changelogHTML);
+    htmlTemplate = htmlTemplate
+      .replace(/{{VERSION}}/g, VERSION)
+      .replace(/{{RELEASE_DATE}}/g, RELEASE_DATE)
+      .replace(/{{MAC_ARM_FILE}}/g, macArmFile)
+      .replace(/{{MAC_ARM_SIZE}}/g, macArmInfo.size)
+      .replace(/{{MAC_INTEL_FILE}}/g, macIntelFile)
+      .replace(/{{MAC_INTEL_SIZE}}/g, macIntelInfo.size)
+      .replace(/{{WIN_FILE}}/g, winFile)
+      .replace(/{{WIN_SIZE}}/g, winInfo.size)
+      .replace(/{{CHANGELOG_ITEMS}}/g, changelogHTML);
 
-  fs.writeFileSync(path.join(RELEASE_DIR, 'index.html'), htmlTemplate);
-  console.log('✓ Generated index.html');
-
-  // 生成 JSON API
-  let jsonTemplate = fs.readFileSync(
-    path.join(TEMPLATE_DIR, 'latest.json'),
-    'utf-8'
-  );
-
-  // 生成 changelog JSON 数组
-  const changelogJSON = changelog.items.map(item => `"${item}"`).join(',\n    ');
-
-  jsonTemplate = jsonTemplate
-    .replace(/{{VERSION}}/g, VERSION)
-    .replace(/{{RELEASE_DATE}}/g, RELEASE_DATE)
-    .replace(/{{MAC_ARM_FILE}}/g, macArmFile)
-    .replace(/{{MAC_ARM_SIZE}}/g, macArmInfo.size)
-    .replace(/{{MAC_ARM_SHA256}}/g, macArmInfo.sha256)
-    .replace(/{{MAC_INTEL_FILE}}/g, macIntelFile)
-    .replace(/{{MAC_INTEL_SIZE}}/g, macIntelInfo.size)
-    .replace(/{{MAC_INTEL_SHA256}}/g, macIntelInfo.sha256)
-    .replace(/{{WIN_FILE}}/g, winFile)
-    .replace(/{{WIN_SIZE}}/g, winInfo.size)
-    .replace(/{{WIN_SHA256}}/g, winInfo.sha256)
-    .replace(/{{CHANGELOG_JSON}}/g, changelogJSON);
-
-  fs.writeFileSync(path.join(RELEASE_DIR, 'latest.json'), jsonTemplate);
-  console.log('✓ Generated latest.json');
+    fs.writeFileSync(path.join(RELEASE_DIR, 'index.html'), htmlTemplate);
+    console.log('✓ Generated index.html');
+  }
 
   // 生成 README
   const readmeContent = `# AiTer ${VERSION} Release
@@ -234,14 +198,6 @@ ${changelog.items.map(item => `- ${item}`).join('\n')}
 3. Follow the installation wizard
 4. Launch AiTer from Start Menu
 
-## Update Server
-
-This release includes:
-- \`index.html\`: Download page for users
-- \`latest.json\`: API endpoint for auto-update checking
-
-You can host these files on any static file server.
-
 ---
 
 Copyright © 2025-2026 Within-7.com - 任小姐出海战略咨询
@@ -254,9 +210,10 @@ Copyright © 2025-2026 Within-7.com - 任小姐出海战略咨询
   console.log(`\nVersion: ${VERSION}`);
   console.log(`Release Date: ${RELEASE_DATE}`);
   console.log('\nFiles in release directory:');
-  console.log(`  - index.html (download page)`);
-  console.log(`  - latest.json (version API)`);
   console.log(`  - README.md (release notes)`);
+  if (fs.existsSync(path.join(RELEASE_DIR, 'index.html'))) {
+    console.log(`  - index.html (download page)`);
+  }
   if (macArmInfo.exists) console.log(`  - ${macArmFile} (${macArmInfo.size})`);
   if (macIntelInfo.exists) console.log(`  - ${macIntelFile} (${macIntelInfo.size})`);
   if (winInfo.exists) console.log(`  - ${winFile} (${winInfo.size})`);
