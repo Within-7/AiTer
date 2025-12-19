@@ -14,6 +14,7 @@ export const SettingsPanel: React.FC = () => {
   const [detectedVersionManagers, setDetectedVersionManagers] = useState<VersionManagerInfo[]>([])
   const [currentConfigFiles, setCurrentConfigFiles] = useState<string[]>([])
   const [isWindows] = useState(() => navigator.platform.toLowerCase().includes('win'))
+  const [isMac] = useState(() => navigator.platform.toLowerCase().includes('mac'))
 
   // Fetch available shells and version managers on mount
   useEffect(() => {
@@ -190,7 +191,7 @@ export const SettingsPanel: React.FC = () => {
           </section>
 
           {/* macOS-specific section */}
-          {!isWindows && (
+          {isMac && (
             <section className="settings-section">
               <h3>macOS</h3>
 
