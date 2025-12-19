@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Workspace } from '../../types'
 import '../styles/WorkspaceSelector.css'
 
@@ -6,10 +6,21 @@ interface WorkspaceSelectorProps {
   onManageWorkspaces: () => void
 }
 
+interface ConfirmState {
+  isOpen: boolean
+  workspaceId: string
+  workspaceName: string
+}
+
 export const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({ onManageWorkspaces }) => {
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null)
   const [workspaces, setWorkspaces] = useState<Workspace[]>([])
   const [isOpen, setIsOpen] = useState(false)
+  const [confirmState, setConfirmState] = useState<ConfirmState>({
+    isOpen: false,
+    workspaceId: '',
+    workspaceName: ''
+  })
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -43,19 +54,67 @@ export const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({ onManageWo
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleLaunchWorkspace = async (workspaceId: string) => {
-    if (workspaceId === currentWorkspace?.id) {
+  // Launch workspace in new window (with optional confirmation for same workspace)
+  const launchWorkspace = useCallback(async (workspaceId: string) => {
+    const result = await window.api.workspace.launch(workspaceId)
+    if (!result.success) {
+      console.error('Failed to launch workspace:', result.error)
+    }
+  }, [])
+
+  const handleLaunchWorkspace = (workspaceId: string) => {
+    setIsOpen(false)
+    launchWorkspace(workspaceId)
+  }
+
+  // Handle clicking on workspace item (navigate or show new window option)
+  const handleWorkspaceClick = (workspace: Workspace) => {
+    if (workspace.id === currentWorkspace?.id) {
+      // Just close dropdown for current workspace - user can click the new window icon
       setIsOpen(false)
       return
     }
-
-    const result = await window.api.workspace.launch(workspaceId)
-    if (result.success) {
-      setIsOpen(false)
-    } else {
-      console.error('Failed to launch workspace:', result.error)
-    }
+    handleLaunchWorkspace(workspace.id)
   }
+
+  // Handle opening same workspace in new window with confirmation
+  const handleOpenSameWorkspace = (e: React.MouseEvent, workspace: Workspace) => {
+    e.stopPropagation()
+    setIsOpen(false)
+    setConfirmState({
+      isOpen: true,
+      workspaceId: workspace.id,
+      workspaceName: workspace.name
+    })
+  }
+
+  const handleConfirmOpen = () => {
+    launchWorkspace(confirmState.workspaceId)
+    setConfirmState(prev => ({ ...prev, isOpen: false }))
+  }
+
+  const handleCancelConfirm = () => {
+    setConfirmState(prev => ({ ...prev, isOpen: false }))
+  }
+
+  // Keyboard shortcut: Cmd/Ctrl+Shift+N to open current workspace in new window
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'n') {
+        e.preventDefault()
+        if (currentWorkspace) {
+          setConfirmState({
+            isOpen: true,
+            workspaceId: currentWorkspace.id,
+            workspaceName: currentWorkspace.name
+          })
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [currentWorkspace])
 
   const handleManageClick = () => {
     setIsOpen(false)
@@ -99,7 +158,7 @@ export const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({ onManageWo
               <button
                 key={workspace.id}
                 className={`workspace-item ${workspace.id === currentWorkspace?.id ? 'active' : ''}`}
-                onClick={() => handleLaunchWorkspace(workspace.id)}
+                onClick={() => handleWorkspaceClick(workspace)}
               >
                 <span className="workspace-item-icon">
                   {workspace.color ? (
@@ -121,14 +180,19 @@ export const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({ onManageWo
                     </svg>
                   </span>
                 )}
-                {workspace.id !== currentWorkspace?.id && (
-                  <span className="workspace-item-launch" title="Open in new window">
-                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
-                      <path d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
-                    </svg>
-                  </span>
-                )}
+                <span
+                  className="workspace-item-launch"
+                  title={workspace.id === currentWorkspace?.id ? "Open in new window (⇧⌘N)" : "Open in new window"}
+                  onClick={(e) => workspace.id === currentWorkspace?.id
+                    ? handleOpenSameWorkspace(e, workspace)
+                    : (e.stopPropagation(), handleLaunchWorkspace(workspace.id))
+                  }
+                >
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+                    <path d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+                  </svg>
+                </span>
               </button>
             ))}
           </div>
@@ -139,6 +203,33 @@ export const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({ onManageWo
               </svg>
               Manage Workspaces...
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation dialog for opening same workspace */}
+      {confirmState.isOpen && (
+        <div className="workspace-confirm-overlay" onClick={handleCancelConfirm}>
+          <div className="workspace-confirm-dialog" onClick={e => e.stopPropagation()}>
+            <div className="workspace-confirm-header">
+              <h3>Open New Window</h3>
+            </div>
+            <div className="workspace-confirm-body">
+              <p>
+                Open another window for <strong>"{confirmState.workspaceName}"</strong>?
+              </p>
+              <p className="workspace-confirm-hint">
+                Multiple windows of the same workspace may have conflicting window positions when closed.
+              </p>
+            </div>
+            <div className="workspace-confirm-actions">
+              <button className="btn-secondary" onClick={handleCancelConfirm}>
+                Cancel
+              </button>
+              <button className="btn-primary" onClick={handleConfirmOpen}>
+                Open New Window
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -129,13 +129,28 @@
 .workspace-item-launch {
   display: flex;
   align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
   opacity: 0;
   color: var(--text-secondary, #858585);
-  transition: opacity 0.1s ease;
+  transition: all 0.1s ease;
 }
 
 .workspace-item:hover .workspace-item-launch {
   opacity: 1;
+}
+
+/* Always show launch button for active workspace since clicking the row does nothing */
+.workspace-item.active .workspace-item-launch {
+  opacity: 0.6;
+}
+
+.workspace-item-launch:hover {
+  opacity: 1 !important;
+  background: var(--hover-bg, rgba(255, 255, 255, 0.1));
+  color: var(--text-primary, #cccccc);
 }
 
 /* Footer */
@@ -163,4 +178,95 @@
 .workspace-manage-button:hover {
   background: var(--hover-bg, rgba(255, 255, 255, 0.08));
   color: var(--text-primary, #cccccc);
+}
+
+/* Confirmation Dialog */
+.workspace-confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.workspace-confirm-dialog {
+  width: 360px;
+  max-width: 90vw;
+  background: var(--dialog-bg, #252526);
+  border: 1px solid var(--border-color, #3c3c3c);
+  border-radius: 8px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.workspace-confirm-header {
+  padding: 16px 20px 12px;
+}
+
+.workspace-confirm-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary, #e0e0e0);
+}
+
+.workspace-confirm-body {
+  padding: 0 20px 16px;
+}
+
+.workspace-confirm-body p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--text-primary, #cccccc);
+  line-height: 1.5;
+}
+
+.workspace-confirm-hint {
+  font-size: 12px !important;
+  color: var(--text-secondary, #858585) !important;
+  font-style: italic;
+}
+
+.workspace-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 20px;
+  background: var(--input-bg, rgba(0, 0, 0, 0.2));
+  border-top: 1px solid var(--border-color, #3c3c3c);
+}
+
+.workspace-confirm-actions .btn-secondary,
+.workspace-confirm-actions .btn-primary {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.workspace-confirm-actions .btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border-color, #3c3c3c);
+  color: var(--text-primary, #cccccc);
+}
+
+.workspace-confirm-actions .btn-secondary:hover {
+  background: var(--hover-bg, rgba(255, 255, 255, 0.08));
+}
+
+.workspace-confirm-actions .btn-primary {
+  background: var(--accent-color, #0e7dcd);
+  color: white;
+}
+
+.workspace-confirm-actions .btn-primary:hover {
+  background: var(--accent-hover, #0a5a94);
 }
