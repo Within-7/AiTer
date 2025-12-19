@@ -2,12 +2,13 @@
   position: fixed;
   z-index: 1000;
   min-width: 160px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
+  background: var(--bg-primary, #1e1e1e);
+  border: 1px solid var(--border-color, #3c3c3c);
   border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   padding: 4px 0;
   animation: contextMenuFadeIn 0.1s ease-out;
+  backdrop-filter: blur(8px);
 }
 
 @keyframes contextMenuFadeIn {
