@@ -493,6 +493,12 @@ export function setupIPC(
     try {
       const pluginManager = PluginManager.getInstance()
       const result = await pluginManager.checkForUpdate(pluginId)
+
+      // Notify renderer that plugin status may have changed (e.g., update available)
+      if (window && !window.isDestroyed()) {
+        window.webContents.send('plugins:status-changed')
+      }
+
       return { success: true, data: result }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
@@ -504,6 +510,12 @@ export function setupIPC(
     try {
       const pluginManager = PluginManager.getInstance()
       await pluginManager.refreshAllPluginsStatus()
+
+      // Notify renderer that plugin status may have changed
+      if (window && !window.isDestroyed()) {
+        window.webContents.send('plugins:status-changed')
+      }
+
       return { success: true }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
