@@ -12,6 +12,28 @@ const EXCLUDED_DIRS = ['.git', '.DS_Store']
 const gitignoreCache = new Map<string, { ig: Ignore; mtime: number }>()
 
 /**
+ * Find the git root by traversing up the directory tree
+ */
+async function findGitRoot(startPath: string): Promise<string | null> {
+  let currentPath = startPath
+
+  while (currentPath !== path.dirname(currentPath)) {
+    const gitPath = path.join(currentPath, '.git')
+    try {
+      const stats = await fs.promises.stat(gitPath)
+      if (stats.isDirectory()) {
+        return currentPath
+      }
+    } catch {
+      // .git not found, continue up
+    }
+    currentPath = path.dirname(currentPath)
+  }
+
+  return null
+}
+
+/**
  * Load and cache gitignore for a project root
  */
 async function getGitignore(projectRoot: string): Promise<Ignore | null> {
@@ -39,6 +61,20 @@ async function getGitignore(projectRoot: string): Promise<Ignore | null> {
     // No .gitignore file or can't read it
     return null
   }
+}
+
+/**
+ * Check if a directory itself is ignored by gitignore
+ */
+async function isDirectoryIgnored(dirPath: string, gitRoot: string): Promise<boolean> {
+  const ig = await getGitignore(gitRoot)
+  if (!ig) return false
+
+  const relativePath = path.relative(gitRoot, dirPath)
+  if (!relativePath) return false // dirPath is the git root itself
+
+  // Check with trailing slash for directory
+  return ig.ignores(relativePath + '/')
 }
 
 export class SecureFileSystemManager {
@@ -209,13 +245,12 @@ export class SecureFileSystemManager {
    * Read directory contents recursively with depth limit
    * @param dirPath - Directory path to read
    * @param depth - Recursion depth limit (default 1)
-   * @param projectRoot - Project root for gitignore checking (optional, defaults to dirPath)
+   * @param projectRoot - Project root for gitignore checking (optional, auto-detected from git)
    * @param parentIgnored - Whether the parent directory is ignored (for inheritance)
    */
   async readDirectory(dirPath: string, depth: number = 1, projectRoot?: string, parentIgnored: boolean = false): Promise<FileNode[]> {
     try {
       const validPath = this.validatePath(dirPath)
-      const root = projectRoot || validPath
 
       // Check if path exists and is a directory
       const stats = await fs.promises.stat(validPath)
@@ -223,8 +258,18 @@ export class SecureFileSystemManager {
         throw new Error('Path is not a directory')
       }
 
+      // Find git root if not provided
+      const root = projectRoot || await findGitRoot(validPath) || validPath
+
       // Load gitignore for the project root
       const ig = await getGitignore(root)
+
+      // Check if the current directory itself is ignored (for when expanding a folder)
+      // This handles the case where the folder was already marked as ignored
+      let currentDirIgnored = parentIgnored
+      if (!parentIgnored && root !== validPath) {
+        currentDirIgnored = await isDirectoryIgnored(validPath, root)
+      }
 
       const entries = await fs.promises.readdir(validPath, { withFileTypes: true })
       const nodes: FileNode[] = []
@@ -244,8 +289,8 @@ export class SecureFileSystemManager {
         const gitignorePath = entry.isDirectory() ? relativePath + '/' : relativePath
 
         // Check if file/directory is ignored by .gitignore
-        // If parent is ignored, children inherit the ignored status
-        const isGitIgnored = parentIgnored || (ig ? ig.ignores(gitignorePath) : false)
+        // If current directory or parent is ignored, children inherit the ignored status
+        const isGitIgnored = currentDirIgnored || (ig ? ig.ignores(gitignorePath) : false)
 
         const node: FileNode = {
           id: uuidv4(),
