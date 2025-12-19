@@ -111,6 +111,15 @@
   color: #569cd6;
 }
 
+/* Gitignored files - grayed out */
+.file-tree-item.gitignored {
+  opacity: 0.5;
+}
+
+.file-tree-item.gitignored .file-name {
+  color: #6e6e6e;
+}
+
 .file-tree-children {
   /* Children are rendered recursively */
 }

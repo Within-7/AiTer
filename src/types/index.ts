@@ -19,6 +19,7 @@ export interface FileNode {
   children?: FileNode[]
   isExpanded?: boolean
   gitStatus?: 'modified' | 'added' | 'deleted' | 'untracked' | 'clean'
+  isGitIgnored?: boolean  // Whether the file/directory is in .gitignore
   size?: number
   modifiedTime?: number
 }

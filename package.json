@@ -45,6 +45,7 @@
     "express-session": "^1.18.2",
     "get-port": "^7.1.0",
     "highlight.js": "^11.9.0",
+    "ignore": "^7.0.5",
     "marked": "^11.0.0",
     "monaco-editor": "^0.45.0",
     "node-pty": "^1.0.0",

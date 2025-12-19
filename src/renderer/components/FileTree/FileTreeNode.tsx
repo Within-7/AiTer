@@ -209,11 +209,12 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   const gitStatus = getGitStatusIcon(effectiveGitStatus)
   const gitStatusClass = getGitStatusClass(effectiveGitStatus)
   const isActive = node.type === 'file' && activeFilePath === node.path
+  const isIgnored = node.isGitIgnored
 
   return (
     <div className="file-tree-node">
       <div
-        className={`file-tree-item ${gitStatusClass} ${isActive ? 'selected' : ''}`}
+        className={`file-tree-item ${gitStatusClass} ${isActive ? 'selected' : ''} ${isIgnored ? 'gitignored' : ''}`}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={handleClick}
       >
