@@ -55,20 +55,27 @@ mac:
   gatekeeperAssess: false
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
-  # 代码签名配置
+  # 代码签名配置 - 当前已禁用
   # 需要设置环境变量:
   # - CSC_LINK: base64 编码的 .p12 证书文件，或证书文件路径
   # - CSC_KEY_PASSWORD: 证书密码
   # 或者使用 Keychain (推荐):
   # - CSC_NAME: 证书名称 (如 "Developer ID Application: Your Name (XXXXXXXXXX)")
-  identity: null  # 设为 null 时自动从 Keychain 查找
+  #
+  # 设为 null 时禁用代码签名（开发/测试环境）
+  identity: null
+  # 明确设置环境变量以禁用签名
+  env:
+    CSC_IDENTITY_AUTO_DISCOVERY: false
 
 # macOS 公证配置 (需要 Apple Developer 账号)
 # 需要设置环境变量:
 # - APPLE_ID: Apple ID 邮箱
 # - APPLE_APP_SPECIFIC_PASSWORD: App 专用密码 (https://appleid.apple.com)
 # - APPLE_TEAM_ID: 开发者团队 ID
-afterSign: scripts/notarize.js
+#
+# 当前已禁用公证（开发/测试环境）
+# afterSign: scripts/notarize.js
 
 # DMG 配置
 dmg:
@@ -94,18 +101,19 @@ win:
         - x64
   icon: build/icon.ico
   artifactName: ${productName}-${version}-win-${arch}.${ext}
-  # Windows 代码签名配置
+  # Windows 代码签名配置 - 当前已禁用
   # 需要设置环境变量:
   # - CSC_LINK: base64 编码的 .pfx 证书文件，或证书文件路径
   # - CSC_KEY_PASSWORD: 证书密码
   # 或使用 Windows 签名工具:
   # - WIN_CSC_LINK: Windows 证书路径
   # - WIN_CSC_KEY_PASSWORD: Windows 证书密码
-  signingHashAlgorithms:
-    - sha256
-  signDlls: false
-  # 时间戳服务器 (可选，推荐使用)
-  timeStampServer: http://timestamp.digicert.com
+  #
+  # 禁用签名（开发/测试环境）
+  # signingHashAlgorithms:
+  #   - sha256
+  # signDlls: false
+  # timeStampServer: http://timestamp.digicert.com
 
 # NSIS 安装程序配置
 nsis:
