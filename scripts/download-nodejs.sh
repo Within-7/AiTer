@@ -6,7 +6,7 @@
 set -e
 
 # Configuration
-NODE_VERSION="v20.18.0"  # LTS version as of 2024
+NODE_VERSION="v22.21.1"  # LTS version - required for Claude Code 2.0+ (needs v22.17.0+)
 BASE_URL="https://nodejs.org/dist"
 RESOURCES_DIR="./resources/nodejs"
 
