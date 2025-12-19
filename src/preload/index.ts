@@ -344,6 +344,22 @@ contextBridge.exposeInMainWorld('api', {
     setProjectVisibility: (projectId: string, visible: boolean) =>
       ipcRenderer.invoke('workspace:setProjectVisibility', { projectId, visible }),
     getAllProjects: () => ipcRenderer.invoke('workspace:getAllProjects')
+  },
+
+  // File Watcher APIs
+  fileWatcher: {
+    watch: (projectPath: string) =>
+      ipcRenderer.invoke('fileWatcher:watch', { projectPath }),
+    unwatch: (projectPath: string) =>
+      ipcRenderer.invoke('fileWatcher:unwatch', { projectPath }),
+    isWatching: (projectPath: string) =>
+      ipcRenderer.invoke('fileWatcher:isWatching', { projectPath }),
+    onChanged: (callback: (data: { projectPath: string; changeCount: number }) => void) => {
+      const listener = (_: unknown, data: { projectPath: string; changeCount: number }) =>
+        callback(data)
+      ipcRenderer.on('fileWatcher:changed', listener)
+      return () => ipcRenderer.removeListener('fileWatcher:changed', listener)
+    }
   }
 })
 
@@ -672,6 +688,22 @@ export interface API {
       projects?: Project[];
       error?: string;
     }>
+  }
+  fileWatcher: {
+    watch(projectPath: string): Promise<{
+      success: boolean;
+      error?: string;
+    }>
+    unwatch(projectPath: string): Promise<{
+      success: boolean;
+      error?: string;
+    }>
+    isWatching(projectPath: string): Promise<{
+      success: boolean;
+      watching?: boolean;
+      error?: string;
+    }>
+    onChanged(callback: (data: { projectPath: string; changeCount: number }) => void): () => void
   }
 }
 

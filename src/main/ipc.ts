@@ -15,6 +15,7 @@ import { gitManager } from './git'
 import { ShellDetector } from './shell/ShellDetector'
 import { VersionManagerDetector } from './shell/VersionManagerDetector'
 import { WorkspaceManager } from './workspace'
+import { fileWatcherManager } from './fileWatcher'
 
 export function setupIPC(
   window: BrowserWindow,
@@ -23,6 +24,9 @@ export function setupIPC(
   serverManager: ProjectServerManager,
   workspaceManager: WorkspaceManager
 ) {
+  // Set main window for file watcher manager
+  fileWatcherManager.setMainWindow(window)
+
   // Throttle terminal name updates to reduce UI flickering
   // For REPL apps like Claude Code CLI that send frequent commands
   const terminalNameThrottle = new Map<string, { lastSent: number; pendingName: string | null; timeout: NodeJS.Timeout | null }>()
@@ -1154,6 +1158,37 @@ export function setupIPC(
     try {
       const projects = storeManager.getProjects()
       return { success: true, projects }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  // File watcher management
+  ipcMain.handle('fileWatcher:watch', async (_, { projectPath }) => {
+    try {
+      const success = fileWatcherManager.watch(projectPath)
+      return { success }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('fileWatcher:unwatch', async (_, { projectPath }) => {
+    try {
+      const success = await fileWatcherManager.unwatch(projectPath)
+      return { success }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('fileWatcher:isWatching', async (_, { projectPath }) => {
+    try {
+      const watching = fileWatcherManager.isWatching(projectPath)
+      return { success: true, watching }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
       return { success: false, error: message }

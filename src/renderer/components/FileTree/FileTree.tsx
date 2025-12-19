@@ -89,10 +89,25 @@ export const FileTree: React.FC<FileTreeProps> = ({
     // Poll git status every 3 seconds
     gitPollIntervalRef.current = setInterval(loadGitChanges, 3000)
 
+    // Start file watcher for this project
+    window.api.fileWatcher.watch(projectPath)
+
+    // Listen for file changes
+    const unsubscribe = window.api.fileWatcher.onChanged((data) => {
+      if (data.projectPath === projectPath) {
+        console.log(`[FileTree] Detected ${data.changeCount} file changes, refreshing...`)
+        loadDirectory(projectPath)
+        loadGitChanges()
+      }
+    })
+
     return () => {
       if (gitPollIntervalRef.current) {
         clearInterval(gitPollIntervalRef.current)
       }
+      // Stop file watcher and remove listener
+      window.api.fileWatcher.unwatch(projectPath)
+      unsubscribe()
     }
   }, [projectPath, loadGitChanges])
 
