@@ -9,6 +9,7 @@ import { ProjectServerManager } from './fileServer/ProjectServerManager'
 import { PluginManager } from './plugins/PluginManager'
 import { initUpdateManager } from './updater'
 import { NodeManager } from './nodejs/manager'
+import { WorkspaceManager } from './workspace'
 
 // ============================================================================
 // Development/Production Environment Isolation
@@ -44,6 +45,16 @@ let storeManager: StoreManager | null = null
 let serverManager: ProjectServerManager | null = null
 let pluginManager: PluginManager | null = null
 let nodeManager: NodeManager | null = null
+let workspaceManager: WorkspaceManager | null = null
+
+// Parse workspace ID from command line arguments
+function getWorkspaceIdFromArgs(): string {
+  const workspaceArg = process.argv.find(arg => arg.startsWith('--workspace='))
+  if (workspaceArg) {
+    return workspaceArg.split('=')[1] || 'default'
+  }
+  return process.env.AITER_WORKSPACE || 'default'
+}
 
 // Update check URL (可以通过环境变量配置)
 const UPDATE_CHECK_URL = process.env.UPDATE_CHECK_URL || 'http://aiter.within-7.com/latest.json'
@@ -52,6 +63,11 @@ async function initialize() {
   try {
     // Initialize store
     storeManager = new StoreManager()
+
+    // Initialize workspace manager with workspace ID from command line
+    const workspaceId = getWorkspaceIdFromArgs()
+    workspaceManager = new WorkspaceManager(workspaceId)
+    console.log(`[WorkspaceManager] Using workspace: ${workspaceId}`)
 
     // Initialize Node.js manager and install if needed
     nodeManager = new NodeManager()
@@ -88,7 +104,7 @@ async function initialize() {
     pluginManager = PluginManager.getInstance()
 
     // Create main window first (so UI appears quickly)
-    mainWindow = createMainWindow()
+    mainWindow = createMainWindow(workspaceManager)
 
     // Set main window on plugin manager for event communication
     pluginManager.setMainWindow(mainWindow)
@@ -102,7 +118,7 @@ async function initialize() {
     setupMenu()
 
     // Setup IPC handlers
-    setupIPC(mainWindow, ptyManager, storeManager, serverManager)
+    setupIPC(mainWindow, ptyManager, storeManager, serverManager, workspaceManager)
 
     // Handle window closed
     mainWindow.on('closed', () => {

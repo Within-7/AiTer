@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { Project, Terminal, AppSettings, FileNode, Plugin, PluginInstallProgress, PluginUpdateProgress, GitStatus, GitCommit, FileChange, DetectedShell, VersionManagerInfo, ShellType } from '../types'
+import { Project, Terminal, AppSettings, FileNode, Plugin, PluginInstallProgress, PluginUpdateProgress, GitStatus, GitCommit, FileChange, DetectedShell, VersionManagerInfo, ShellType, Workspace } from '../types'
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
@@ -279,6 +279,22 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.invoke('git:getCommitFiles', { projectPath, commitHash }),
     getCommitFileDiff: (projectPath: string, commitHash: string, filePath: string) =>
       ipcRenderer.invoke('git:getCommitFileDiff', { projectPath, commitHash, filePath })
+  },
+
+  // Workspace APIs
+  workspace: {
+    getCurrent: () => ipcRenderer.invoke('workspace:getCurrent'),
+    list: () => ipcRenderer.invoke('workspace:list'),
+    create: (name: string, projectIds?: string[]) =>
+      ipcRenderer.invoke('workspace:create', { name, projectIds }),
+    update: (id: string, updates: Partial<Workspace>) =>
+      ipcRenderer.invoke('workspace:update', { id, updates }),
+    delete: (id: string) => ipcRenderer.invoke('workspace:delete', { id }),
+    launch: (workspaceId: string) =>
+      ipcRenderer.invoke('workspace:launch', { workspaceId }),
+    setProjectVisibility: (projectId: string, visible: boolean) =>
+      ipcRenderer.invoke('workspace:setProjectVisibility', { projectId, visible }),
+    getAllProjects: () => ipcRenderer.invoke('workspace:getAllProjects')
   }
 })
 
@@ -554,6 +570,45 @@ export interface API {
     getCommitFileDiff(projectPath: string, commitHash: string, filePath: string): Promise<{
       success: boolean;
       diff?: string;
+      error?: string;
+    }>
+  }
+  workspace: {
+    getCurrent(): Promise<{
+      success: boolean;
+      workspace?: Workspace | null;
+      error?: string;
+    }>
+    list(): Promise<{
+      success: boolean;
+      workspaces?: Workspace[];
+      error?: string;
+    }>
+    create(name: string, projectIds?: string[]): Promise<{
+      success: boolean;
+      workspace?: Workspace;
+      error?: string;
+    }>
+    update(id: string, updates: Partial<Workspace>): Promise<{
+      success: boolean;
+      workspace?: Workspace;
+      error?: string;
+    }>
+    delete(id: string): Promise<{
+      success: boolean;
+      error?: string;
+    }>
+    launch(workspaceId: string): Promise<{
+      success: boolean;
+      error?: string;
+    }>
+    setProjectVisibility(projectId: string, visible: boolean): Promise<{
+      success: boolean;
+      error?: string;
+    }>
+    getAllProjects(): Promise<{
+      success: boolean;
+      projects?: Project[];
       error?: string;
     }>
   }

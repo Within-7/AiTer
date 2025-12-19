@@ -3,11 +3,14 @@ import { VscFiles, VscSourceControl } from 'react-icons/vsc'
 import { AppContext } from '../context/AppContext'
 import { ExplorerView } from './ExplorerView'
 import { GitView } from './GitView'
+import { WorkspaceSelector } from './WorkspaceSelector'
+import { WorkspaceManagerDialog } from './WorkspaceManagerDialog'
 import '../styles/Sidebar.css'
 
 export function Sidebar() {
   const { state, dispatch } = useContext(AppContext)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [showWorkspaceManager, setShowWorkspaceManager] = useState(false)
 
   // Monitor fullscreen state changes
   useEffect(() => {
@@ -39,6 +42,7 @@ export function Sidebar() {
     <div className="sidebar">
       <div className="sidebar-header">
         <h2 className={!isFullscreen ? 'has-traffic-lights' : ''}>AiTer</h2>
+        <WorkspaceSelector onManageWorkspaces={() => setShowWorkspaceManager(true)} />
       </div>
 
       {/* View Switcher */}
@@ -64,6 +68,12 @@ export function Sidebar() {
         {state.sidebarView === 'explorer' && <ExplorerView />}
         {state.sidebarView === 'git' && <GitView />}
       </div>
+
+      {/* Workspace Manager Dialog */}
+      <WorkspaceManagerDialog
+        isOpen={showWorkspaceManager}
+        onClose={() => setShowWorkspaceManager(false)}
+      />
     </div>
   )
 }

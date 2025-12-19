@@ -2,8 +2,14 @@ import { BrowserWindow, screen, app } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import { WindowState } from '../types'
+import { WorkspaceManager } from './workspace'
 
-const WINDOW_STATE_FILE = path.join(app.getPath('userData'), 'window-state.json')
+function getWindowStateFile(workspaceId: string): string {
+  if (workspaceId === 'default') {
+    return path.join(app.getPath('userData'), 'window-state.json')
+  }
+  return path.join(app.getPath('userData'), `window-state-${workspaceId}.json`)
+}
 
 function getDefaultWindowState(): WindowState {
   const primaryDisplay = screen.getPrimaryDisplay()
@@ -16,10 +22,11 @@ function getDefaultWindowState(): WindowState {
   }
 }
 
-function loadWindowState(): WindowState {
+function loadWindowState(workspaceId: string): WindowState {
+  const stateFile = getWindowStateFile(workspaceId)
   try {
-    if (fs.existsSync(WINDOW_STATE_FILE)) {
-      const data = fs.readFileSync(WINDOW_STATE_FILE, 'utf-8')
+    if (fs.existsSync(stateFile)) {
+      const data = fs.readFileSync(stateFile, 'utf-8')
       return { ...getDefaultWindowState(), ...JSON.parse(data) }
     }
   } catch (error) {
@@ -28,7 +35,8 @@ function loadWindowState(): WindowState {
   return getDefaultWindowState()
 }
 
-function saveWindowState(window: BrowserWindow) {
+function saveWindowState(window: BrowserWindow, workspaceId: string) {
+  const stateFile = getWindowStateFile(workspaceId)
   try {
     const bounds = window.getBounds()
     const state: WindowState = {
@@ -38,14 +46,15 @@ function saveWindowState(window: BrowserWindow) {
       y: bounds.y,
       isMaximized: window.isMaximized()
     }
-    fs.writeFileSync(WINDOW_STATE_FILE, JSON.stringify(state, null, 2))
+    fs.writeFileSync(stateFile, JSON.stringify(state, null, 2))
   } catch (error) {
     console.error('Failed to save window state:', error)
   }
 }
 
-export function createMainWindow(): BrowserWindow {
-  const state = loadWindowState()
+export function createMainWindow(workspaceManager?: WorkspaceManager): BrowserWindow {
+  const workspaceId = workspaceManager?.getCurrentWorkspaceId() || 'default'
+  const state = loadWindowState(workspaceId)
 
   // Set icon path based on environment
   // In development, use path relative to project root
@@ -54,8 +63,8 @@ export function createMainWindow(): BrowserWindow {
     ? path.join(app.getAppPath(), 'assets/logo.png')
     : path.join(process.resourcesPath, 'assets/logo.png')
 
-  // Set window title based on app name (includes dev mode indicator)
-  const windowTitle = app.getName()
+  // Set window title based on workspace (includes dev mode indicator)
+  const windowTitle = workspaceManager?.getWindowTitle() || app.getName()
 
   const window = new BrowserWindow({
     width: state.width,
@@ -94,7 +103,7 @@ export function createMainWindow(): BrowserWindow {
   let saveStateTimeout: NodeJS.Timeout
   const debouncedSaveState = () => {
     clearTimeout(saveStateTimeout)
-    saveStateTimeout = setTimeout(() => saveWindowState(window), 500)
+    saveStateTimeout = setTimeout(() => saveWindowState(window, workspaceId), 500)
   }
 
   window.on('resize', debouncedSaveState)
@@ -103,7 +112,7 @@ export function createMainWindow(): BrowserWindow {
   // Save state before close
   window.on('close', () => {
     clearTimeout(saveStateTimeout)
-    saveWindowState(window)
+    saveWindowState(window, workspaceId)
   })
 
   return window

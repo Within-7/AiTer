@@ -224,3 +224,19 @@ export interface PluginUpdateProgress {
   fromVersion?: string
   toVersion?: string
 }
+
+// Workspace system for multi-instance support
+export interface Workspace {
+  id: string
+  name: string
+  description?: string
+  visibleProjectIds: string[]  // Empty array = show all projects
+  color?: string
+  createdAt: number
+  lastUsedAt: number
+}
+
+export interface WorkspaceSettings {
+  workspaces: Workspace[]
+  lastUsedWorkspaceId?: string
+}

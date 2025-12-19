@@ -1,4 +1,5 @@
-import { BrowserWindow, ipcMain, dialog, shell } from 'electron'
+import { BrowserWindow, ipcMain, dialog, shell, app } from 'electron'
+import { spawn } from 'child_process'
 import { v4 as uuidv4 } from 'uuid'
 import { PTYManager } from './pty'
 import { StoreManager } from './store'
@@ -12,12 +13,14 @@ import { NodeDownloader } from './nodejs/downloader'
 import { gitManager } from './git'
 import { ShellDetector } from './shell/ShellDetector'
 import { VersionManagerDetector } from './shell/VersionManagerDetector'
+import { WorkspaceManager } from './workspace'
 
 export function setupIPC(
   window: BrowserWindow,
   ptyManager: PTYManager,
   storeManager: StoreManager,
-  serverManager: ProjectServerManager
+  serverManager: ProjectServerManager,
+  workspaceManager: WorkspaceManager
 ) {
   // Throttle terminal name updates to reduce UI flickering
   // For REPL apps like Claude Code CLI that send frequent commands
@@ -85,9 +88,19 @@ export function setupIPC(
       // Update project with Git status
       project.isGitRepo = isGitRepo
 
-      window.webContents.send('projects:updated', {
-        projects: storeManager.getProjects()
-      })
+      // Auto-add to current workspace if not the default workspace
+      const workspaceId = workspaceManager.getCurrentWorkspaceId()
+      if (workspaceId !== 'default') {
+        workspaceManager.addProjectToWorkspace(workspaceId, project.id)
+      }
+
+      // Send filtered projects based on current workspace
+      const visibleIds = workspaceManager.getVisibleProjectIds()
+      const projects = visibleIds
+        ? storeManager.getProjects().filter(p => visibleIds.includes(p.id))
+        : storeManager.getProjects()
+
+      window.webContents.send('projects:updated', { projects })
       return { success: true, project }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
@@ -99,9 +112,16 @@ export function setupIPC(
     try {
       const success = storeManager.removeProject(id)
       if (success) {
-        window.webContents.send('projects:updated', {
-          projects: storeManager.getProjects()
-        })
+        // Remove project from all workspaces
+        workspaceManager.onProjectDeleted(id)
+
+        // Send filtered projects based on current workspace
+        const visibleIds = workspaceManager.getVisibleProjectIds()
+        const projects = visibleIds
+          ? storeManager.getProjects().filter(p => visibleIds.includes(p.id))
+          : storeManager.getProjects()
+
+        window.webContents.send('projects:updated', { projects })
       }
       return { success }
     } catch (error) {
@@ -123,7 +143,11 @@ export function setupIPC(
 
   ipcMain.handle('projects:list', async () => {
     try {
-      const projects = storeManager.getProjects()
+      // Filter projects based on current workspace
+      const visibleIds = workspaceManager.getVisibleProjectIds()
+      const projects = visibleIds
+        ? storeManager.getProjects().filter(p => visibleIds.includes(p.id))
+        : storeManager.getProjects()
       return { success: true, projects }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
@@ -972,6 +996,116 @@ export function setupIPC(
     try {
       const managers = await versionManagerDetector.getDetected()
       return { success: true, managers }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  // Workspace management
+  ipcMain.handle('workspace:getCurrent', async () => {
+    try {
+      const workspace = workspaceManager.getCurrentWorkspace()
+      return { success: true, workspace }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('workspace:list', async () => {
+    try {
+      const workspaces = workspaceManager.getWorkspaces()
+      return { success: true, workspaces }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('workspace:create', async (_, { name, projectIds }) => {
+    try {
+      const workspace = workspaceManager.createWorkspace(name, projectIds)
+      return { success: true, workspace }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('workspace:update', async (_, { id, updates }) => {
+    try {
+      const workspace = workspaceManager.updateWorkspace(id, updates)
+      if (!workspace) {
+        return { success: false, error: 'Workspace not found or cannot be updated' }
+      }
+      return { success: true, workspace }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('workspace:delete', async (_, { id }) => {
+    try {
+      const success = workspaceManager.deleteWorkspace(id)
+      if (!success) {
+        return { success: false, error: 'Workspace not found or cannot be deleted' }
+      }
+      return { success: true }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('workspace:launch', async (_, { workspaceId }) => {
+    try {
+      // Launch new instance with specified workspace
+      const appPath = app.getPath('exe')
+      spawn(appPath, [`--workspace=${workspaceId}`], {
+        detached: true,
+        stdio: 'ignore'
+      }).unref()
+      return { success: true }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('workspace:setProjectVisibility', async (_, { projectId, visible }) => {
+    try {
+      const workspaceId = workspaceManager.getCurrentWorkspaceId()
+      if (workspaceId === 'default') {
+        return { success: false, error: 'Cannot modify visibility in default workspace' }
+      }
+
+      if (visible) {
+        workspaceManager.addProjectToWorkspace(workspaceId, projectId)
+      } else {
+        workspaceManager.removeProjectFromWorkspace(workspaceId, projectId)
+      }
+
+      // Refresh projects list
+      const visibleIds = workspaceManager.getVisibleProjectIds()
+      const projects = visibleIds
+        ? storeManager.getProjects().filter(p => visibleIds.includes(p.id))
+        : storeManager.getProjects()
+
+      window.webContents.send('projects:updated', { projects })
+      return { success: true }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  // Get all projects (unfiltered) for workspace management UI
+  ipcMain.handle('workspace:getAllProjects', async () => {
+    try {
+      const projects = storeManager.getProjects()
+      return { success: true, projects }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
       return { success: false, error: message }
