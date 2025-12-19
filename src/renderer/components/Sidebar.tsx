@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from 'react'
+import { useContext, useState, useEffect, useRef } from 'react'
 import { VscFiles, VscSourceControl } from 'react-icons/vsc'
 import { AppContext } from '../context/AppContext'
 import { ExplorerView } from './ExplorerView'
@@ -7,10 +7,21 @@ import { WorkspaceSelector } from './WorkspaceSelector'
 import { WorkspaceManagerDialog } from './WorkspaceManagerDialog'
 import '../styles/Sidebar.css'
 
+const MIN_WIDTH = 200
+const MAX_WIDTH = 600
+const DEFAULT_WIDTH = 300
+const STORAGE_KEY = 'sidebar-width'
+
 export function Sidebar() {
   const { state, dispatch } = useContext(AppContext)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showWorkspaceManager, setShowWorkspaceManager] = useState(false)
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    return saved ? parseInt(saved, 10) : DEFAULT_WIDTH
+  })
+  const [isResizing, setIsResizing] = useState(false)
+  const sidebarRef = useRef<HTMLDivElement>(null)
 
   // Monitor fullscreen state changes
   useEffect(() => {
@@ -38,8 +49,46 @@ export function Sidebar() {
     }
   }, [])
 
+  // Handle sidebar resizing
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return
+
+      const newWidth = e.clientX
+      if (newWidth >= MIN_WIDTH && newWidth <= MAX_WIDTH) {
+        setSidebarWidth(newWidth)
+      }
+    }
+
+    const handleMouseUp = () => {
+      if (isResizing) {
+        setIsResizing(false)
+        localStorage.setItem(STORAGE_KEY, sidebarWidth.toString())
+        document.body.style.cursor = ''
+        document.body.style.userSelect = ''
+      }
+    }
+
+    if (isResizing) {
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizing, sidebarWidth])
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsResizing(true)
+  }
+
   return (
-    <div className="sidebar">
+    <div className="sidebar" ref={sidebarRef} style={{ width: `${sidebarWidth}px` }}>
       <div className="sidebar-header">
         <h2 className={!isFullscreen ? 'has-traffic-lights' : ''}>AiTer</h2>
         <WorkspaceSelector onManageWorkspaces={() => setShowWorkspaceManager(true)} />
@@ -68,6 +117,12 @@ export function Sidebar() {
         {state.sidebarView === 'explorer' && <ExplorerView />}
         {state.sidebarView === 'git' && <GitView />}
       </div>
+
+      {/* Resize Handle */}
+      <div
+        className={`sidebar-resize-handle ${isResizing ? 'resizing' : ''}`}
+        onMouseDown={handleResizeStart}
+      />
 
       {/* Workspace Manager Dialog */}
       <WorkspaceManagerDialog

@@ -1,12 +1,14 @@
 .sidebar {
   width: 300px;
-  min-width: 250px;
-  max-width: 500px;
+  min-width: 200px;
+  max-width: 600px;
   background-color: #252526;
   border-right: 1px solid #1e1e1e;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
 }
 
 .sidebar-header {
@@ -226,4 +228,24 @@
 
 .btn-remove:hover {
   opacity: 1;
+}
+
+/* Resize Handle */
+.sidebar-resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 1000;
+  transition: background-color 0.15s ease;
+}
+
+.sidebar-resize-handle:hover {
+  background-color: #007acc;
+}
+
+.sidebar-resize-handle.resizing {
+  background-color: #007acc;
 }
