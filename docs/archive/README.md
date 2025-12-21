@@ -21,6 +21,7 @@ This folder contains historical development documents that were used during the 
 ### Historical Records
 - **ROLLBACK_SUMMARY.md** - AiTer Shell rollback decision record
 - **USAGE_GUIDE.md** - Original usage guide (replaced by docs/USER_MANUAL.md)
+- **PLUGIN_ISOLATION_FIX.md** - Plugin installation isolation fix record (2025-12-17)
 
 ## Note
 

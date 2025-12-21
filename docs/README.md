@@ -136,7 +136,6 @@ docs/
 ├── RELEASE_GUIDE.md               # 发布指南
 ├── CODE_SIGNING.md                # 代码签名指南
 ├── TEAM_DOWNLOAD_GUIDE.md         # 团队下载指南
-├── PLUGIN_ISOLATION_FIX.md        # 插件隔离修复记录
 └── archive/                       # 归档的开发文档
     └── README.md                  # 归档文档索引
 ```

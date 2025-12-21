@@ -357,7 +357,100 @@ Currently no test suite configured. When adding tests:
 
 ## Security
 
-- Preload script uses `contextBridge` (no `nodeIntegration`)
-- File server uses random access tokens per project
-- Path traversal protection in file operations
-- HTML preview uses sandboxed iframes
+AiTer implements defense-in-depth security measures:
+
+### Core Security Layers
+
+1. **Electron Security**
+   - Preload script uses `contextBridge` (no `nodeIntegration`)
+   - HTML preview uses sandboxed iframes
+   - Context isolation enabled by default
+
+2. **File System Security** (`src/main/filesystem.ts`)
+   - **Path traversal protection**: All file operations validated against allowed project roots
+   - **Allowed roots whitelist**: Only registered project directories can be accessed
+   - **File size limits**: 50MB max for write operations (DoS prevention)
+
+3. **File Server Security** (`src/main/fileServer/LocalFileServer.ts`)
+   - Random access token per project (cryptographically secure)
+   - **Timing-safe token comparison** using `crypto.timingSafeEqual()`
+   - Session-based authentication after initial token validation
+   - No Referer-based authentication bypasses
+
+4. **Shell/PTY Security** (`src/main/pty.ts`)
+   - **Shell whitelist**: Only known safe shells allowed
+   - Validates shell path exists and is in standard directories
+   - Prevents shell command injection via path manipulation
+
+5. **External URL Security** (`src/main/ipc.ts`)
+   - URL scheme validation for `shell.openExternal`
+   - Only `http:`, `https:`, `mailto:` protocols allowed
+
+### Security Guidelines for Development
+
+- Never trust user input without validation
+- Use `path.resolve()` and check against allowed roots for file operations
+- Use timing-safe comparisons for security tokens
+- Validate all external URLs before opening
+
+## Plugin System
+
+AiTer includes a plugin management system for AI CLI tools:
+
+### Plugin Architecture (`src/main/plugins/`)
+
+- **PluginManager**: Central orchestrator for plugin lifecycle
+- **NpmPluginInstaller**: Handles npm-based plugin installation
+- **Built-in Plugins**: Minto CLI, Claude Code CLI, Gemini CLI
+
+### Plugin Features
+
+- **Auto-installation**: Minto CLI installed on first launch (configurable)
+- **Auto-start**: Terminal can auto-run Minto on creation (configurable via settings)
+- **Dev/Prod Isolation**: Separate plugin registries for development and production
+
+### Plugin Settings (`AppSettings`)
+
+```typescript
+{
+  autoStartMinto: boolean,     // Auto-run minto command in new terminals
+  mintoInstalled?: boolean,    // Track if Minto was installed
+}
+```
+
+## Auto-Update System
+
+AiTer uses `electron-updater` for automatic updates:
+
+### Update Configuration
+
+- **Update source**: GitHub Releases (`Within-7/aiter`)
+- **Differential updates**: Disabled for unsigned builds
+- **Network error handling**: Silent retry without user notification
+
+### Platform-specific Notes
+
+- **macOS unsigned builds**: Uses `forceDevUpdateConfig` to bypass signature verification
+- **Windows**: Standard NSIS installer with auto-update support
+
+See `docs/CODE_SIGNING.md` for signing configuration.
+
+## Documentation Structure
+
+```
+docs/
+├── README.md                 # Documentation center navigation
+├── index.html                # Product website
+├── USER_MANUAL.md            # User manual
+├── CONSULTING_WORKFLOW.md    # Consulting workflow guide
+├── BEST_PRACTICES.md         # Best practices guide
+├── RELEASE_GUIDE.md          # Release process guide
+├── CODE_SIGNING.md           # Code signing configuration
+├── TEAM_DOWNLOAD_GUIDE.md    # Team download instructions
+└── archive/                  # Archived development docs
+    ├── README.md             # Archive index
+    ├── PRD.md                # Product requirements
+    ├── FILE_SERVER_IMPLEMENTATION.md
+    ├── NODEJS_INTEGRATION.md
+    └── ...                   # Other historical docs
+```
