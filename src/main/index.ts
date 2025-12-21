@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from 'electron'
 import path from 'path'
+import { execFileSync } from 'child_process'
 import { createMainWindow } from './window'
 import { setupIPC } from './ipc'
 import { setupMenu } from './menu'
@@ -56,6 +57,54 @@ function getWorkspaceIdFromArgs(): string {
   return process.env.AITER_WORKSPACE || 'default'
 }
 
+/**
+ * Check if Minto CLI is installed
+ */
+function isMintoInstalled(): boolean {
+  try {
+    // Use 'which' on Unix, 'where' on Windows
+    const command = process.platform === 'win32' ? 'where' : 'which'
+    execFileSync(command, ['minto'], { encoding: 'utf-8', stdio: 'pipe' })
+    return true
+  } catch {
+    // Command not found
+    return false
+  }
+}
+
+/**
+ * Install Minto CLI using npm
+ * Returns true if installation was successful
+ */
+async function installMinto(nodeManagerInstance: NodeManager): Promise<boolean> {
+  try {
+    console.log('[MintoInstaller] Installing Minto CLI...')
+
+    // Get npm path from NodeManager
+    const npmPath = nodeManagerInstance.getNpmExecutable()
+    if (!npmPath) {
+      console.error('[MintoInstaller] npm not found')
+      return false
+    }
+
+    // Install minto globally using execFileSync (safer than execSync)
+    execFileSync(npmPath, ['install', '-g', '@anthropic-ai/minto'], {
+      encoding: 'utf-8',
+      stdio: 'pipe',
+      env: {
+        ...process.env,
+        ...nodeManagerInstance.getTerminalEnv()
+      }
+    })
+
+    console.log('[MintoInstaller] Minto CLI installed successfully')
+    return true
+  } catch (error) {
+    console.error('[MintoInstaller] Failed to install Minto CLI:', error)
+    return false
+  }
+}
+
 // electron-updater 会自动从 electron-builder.yml 中的 publish 配置获取更新源
 // 不再需要手动配置 UPDATE_CHECK_URL
 
@@ -92,6 +141,27 @@ async function initialize() {
       console.log('[NodeManager] Shell configuration verified')
     } else {
       console.warn('[NodeManager] Failed to configure shell automatically')
+    }
+
+    // Check and install Minto CLI if needed (first-time setup)
+    const settings = storeManager.getSettings()
+    if (!settings.mintoInstalled) {
+      console.log('[MintoInstaller] Checking Minto CLI installation...')
+      if (isMintoInstalled()) {
+        console.log('[MintoInstaller] Minto CLI is already installed')
+        storeManager.updateSettings({ mintoInstalled: true })
+      } else {
+        console.log('[MintoInstaller] Minto CLI not found, installing...')
+        const mintoSuccess = await installMinto(nodeManager)
+        if (mintoSuccess) {
+          storeManager.updateSettings({ mintoInstalled: true })
+          console.log('[MintoInstaller] Minto CLI setup complete')
+        } else {
+          console.warn('[MintoInstaller] Minto CLI installation failed, user can install manually')
+        }
+      }
+    } else {
+      console.log('[MintoInstaller] Minto CLI installation already verified')
     }
 
     // Initialize PTY manager

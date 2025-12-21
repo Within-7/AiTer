@@ -185,6 +185,16 @@ export function setupIPC(
         }
       )
 
+      // Auto-start Minto if enabled in settings
+      if (settings.autoStartMinto) {
+        // Wait a bit for the shell to initialize before sending command
+        setTimeout(() => {
+          if (ptyManager.exists(id)) {
+            ptyManager.write(id, 'minto\r')
+          }
+        }, 500)
+      }
+
       return { success: true, terminal }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'

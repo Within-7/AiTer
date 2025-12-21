@@ -114,6 +114,10 @@ export interface AppSettings {
 
   // Keyboard shortcuts
   shortcuts?: ShortcutConfig[]      // Custom keyboard shortcuts
+
+  // AI CLI integration
+  autoStartMinto: boolean           // Auto-start Minto when opening a new terminal
+  mintoInstalled?: boolean          // Track if Minto CLI has been installed
 }
 
 // Shell type identifier

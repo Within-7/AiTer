@@ -89,7 +89,9 @@ export const initialState: AppState = {
     // Windows-specific
     windowsUseUtf8: true,
     // Keyboard shortcuts
-    shortcuts: defaultShortcuts
+    shortcuts: defaultShortcuts,
+    // AI CLI integration
+    autoStartMinto: true
   },
   terminalDataBuffer: new Map(),
   showPluginPanel: false,

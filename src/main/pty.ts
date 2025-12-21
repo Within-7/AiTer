@@ -101,7 +101,8 @@ export class PTYManager {
       macOptionIsMeta: true,
       nodeSource: 'builtin',
       preserveVersionManagers: false,
-      windowsUseUtf8: true
+      windowsUseUtf8: true,
+      autoStartMinto: true
     }
 
     try {

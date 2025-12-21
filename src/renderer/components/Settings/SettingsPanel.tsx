@@ -189,6 +189,24 @@ export const SettingsPanel: React.FC = () => {
             )}
           </section>
 
+          {/* AI CLI Integration Section */}
+          <section className="settings-section">
+            <h3>AI CLI</h3>
+
+            <div className="setting-item setting-item-checkbox">
+              <label htmlFor="auto-start-minto">自动启动 Minto</label>
+              <input
+                id="auto-start-minto"
+                type="checkbox"
+                checked={settings.autoStartMinto ?? true}
+                onChange={(e) => handleSettingChange('autoStartMinto', e.target.checked)}
+              />
+              <span className="setting-hint">
+                打开新终端时自动运行 minto 命令
+              </span>
+            </div>
+          </section>
+
           {/* Node.js Configuration Section */}
           <section className="settings-section">
             <h3>Node.js</h3>

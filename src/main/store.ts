@@ -43,7 +43,11 @@ const defaultSettings: AppSettings = {
   windowsUseUtf8: true,              // Enable UTF-8 on Windows by default
 
   // Keyboard shortcuts
-  shortcuts: defaultShortcuts
+  shortcuts: defaultShortcuts,
+
+  // AI CLI integration
+  autoStartMinto: true,              // Auto-start Minto when opening a new terminal (default: enabled)
+  mintoInstalled: false              // Track Minto CLI installation status
 }
 
 export class StoreManager {
