@@ -51,10 +51,12 @@ mac:
   category: public.app-category.developer-tools
   icon: build/icon.icns
   artifactName: ${productName}-${version}-mac-${arch}.${ext}
-  hardenedRuntime: true
+  # 禁用 Hardened Runtime（需要代码签名）
+  hardenedRuntime: false
   gatekeeperAssess: false
-  entitlements: build/entitlements.mac.plist
-  entitlementsInherit: build/entitlements.mac.plist
+  # 暂时禁用 entitlements（需要代码签名）
+  # entitlements: build/entitlements.mac.plist
+  # entitlementsInherit: build/entitlements.mac.plist
   # 代码签名配置 - 当前已禁用
   # 需要设置环境变量:
   # - CSC_LINK: base64 编码的 .p12 证书文件，或证书文件路径
@@ -123,5 +125,5 @@ nsis:
   allowElevation: true
   # 安装完成后运行应用
   runAfterFinish: true
-  # 差量更新
-  differentialPackage: true
+  # 禁用差量更新（差量更新需要代码签名）
+  differentialPackage: false

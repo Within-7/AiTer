@@ -50,12 +50,20 @@ export class AutoUpdateManager {
     autoUpdater.autoInstallOnAppQuit = true // 退出时自动安装
     autoUpdater.allowDowngrade = false // 不允许降级
 
-    // macOS: 禁用签名验证（仅用于开发/测试环境）
-    // 生产环境应该使用代码签名和公证
+    // macOS: 完全禁用签名验证（临时方案）
+    // 生产环境应该使用代码签名和公证，但目前暂时禁用签名验证以支持未签名应用的更新
     // @ts-ignore - electron-updater 内部属性
     if (process.platform === 'darwin') {
-      // 设置为不验证签名
+      // 强制跳过签名验证（开发和生产环境都生效）
       autoUpdater.forceDevUpdateConfig = true
+
+      // 额外配置：禁用差量更新（差量更新需要签名）
+      // @ts-ignore
+      autoUpdater.disableDifferentialDownload = true
+
+      // 禁用 Web installer（需要签名）
+      // @ts-ignore
+      autoUpdater.disableWebInstaller = true
     }
 
     // 设置事件监听
