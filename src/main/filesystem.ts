@@ -4,7 +4,8 @@ import { FileNode } from '../types'
 import { v4 as uuidv4 } from 'uuid'
 import ignore, { Ignore } from 'ignore'
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB for reading
+const MAX_WRITE_SIZE = 50 * 1024 * 1024 // 50MB for writing (DoS protection)
 // Only exclude truly internal/system directories, show all other hidden files
 const EXCLUDED_DIRS = ['.git', '.DS_Store']
 
@@ -78,16 +79,54 @@ async function isDirectoryIgnored(dirPath: string, gitRoot: string): Promise<boo
 }
 
 export class SecureFileSystemManager {
+  // Set of allowed project root paths
+  private allowedRoots: Set<string> = new Set()
+
+  /**
+   * Add a project root to the allowed paths
+   * Called when a project is added or accessed
+   */
+  addAllowedRoot(projectPath: string): void {
+    const resolved = path.resolve(projectPath)
+    this.allowedRoots.add(resolved)
+  }
+
+  /**
+   * Remove a project root from allowed paths
+   * Called when a project is removed
+   */
+  removeAllowedRoot(projectPath: string): void {
+    const resolved = path.resolve(projectPath)
+    this.allowedRoots.delete(resolved)
+  }
+
+  /**
+   * Get all allowed roots (for debugging)
+   */
+  getAllowedRoots(): string[] {
+    return Array.from(this.allowedRoots)
+  }
+
   /**
    * Validate and normalize file path to prevent directory traversal attacks
+   * Path must be within one of the allowed project roots
    */
   private validatePath(filePath: string): string {
     const normalizedPath = path.normalize(filePath)
     const resolvedPath = path.resolve(normalizedPath)
 
-    // Check for directory traversal attempts
-    if (!resolvedPath.startsWith(path.resolve('/'))) {
-      throw new Error('Invalid path: directory traversal detected')
+    // Check if path is within any allowed project root
+    let isAllowed = false
+    for (const root of this.allowedRoots) {
+      // Path must be exactly the root or start with root + separator
+      if (resolvedPath === root || resolvedPath.startsWith(root + path.sep)) {
+        isAllowed = true
+        break
+      }
+    }
+
+    if (!isAllowed) {
+      throw new Error(`Access denied: Path "${resolvedPath}" is outside allowed project directories`)
     }
 
     return resolvedPath
@@ -369,6 +408,12 @@ export class SecureFileSystemManager {
   async writeFile(filePath: string, content: string): Promise<boolean> {
     try {
       const validPath = this.validatePath(filePath)
+
+      // SECURITY: Check file size to prevent DoS attacks
+      const contentSize = Buffer.byteLength(content, 'utf-8')
+      if (contentSize > MAX_WRITE_SIZE) {
+        throw new Error(`File too large to write: ${(contentSize / 1024 / 1024).toFixed(2)}MB (max ${MAX_WRITE_SIZE / 1024 / 1024}MB)`)
+      }
 
       // Ensure directory exists
       const dir = path.dirname(validPath)

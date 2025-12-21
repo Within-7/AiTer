@@ -1,5 +1,6 @@
 import * as pty from 'node-pty'
 import * as path from 'path'
+import * as fs from 'fs'
 import { Terminal, AppSettings, ShellType } from '../types'
 import { NodeManager } from './nodejs/manager'
 import { ShellDetector } from './shell/ShellDetector'
@@ -18,6 +19,28 @@ export class PTYManager {
   private nodeManager: NodeManager
   private shellDetector: ShellDetector
 
+  // Whitelist of allowed shells (security)
+  private static readonly ALLOWED_SHELLS: Set<string> = new Set([
+    // macOS/Linux shells
+    '/bin/zsh',
+    '/bin/bash',
+    '/bin/sh',
+    '/usr/bin/zsh',
+    '/usr/bin/bash',
+    '/usr/bin/sh',
+    '/usr/local/bin/zsh',
+    '/usr/local/bin/bash',
+    '/usr/local/bin/fish',
+    '/opt/homebrew/bin/zsh',
+    '/opt/homebrew/bin/bash',
+    '/opt/homebrew/bin/fish',
+    // Windows shells
+    'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',
+    'C:\\Windows\\System32\\cmd.exe',
+    'C:\\Program Files\\PowerShell\\7\\pwsh.exe',
+    'C:\\Program Files (x86)\\PowerShell\\7\\pwsh.exe',
+  ])
+
   constructor() {
     this.nodeManager = new NodeManager()
     this.shellDetector = new ShellDetector()
@@ -25,6 +48,60 @@ export class PTYManager {
 
   private getDefaultShell(): string {
     return this.shellDetector.getDefaultShell()
+  }
+
+  /**
+   * Validate shell path against whitelist (security)
+   * Checks both static whitelist and that the shell exists and is executable
+   */
+  private isValidShell(shellPath: string): boolean {
+    // Check against static whitelist first (fast path)
+    if (PTYManager.ALLOWED_SHELLS.has(shellPath)) {
+      return true
+    }
+
+    // For shells not in whitelist, verify they:
+    // 1. Exist as a file
+    // 2. Are in standard shell directories
+    // 3. Have a shell-like name
+    try {
+      // Check if file exists
+      if (!fs.existsSync(shellPath)) {
+        return false
+      }
+
+      // Must be in a standard shell location
+      const validDirs = [
+        '/bin/',
+        '/usr/bin/',
+        '/usr/local/bin/',
+        '/opt/homebrew/bin/',
+        'C:\\Windows\\System32\\',
+        'C:\\Program Files\\PowerShell\\',
+        'C:\\Program Files (x86)\\PowerShell\\'
+      ]
+
+      const isInValidDir = validDirs.some(dir =>
+        shellPath.startsWith(dir) ||
+        shellPath.toLowerCase().startsWith(dir.toLowerCase())
+      )
+
+      if (!isInValidDir) {
+        return false
+      }
+
+      // Must have a shell-like basename
+      const basename = path.basename(shellPath).toLowerCase()
+      const validShellNames = ['sh', 'bash', 'zsh', 'fish', 'csh', 'tcsh', 'ksh', 'dash',
+                               'powershell.exe', 'pwsh.exe', 'cmd.exe']
+      const isValidName = validShellNames.some(name =>
+        basename === name || basename.startsWith(name.replace('.exe', ''))
+      )
+
+      return isValidName
+    } catch {
+      return false
+    }
   }
 
   /**
@@ -85,6 +162,12 @@ export class PTYManager {
     }
 
     const shellPath = shell || this.getDefaultShell()
+
+    // SECURITY: Validate shell path against whitelist
+    if (!this.isValidShell(shellPath)) {
+      throw new Error(`Security error: Shell "${shellPath}" is not in the allowed list`)
+    }
+
     const cols = 80
     const rows = 24
 

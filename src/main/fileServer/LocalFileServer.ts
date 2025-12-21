@@ -2,6 +2,7 @@ import express, { Application } from 'express'
 import cors from 'cors'
 import path from 'path'
 import fs from 'fs/promises'
+import crypto from 'crypto'
 import { Server } from 'http'
 import session from 'express-session'
 import cookieParser from 'cookie-parser'
@@ -59,6 +60,7 @@ export class LocalFileServer {
     })
 
     // Token validation with session support
+    // SECURITY: Removed insecure Referer-based bypass - token is always required
     this.app.use((req, res, next) => {
       // Check if already authenticated in this session
       if ((req.session as any).authenticated) {
@@ -69,23 +71,15 @@ export class LocalFileServer {
       // Check for token in headers or query
       const token = req.headers['x-access-token'] || req.query.token
 
-      if (token === this.accessToken) {
+      // Use timing-safe comparison to prevent timing attacks
+      if (token && typeof token === 'string' && this.isValidToken(token)) {
         // Token is valid, mark session as authenticated
         (req.session as any).authenticated = true
         this.lastAccessed = Date.now()
         return next()
       }
 
-      // Check if request comes from an already authenticated page (Referer check)
-      const referer = req.headers.referer || req.headers.referrer
-      if (referer && referer.includes(`localhost:${this.port}`)) {
-        // Request comes from our own server, allow it
-        (req.session as any).authenticated = true
-        this.lastAccessed = Date.now()
-        return next()
-      }
-
-      // No valid authentication found
+      // No valid authentication found - no fallbacks allowed
       return res.status(403).json({ error: 'Forbidden: Invalid access token' })
     })
   }
@@ -240,5 +234,28 @@ export class LocalFileServer {
 
   public isRunning(): boolean {
     return this.server !== null && this.port > 0
+  }
+
+  /**
+   * Timing-safe token comparison to prevent timing attacks
+   */
+  private isValidToken(token: string): boolean {
+    try {
+      // Both tokens must be the same length for timing-safe comparison
+      const tokenBuffer = Buffer.from(token, 'utf-8')
+      const expectedBuffer = Buffer.from(this.accessToken, 'utf-8')
+
+      // If lengths differ, still do a comparison to maintain constant time
+      if (tokenBuffer.length !== expectedBuffer.length) {
+        // Create a dummy buffer of matching length
+        const dummyBuffer = Buffer.alloc(tokenBuffer.length)
+        crypto.timingSafeEqual(tokenBuffer, dummyBuffer)
+        return false
+      }
+
+      return crypto.timingSafeEqual(tokenBuffer, expectedBuffer)
+    } catch {
+      return false
+    }
   }
 }

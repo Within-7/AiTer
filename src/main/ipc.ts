@@ -27,6 +27,13 @@ export function setupIPC(
   // Set main window for file watcher manager
   fileWatcherManager.setMainWindow(window)
 
+  // Initialize allowed filesystem roots from existing projects (security)
+  const existingProjects = storeManager.getProjects()
+  for (const project of existingProjects) {
+    fileSystemManager.addAllowedRoot(project.path)
+  }
+  console.log(`[Security] Initialized ${existingProjects.length} allowed filesystem roots`)
+
   // Throttle terminal name updates to reduce UI flickering
   // For REPL apps like Claude Code CLI that send frequent commands
   const terminalNameThrottle = new Map<string, { lastSent: number; pendingName: string | null; timeout: NodeJS.Timeout | null }>()
@@ -90,6 +97,9 @@ export function setupIPC(
 
       const project = storeManager.addProject(path, name)
 
+      // Add project path to allowed filesystem roots (security)
+      fileSystemManager.addAllowedRoot(path)
+
       // Update project with Git status
       project.isGitRepo = isGitRepo
 
@@ -115,8 +125,16 @@ export function setupIPC(
 
   ipcMain.handle('project:remove', async (_, { id }) => {
     try {
+      // Get project path before removing (for security cleanup)
+      const project = storeManager.getProjectById(id)
+
       const success = storeManager.removeProject(id)
       if (success) {
+        // Remove project path from allowed filesystem roots (security)
+        if (project) {
+          fileSystemManager.removeAllowedRoot(project.path)
+        }
+
         // Remove project from all workspaces
         workspaceManager.onProjectDeleted(id)
 
@@ -728,6 +746,17 @@ export function setupIPC(
   // Shell operations
   ipcMain.handle('shell:openExternal', async (_, { url }) => {
     try {
+      // SECURITY: Validate URL scheme to prevent malicious protocols
+      const parsedUrl = new URL(url)
+      const allowedSchemes = ['http:', 'https:', 'mailto:']
+
+      if (!allowedSchemes.includes(parsedUrl.protocol)) {
+        return {
+          success: false,
+          error: `URL scheme '${parsedUrl.protocol}' is not allowed. Allowed: ${allowedSchemes.join(', ')}`
+        }
+      }
+
       await shell.openExternal(url)
       return { success: true }
     } catch (error) {
