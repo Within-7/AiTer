@@ -144,13 +144,55 @@ export class AutoUpdateManager {
     // 错误
     autoUpdater.on('error', (error: Error) => {
       log.error('[AutoUpdater] Error:', error)
-      this.sendToRenderer({
-        status: 'error',
-        error: error.message
-      })
-      // 发生错误时清理缓存
-      this.clearUpdateCache()
+
+      // 判断是否是网络错误（静默处理）
+      const isNetworkError = this.isNetworkError(error)
+
+      if (isNetworkError) {
+        // 网络错误：仅记录日志，不通知用户
+        log.warn('[AutoUpdater] Network error detected, will retry later:', error.message)
+        // 不清理缓存，以便下次重试时可能继续下载
+      } else {
+        // 非网络错误：通知用户
+        this.sendToRenderer({
+          status: 'error',
+          error: error.message
+        })
+        // 发生严重错误时清理缓存
+        this.clearUpdateCache()
+      }
     })
+  }
+
+  /**
+   * 判断是否是网络错误
+   * 网络错误应该静默处理，不打扰用户
+   */
+  private isNetworkError(error: Error): boolean {
+    const errorMessage = error.message.toLowerCase()
+
+    // 常见的网络错误关键词
+    const networkErrorKeywords = [
+      'network',
+      'enotfound',
+      'econnrefused',
+      'econnreset',
+      'etimedout',
+      'timeout',
+      'fetch failed',
+      'failed to fetch',
+      'dns',
+      'connection',
+      'socket',
+      'connect timeout',
+      'read timeout',
+      'request timeout',
+      'net::err',
+      'offline'
+    ]
+
+    // 检查错误消息是否包含网络错误关键词
+    return networkErrorKeywords.some(keyword => errorMessage.includes(keyword))
   }
 
   /**
