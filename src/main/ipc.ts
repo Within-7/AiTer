@@ -1234,5 +1234,36 @@ export function setupIPC(
     }
   })
 
+  // Session management
+  ipcMain.handle('session:save', async (_, { session }) => {
+    try {
+      storeManager.saveSession(session)
+      return { success: true }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('session:get', async () => {
+    try {
+      const session = storeManager.getSession()
+      return { success: true, session }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  ipcMain.handle('session:clear', async () => {
+    try {
+      storeManager.clearSession()
+      return { success: true }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
   console.log('IPC handlers registered')
 }

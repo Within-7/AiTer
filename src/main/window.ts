@@ -97,6 +97,23 @@ export function createMainWindow(workspaceManager?: WorkspaceManager): BrowserWi
     window.webContents.openDevTools()
   } else {
     window.loadFile(path.join(__dirname, '../../dist-renderer/index.html'))
+
+    // Disable refresh shortcuts in production to prevent accidental session loss
+    // These shortcuts would cause all terminals and editor tabs to be lost
+    window.webContents.on('before-input-event', (event, input) => {
+      // Block Ctrl+R, Cmd+R (reload)
+      if ((input.control || input.meta) && input.key.toLowerCase() === 'r') {
+        event.preventDefault()
+      }
+      // Block Ctrl+Shift+R, Cmd+Shift+R (hard reload)
+      if ((input.control || input.meta) && input.shift && input.key.toLowerCase() === 'r') {
+        event.preventDefault()
+      }
+      // Block F5 (reload)
+      if (input.key === 'F5') {
+        event.preventDefault()
+      }
+    })
   }
 
   // Save window state on resize/move

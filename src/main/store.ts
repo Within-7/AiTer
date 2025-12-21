@@ -1,5 +1,5 @@
 import Store from 'electron-store'
-import { Project, AppSettings, ShortcutConfig } from '../types'
+import { Project, AppSettings, ShortcutConfig, SessionState } from '../types'
 
 // Default keyboard shortcuts
 const defaultShortcuts: ShortcutConfig[] = [
@@ -18,6 +18,7 @@ const defaultShortcuts: ShortcutConfig[] = [
 interface StoreSchema {
   projects: Project[]
   settings: AppSettings
+  session: SessionState | null
 }
 
 const defaultSettings: AppSettings = {
@@ -58,7 +59,8 @@ export class StoreManager {
       name: 'airter-data',
       defaults: {
         projects: [],
-        settings: defaultSettings
+        settings: defaultSettings,
+        session: null
       }
     })
 
@@ -191,6 +193,25 @@ export class StoreManager {
   resetSettings(): AppSettings {
     this.store.set('settings', defaultSettings)
     return defaultSettings
+  }
+
+  // Session management
+  saveSession(session: SessionState): void {
+    this.store.set('session', session)
+    console.log('[StoreManager] Session saved:', {
+      editorTabs: session.editorTabs.length,
+      terminals: session.terminals.length,
+      tabOrder: session.tabOrder.length
+    })
+  }
+
+  getSession(): SessionState | null {
+    return this.store.get('session', null)
+  }
+
+  clearSession(): void {
+    this.store.set('session', null)
+    console.log('[StoreManager] Session cleared')
   }
 
   // Utility

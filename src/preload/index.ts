@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { Project, Terminal, AppSettings, FileNode, Plugin, PluginInstallProgress, PluginUpdateProgress, GitStatus, GitCommit, FileChange, DetectedShell, VersionManagerInfo, ShellType, Workspace } from '../types'
+import { Project, Terminal, AppSettings, FileNode, Plugin, PluginInstallProgress, PluginUpdateProgress, GitStatus, GitCommit, FileChange, DetectedShell, VersionManagerInfo, ShellType, Workspace, SessionState } from '../types'
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
@@ -360,6 +360,14 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.on('fileWatcher:changed', listener)
       return () => ipcRenderer.removeListener('fileWatcher:changed', listener)
     }
+  },
+
+  // Session APIs
+  session: {
+    save: (session: SessionState) =>
+      ipcRenderer.invoke('session:save', { session }),
+    get: () => ipcRenderer.invoke('session:get'),
+    clear: () => ipcRenderer.invoke('session:clear')
   }
 })
 
@@ -704,6 +712,21 @@ export interface API {
       error?: string;
     }>
     onChanged(callback: (data: { projectPath: string; changeCount: number }) => void): () => void
+  }
+  session: {
+    save(session: SessionState): Promise<{
+      success: boolean;
+      error?: string;
+    }>
+    get(): Promise<{
+      success: boolean;
+      session?: SessionState | null;
+      error?: string;
+    }>
+    clear(): Promise<{
+      success: boolean;
+      error?: string;
+    }>
   }
 }
 

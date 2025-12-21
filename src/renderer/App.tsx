@@ -1,5 +1,6 @@
-import { useEffect, useReducer, useRef } from 'react'
+import { useEffect, useReducer, useRef, useCallback } from 'react'
 import { AppContext, appReducer, initialState } from './context/AppContext'
+import { SessionState } from '../types'
 import { Sidebar } from './components/Sidebar'
 import { WorkArea } from './components/WorkArea'
 import { StatusBar } from './components/StatusBar'
@@ -18,6 +19,65 @@ function App() {
   const stateRef = useRef(state)
   stateRef.current = state
 
+  // Track if session has been restored to avoid overwriting with empty state
+  const sessionRestoredRef = useRef(false)
+
+  // Save session state to disk (debounced)
+  const saveSessionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const saveSession = useCallback(() => {
+    if (saveSessionTimeoutRef.current) {
+      clearTimeout(saveSessionTimeoutRef.current)
+    }
+
+    saveSessionTimeoutRef.current = setTimeout(async () => {
+      const currentState = stateRef.current
+
+      // Don't save if session hasn't been restored yet (avoid overwriting with empty state)
+      if (!sessionRestoredRef.current) {
+        return
+      }
+
+      // Only save if there's something to save
+      if (currentState.terminals.length === 0 && currentState.editorTabs.length === 0) {
+        // Clear session if everything is closed
+        await window.api.session.clear()
+        return
+      }
+
+      const session: SessionState = {
+        editorTabs: currentState.editorTabs.map(tab => ({
+          id: tab.id,
+          filePath: tab.filePath,
+          fileName: tab.fileName,
+          fileType: tab.fileType,
+          serverUrl: tab.serverUrl,
+          projectPath: tab.projectPath,
+          isDiff: tab.isDiff,
+          commitHash: tab.commitHash,
+          commitMessage: tab.commitMessage
+        })),
+        terminals: currentState.terminals.map(t => ({
+          id: t.id,
+          projectId: t.projectId,
+          name: t.name,
+          cwd: t.cwd
+        })),
+        tabOrder: currentState.tabOrder,
+        activeTerminalId: currentState.activeTerminalId,
+        activeEditorTabId: currentState.activeEditorTabId,
+        activeProjectId: currentState.activeProjectId,
+        savedAt: Date.now()
+      }
+
+      await window.api.session.save(session)
+    }, 1000) // Debounce 1 second
+  }, [])
+
+  // Auto-save session when state changes
+  useEffect(() => {
+    saveSession()
+  }, [state.terminals, state.editorTabs, state.tabOrder, state.activeTerminalId, state.activeEditorTabId, state.activeProjectId, saveSession])
+
   useEffect(() => {
     // Load initial data
     const loadInitialData = async () => {
@@ -32,6 +92,100 @@ function App() {
       if (settingsResult.success && settingsResult.settings) {
         dispatch({ type: 'SET_SETTINGS', payload: settingsResult.settings })
       }
+
+      // Restore session state
+      const sessionResult = await window.api.session.get()
+      if (sessionResult.success && sessionResult.session) {
+        const session = sessionResult.session
+
+        // Check if session is not too old (24 hours)
+        const maxAge = 24 * 60 * 60 * 1000 // 24 hours in ms
+        if (Date.now() - session.savedAt < maxAge) {
+          console.log('[Session] Restoring session:', {
+            editorTabs: session.editorTabs.length,
+            terminals: session.terminals.length
+          })
+
+          // Restore editor tabs (reloading content from files)
+          for (const tabInfo of session.editorTabs) {
+            // Skip diff tabs as they can't be restored easily
+            if (tabInfo.isDiff) continue
+
+            try {
+              const fileResult = await window.api.fs.readFile(tabInfo.filePath)
+              if (fileResult.success && fileResult.content !== undefined) {
+                dispatch({
+                  type: 'ADD_EDITOR_TAB',
+                  payload: {
+                    id: tabInfo.id,
+                    filePath: tabInfo.filePath,
+                    fileName: tabInfo.fileName,
+                    fileType: tabInfo.fileType,
+                    content: fileResult.content,
+                    isDirty: false,
+                    serverUrl: tabInfo.serverUrl,
+                    projectPath: tabInfo.projectPath
+                  }
+                })
+              }
+            } catch (error) {
+              console.warn(`[Session] Failed to restore editor tab: ${tabInfo.filePath}`, error)
+            }
+          }
+
+          // Restore terminals (create new PTY processes)
+          for (const termInfo of session.terminals) {
+            try {
+              // Find project for this terminal
+              const project = projectsResult.projects?.find(p => p.id === termInfo.projectId)
+              if (!project) {
+                console.warn(`[Session] Project not found for terminal: ${termInfo.projectId}`)
+                continue
+              }
+
+              const terminalResult = await window.api.terminal.create(
+                termInfo.cwd,
+                termInfo.projectId,
+                project.name
+              )
+
+              if (terminalResult.success && terminalResult.terminal) {
+                dispatch({
+                  type: 'ADD_TERMINAL',
+                  payload: terminalResult.terminal
+                })
+              }
+            } catch (error) {
+              console.warn(`[Session] Failed to restore terminal: ${termInfo.id}`, error)
+            }
+          }
+
+          // Restore tab order after all tabs are added
+          if (session.tabOrder.length > 0) {
+            dispatch({ type: 'REORDER_TABS', payload: session.tabOrder })
+          }
+
+          // Restore active tab
+          if (session.activeEditorTabId) {
+            dispatch({ type: 'SET_ACTIVE_EDITOR_TAB', payload: session.activeEditorTabId })
+          } else if (session.activeTerminalId) {
+            dispatch({ type: 'SET_ACTIVE_TERMINAL', payload: session.activeTerminalId })
+          }
+
+          // Restore active project
+          if (session.activeProjectId) {
+            dispatch({ type: 'SET_ACTIVE_PROJECT', payload: session.activeProjectId })
+          }
+
+          console.log('[Session] Session restored successfully')
+        } else {
+          console.log('[Session] Session expired, clearing')
+          await window.api.session.clear()
+        }
+      }
+
+      // Mark session as restored
+      sessionRestoredRef.current = true
     }
 
     loadInitialData()
