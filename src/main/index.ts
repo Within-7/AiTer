@@ -88,7 +88,7 @@ async function installMinto(nodeManagerInstance: NodeManager): Promise<boolean> 
     }
 
     // Install minto globally using execFileSync (safer than execSync)
-    execFileSync(npmPath, ['install', '-g', '@anthropic-ai/minto'], {
+    execFileSync(npmPath, ['install', '-g', '@within-7/minto'], {
       encoding: 'utf-8',
       stdio: 'pipe',
       env: {
