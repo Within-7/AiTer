@@ -1,6 +1,8 @@
 .workspace-selector {
   position: relative;
   margin-left: auto;
+  /* Disable window dragging so buttons can be clicked */
+  -webkit-app-region: no-drag;
 }
 
 .workspace-selector-button {

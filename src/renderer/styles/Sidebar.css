@@ -19,6 +19,8 @@
   border-bottom: 1px solid #1e1e1e;
   background-color: #2d2d30;
   gap: 8px;
+  /* Enable window dragging in title bar area */
+  -webkit-app-region: drag;
 }
 
 .sidebar-header h2 {
