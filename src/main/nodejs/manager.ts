@@ -448,6 +448,10 @@ export class NodeManager {
 
   /**
    * 安装内置 Node.js（从预打包的资源复制）
+   *
+   * IMPORTANT: This method now preserves user-installed npm packages during upgrades.
+   * Previously, using overwrite: true would delete all installed packages (minto, claude, etc.)
+   * Now we backup and restore the node_modules directory to preserve user packages.
    */
   async installFromResources(): Promise<boolean> {
     try {
@@ -503,6 +507,74 @@ export class NodeManager {
       const targetPath = this.getNodeRootPath();
       await fs.ensureDir(targetPath);
 
+      // ============================================================
+      // PRESERVE USER-INSTALLED NPM PACKAGES DURING UPGRADE
+      // ============================================================
+      // The node_modules directory contains user-installed packages like minto, claude, etc.
+      // We need to backup and restore them after copying the new Node.js files.
+
+      const nodeModulesPath = path.join(targetPath, 'lib', 'node_modules');
+      const backupPath = path.join(this.nodejsDir, '.node_modules_backup');
+      let hasUserPackages = false;
+
+      // Check if there are user-installed packages to preserve
+      if (await fs.pathExists(nodeModulesPath)) {
+        const packages = await fs.readdir(nodeModulesPath);
+        // Bundled packages that come with Node.js
+        const bundledPackages = ['corepack', 'npm'];
+        const userPackages = packages.filter(pkg => !bundledPackages.includes(pkg));
+
+        if (userPackages.length > 0) {
+          hasUserPackages = true;
+          console.log(`[NodeManager] Backing up ${userPackages.length} user-installed packages: ${userPackages.join(', ')}`);
+
+          // Backup user packages
+          await fs.ensureDir(backupPath);
+          for (const pkg of userPackages) {
+            const srcPath = path.join(nodeModulesPath, pkg);
+            const destPath = path.join(backupPath, pkg);
+            await fs.copy(srcPath, destPath, { preserveTimestamps: true });
+          }
+          console.log('[NodeManager] User packages backed up successfully');
+        }
+      }
+
+      // Also backup bin symlinks for user packages
+      const binPath = this.getNodeBinPath();
+      const binBackupPath = path.join(this.nodejsDir, '.bin_backup');
+      const userBinLinks: string[] = [];
+
+      if (hasUserPackages && await fs.pathExists(binPath)) {
+        const binFiles = await fs.readdir(binPath);
+        // Bundled binaries
+        const bundledBins = ['node', 'npm', 'npx', 'corepack'];
+
+        await fs.ensureDir(binBackupPath);
+        for (const file of binFiles) {
+          if (!bundledBins.includes(file)) {
+            const srcPath = path.join(binPath, file);
+            const destPath = path.join(binBackupPath, file);
+            try {
+              // Read symlink target before copying
+              const stats = await fs.lstat(srcPath);
+              if (stats.isSymbolicLink()) {
+                const linkTarget = await fs.readlink(srcPath);
+                await fs.writeFile(destPath + '.link', linkTarget);
+                userBinLinks.push(file);
+              } else {
+                await fs.copy(srcPath, destPath, { preserveTimestamps: true });
+                userBinLinks.push(file);
+              }
+            } catch (err) {
+              console.warn(`[NodeManager] Failed to backup bin file ${file}:`, err);
+            }
+          }
+        }
+        if (userBinLinks.length > 0) {
+          console.log(`[NodeManager] Backed up ${userBinLinks.length} user bin files: ${userBinLinks.join(', ')}`);
+        }
+      }
+
       // 复制文件
       console.log(`[NodeManager] Copying to: ${targetPath}`);
       await fs.copy(resourcesPath, targetPath, {
@@ -510,12 +582,74 @@ export class NodeManager {
         preserveTimestamps: true,
       });
 
+      // Restore user packages if we backed them up
+      if (hasUserPackages && await fs.pathExists(backupPath)) {
+        console.log('[NodeManager] Restoring user-installed packages...');
+        const backedUpPackages = await fs.readdir(backupPath);
+
+        for (const pkg of backedUpPackages) {
+          const srcPath = path.join(backupPath, pkg);
+          const destPath = path.join(nodeModulesPath, pkg);
+          await fs.copy(srcPath, destPath, { preserveTimestamps: true });
+        }
+
+        console.log(`[NodeManager] Restored ${backedUpPackages.length} user packages`);
+
+        // Clean up backup
+        await fs.remove(backupPath);
+      }
+
+      // Restore user bin files
+      if (userBinLinks.length > 0 && await fs.pathExists(binBackupPath)) {
+        console.log('[NodeManager] Restoring user bin files...');
+
+        for (const file of userBinLinks) {
+          const linkFile = path.join(binBackupPath, file + '.link');
+          const destPath = path.join(binPath, file);
+
+          try {
+            if (await fs.pathExists(linkFile)) {
+              // Restore symlink
+              const linkTarget = await fs.readFile(linkFile, 'utf-8');
+              await fs.symlink(linkTarget, destPath);
+            } else {
+              // Restore regular file
+              const srcPath = path.join(binBackupPath, file);
+              if (await fs.pathExists(srcPath)) {
+                await fs.copy(srcPath, destPath, { preserveTimestamps: true });
+              }
+            }
+          } catch (err) {
+            console.warn(`[NodeManager] Failed to restore bin file ${file}:`, err);
+          }
+        }
+
+        console.log(`[NodeManager] Restored ${userBinLinks.length} user bin files`);
+
+        // Clean up backup
+        await fs.remove(binBackupPath);
+      }
+
       // Unix 系统：设置可执行权限
       if (this.platform !== 'win32') {
         const nodePath = this.getNodeExecutable();
         const npmPath = this.getNpmExecutable();
         await fs.chmod(nodePath, 0o755);
         await fs.chmod(npmPath, 0o755);
+
+        // Also set permissions for restored user bin files
+        if (userBinLinks.length > 0) {
+          for (const file of userBinLinks) {
+            const filePath = path.join(binPath, file);
+            try {
+              if (await fs.pathExists(filePath)) {
+                await fs.chmod(filePath, 0o755);
+              }
+            } catch (err) {
+              // Ignore permission errors for symlinks
+            }
+          }
+        }
       }
 
       console.log('[NodeManager] Installation completed successfully');
