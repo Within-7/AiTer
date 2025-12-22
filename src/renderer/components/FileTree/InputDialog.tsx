@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import './InputDialog.css'
 
 interface InputDialogProps {
@@ -90,7 +91,7 @@ export const InputDialog: React.FC<InputDialogProps> = ({
     setError(null)
   }
 
-  return (
+  return createPortal(
     <div className="input-dialog-overlay">
       <div ref={dialogRef} className="input-dialog">
         <div className="input-dialog-header">
@@ -118,6 +119,7 @@ export const InputDialog: React.FC<InputDialogProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
