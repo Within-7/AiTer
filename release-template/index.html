@@ -651,24 +651,25 @@ Write-Host "AiTer 静默安装完成"</pre>
     const GITHUB_RELEASES_URL = 'https://github.com/Within-7/aiter/releases/latest';
 
     // 静态 fallback - 当 API 请求失败时使用（尤其是 file:// 协议）
+    // 注意：每次发布新版本后需要更新此数据
     const FALLBACK_RELEASE = {
-      tag_name: 'v0.1.18',
-      published_at: '2025-12-21T04:06:57Z',
+      tag_name: 'v0.1.19',
+      published_at: '2025-12-23T00:00:00Z',
       assets: [
         {
-          name: 'AiTer-0.1.18-mac-arm64.dmg',
-          size: 252481715,
-          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.18/AiTer-0.1.18-mac-arm64.dmg'
+          name: 'AiTer-0.1.19-mac-arm64.dmg',
+          size: 252500000,
+          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.19/AiTer-0.1.19-mac-arm64.dmg'
         },
         {
-          name: 'AiTer-0.1.18-mac-x64.dmg',
-          size: 257397731,
-          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.18/AiTer-0.1.18-mac-x64.dmg'
+          name: 'AiTer-0.1.19-mac-x64.dmg',
+          size: 257400000,
+          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.19/AiTer-0.1.19-mac-x64.dmg'
         },
         {
-          name: 'AiTer-0.1.18-win-x64.exe',
-          size: 116845291,
-          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.18/AiTer-0.1.18-win-x64.exe'
+          name: 'AiTer-0.1.19-win-x64.exe',
+          size: 116900000,
+          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.19/AiTer-0.1.19-win-x64.exe'
         }
       ]
     };
