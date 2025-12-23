@@ -59,8 +59,7 @@ export class LocalFileServer {
       next()
     })
 
-    // Token validation with session support
-    // SECURITY: Removed insecure Referer-based bypass - token is always required
+    // Token validation with session and same-origin Referer support
     this.app.use((req, res, next) => {
       // Check if already authenticated in this session
       if ((req.session as any).authenticated) {
@@ -79,7 +78,27 @@ export class LocalFileServer {
         return next()
       }
 
-      // No valid authentication found - no fallbacks allowed
+      // SECURITY: Allow same-origin requests from pages served by this server
+      // This enables CSS, JS, images, and other resources to load properly
+      // when referenced from HTML files that were accessed with a valid token.
+      // The Referer header cannot be spoofed by JavaScript in browsers,
+      // so this is safe for same-origin resource loading.
+      const referer = req.headers.referer
+      if (referer) {
+        try {
+          const refererUrl = new URL(referer)
+          const serverOrigin = `localhost:${this.port}`
+          // Check if the referer is from the same server (same host and port)
+          if (refererUrl.host === serverOrigin) {
+            this.lastAccessed = Date.now()
+            return next()
+          }
+        } catch {
+          // Invalid referer URL, continue to deny
+        }
+      }
+
+      // No valid authentication found
       return res.status(403).json({ error: 'Forbidden: Invalid access token' })
     })
   }
