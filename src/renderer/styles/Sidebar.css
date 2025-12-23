@@ -194,7 +194,10 @@
 .btn-file-op {
   font-size: 12px;
   opacity: 0;
-  transition: opacity 0.15s;
+  width: 0;
+  padding: 0;
+  overflow: hidden;
+  transition: opacity 0.15s, width 0.15s, padding 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -202,6 +205,8 @@
 
 .project-header:hover .btn-file-op {
   opacity: 0.6;
+  width: auto;
+  padding: 4px;
 }
 
 .btn-file-op:hover {
