@@ -71,6 +71,7 @@ detect_system() {
 }
 
 # Get latest release information from GitHub
+# Uses releases page HTML instead of API to avoid rate limiting
 get_latest_release() {
     print_info "Fetching latest release information from GitHub..."
 
@@ -79,38 +80,46 @@ get_latest_release() {
         exit 1
     fi
 
-    # Use -H to set proper headers, helps with proxy compatibility
-    RELEASE_JSON=$(curl -s -H "Accept: application/vnd.github.v3+json" -H "User-Agent: AiTer-Installer" "$GITHUB_API")
-    CURL_EXIT_CODE=$?
+    # First, try to get version from the releases/latest redirect (no API, no rate limit)
+    LATEST_URL="https://github.com/${GITHUB_REPO}/releases/latest"
+    REDIRECT_URL=$(curl -sI -o /dev/null -w '%{redirect_url}' "$LATEST_URL")
 
-    if [ $CURL_EXIT_CODE -ne 0 ]; then
-        print_error "Failed to fetch release information from GitHub. (curl exit code: $CURL_EXIT_CODE)"
-        exit 1
+    if [ -n "$REDIRECT_URL" ]; then
+        # Extract version from redirect URL (e.g., .../releases/tag/v0.1.20 -> 0.1.20)
+        VERSION=$(echo "$REDIRECT_URL" | sed -E 's|.*/tag/v?||')
     fi
-
-    # Check if response contains an error message (API rate limit, etc.)
-    if echo "$RELEASE_JSON" | grep -q '"message":'; then
-        ERROR_MSG=$(echo "$RELEASE_JSON" | grep '"message":' | sed -E 's/.*"message":\s*"([^"]+)".*/\1/' | head -1)
-        print_error "GitHub API error: $ERROR_MSG"
-        print_info "If you're behind a proxy, try disabling it temporarily or wait for rate limit reset."
-        exit 1
-    fi
-
-    # Extract version and download URL
-    VERSION=$(echo "$RELEASE_JSON" | grep '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/' | head -1)
-    DOWNLOAD_URL=$(echo "$RELEASE_JSON" | grep '"browser_download_url":' | grep "$INSTALLER_PATTERN" | sed -E 's/.*"([^"]+)".*/\1/' | head -1)
 
     if [ -z "$VERSION" ]; then
-        print_error "Could not find version information."
-        print_info "Response preview: $(echo "$RELEASE_JSON" | head -c 200)"
+        # Fallback: try API (may fail if rate limited)
+        print_info "Trying GitHub API..."
+        RELEASE_JSON=$(curl -s -H "Accept: application/vnd.github.v3+json" -H "User-Agent: AiTer-Installer" "$GITHUB_API")
+
+        # Check for rate limit error
+        if echo "$RELEASE_JSON" | grep -q '"message":'; then
+            ERROR_MSG=$(echo "$RELEASE_JSON" | grep '"message":' | sed -E 's/.*"message":\s*"([^"]+)".*/\1/' | head -1)
+            print_error "GitHub API error: $ERROR_MSG"
+            print_info "Tip: Try disabling proxy or use direct download links from:"
+            print_info "  https://github.com/${GITHUB_REPO}/releases/latest"
+            exit 1
+        fi
+
+        VERSION=$(echo "$RELEASE_JSON" | grep '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/' | head -1)
+    fi
+
+    if [ -z "$VERSION" ]; then
+        print_error "Could not determine latest version."
         exit 1
     fi
 
-    if [ -z "$DOWNLOAD_URL" ]; then
-        print_error "Could not find download URL for your system."
-        echo "Pattern searched: $INSTALLER_PATTERN"
-        print_info "Available assets:"
-        echo "$RELEASE_JSON" | grep '"browser_download_url":' | sed -E 's/.*"browser_download_url":\s*"([^"]+)".*/  - \1/' | head -5
+    # Construct download URL directly (no API needed)
+    DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/releases/download/v${VERSION}/AiTer-${VERSION}-${INSTALLER_PATTERN}"
+
+    # Verify the URL exists
+    HTTP_STATUS=$(curl -sI -o /dev/null -w '%{http_code}' -L "$DOWNLOAD_URL")
+    if [ "$HTTP_STATUS" != "200" ] && [ "$HTTP_STATUS" != "302" ]; then
+        print_error "Download URL not accessible (HTTP $HTTP_STATUS)"
+        print_info "URL: $DOWNLOAD_URL"
+        print_info "Please check https://github.com/${GITHUB_REPO}/releases/latest manually"
         exit 1
     fi
 
