@@ -31,6 +31,7 @@ export interface EditorTab {
   fileType: 'html' | 'markdown' | 'json' | 'javascript' | 'typescript' | 'css' | 'text' | 'other' | 'diff' | 'python' | 'java' | 'c' | 'cpp' | 'go' | 'rust' | 'ruby' | 'php' | 'shell' | 'sql' | 'yaml' | 'xml' | 'dockerfile' | 'image' | 'pdf' | 'word' | 'excel' | 'powerpoint'
   content: string
   isDirty: boolean
+  isPreview?: boolean // Preview tab (VSCode-like behavior): replaced on next file click, unless pinned
   cursorPosition?: { line: number; column: number }
   serverUrl?: string // HTTP server URL for HTML preview
   // Diff view properties

@@ -104,6 +104,11 @@
   background: rgba(0, 122, 204, 0.3);
 }
 
+/* Preview tab styling (VSCode-like) */
+.work-area-tab.preview .tab-title {
+  font-style: italic;
+}
+
 .tab-icon {
   font-size: 13px;
   flex-shrink: 0;

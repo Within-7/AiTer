@@ -18,6 +18,7 @@ interface Tab {
   type: TabType
   title: string
   projectColor?: string
+  isPreview?: boolean
 }
 
 export const WorkArea: React.FC = () => {
@@ -50,7 +51,8 @@ export const WorkArea: React.FC = () => {
         id: `editor-${t.id}`,
         type: 'editor' as TabType,
         title: t.isDirty ? `● ${t.fileName}` : t.fileName,
-        projectColor: project ? getProjectColor(project.id, project.color) : undefined
+        projectColor: project ? getProjectColor(project.id, project.color) : undefined,
+        isPreview: t.isPreview
       })
     })
 
@@ -290,8 +292,15 @@ export const WorkArea: React.FC = () => {
             return (
               <div
                 key={tab.id}
-                className={`work-area-tab ${isActive ? 'active' : ''} ${isDragging ? 'dragging' : ''} ${isDragOver ? 'drag-over' : ''} ${isSelected ? 'selected' : ''} ${isMultiSelected ? 'multi-selected' : ''}`}
+                className={`work-area-tab ${isActive ? 'active' : ''} ${isDragging ? 'dragging' : ''} ${isDragOver ? 'drag-over' : ''} ${isSelected ? 'selected' : ''} ${isMultiSelected ? 'multi-selected' : ''} ${tab.isPreview ? 'preview' : ''}`}
                 onClick={(e) => handleTabClick(e, tab.id)}
+                onDoubleClick={() => {
+                  // Double-click on tab pins it (converts preview to permanent)
+                  if (tab.isPreview && tab.id.startsWith('editor-')) {
+                    const id = tab.id.substring('editor-'.length)
+                    dispatch({ type: 'PIN_EDITOR_TAB', payload: id })
+                  }
+                }}
                 draggable
                 onDragStart={(e) => handleDragStart(e, tab.id)}
                 onDragOver={(e) => handleDragOver(e, tab.id)}

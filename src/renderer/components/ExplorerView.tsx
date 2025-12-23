@@ -225,7 +225,8 @@ export function ExplorerView() {
     })
   }
 
-  const handleFileClick = async (file: FileNode) => {
+  // Open file as preview (single-click) or permanent (double-click)
+  const openFile = async (file: FileNode, isPreview: boolean) => {
     if (file.type === 'file') {
       try {
         // Check if this file type should be opened externally
@@ -254,13 +255,32 @@ export function ExplorerView() {
             fileName: file.name,
             fileType: result.fileType as EditorTab['fileType'],
             content: result.content,
-            isDirty: false
+            isDirty: false,
+            isPreview  // Preview tab (single-click) or permanent tab (double-click)
           }
           dispatch({ type: 'ADD_EDITOR_TAB', payload: tab })
         }
       } catch (error) {
         console.error('Error opening file:', error)
       }
+    }
+  }
+
+  // Single-click: open as preview tab
+  const handleFileClick = async (file: FileNode) => {
+    await openFile(file, true)
+  }
+
+  // Double-click: open as permanent tab (or pin existing preview)
+  const handleFileDoubleClick = async (file: FileNode) => {
+    // Check if the file is already open as a preview tab
+    const existingTab = state.editorTabs.find(t => t.filePath === file.path)
+    if (existingTab?.isPreview) {
+      // Pin the existing preview tab
+      dispatch({ type: 'PIN_EDITOR_TAB', payload: existingTab.id })
+    } else {
+      // Open as permanent tab
+      await openFile(file, false)
     }
   }
 
@@ -403,6 +423,7 @@ export function ExplorerView() {
                   projectPath={project.path}
                   projectName={project.name}
                   onFileClick={handleFileClick}
+                  onFileDoubleClick={handleFileDoubleClick}
                   activeFilePath={
                     state.activeEditorTabId
                       ? state.editorTabs.find(t => t.id === state.activeEditorTabId)?.filePath

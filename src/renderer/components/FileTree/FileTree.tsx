@@ -58,6 +58,7 @@ interface FileTreeProps {
   projectPath: string
   projectName: string
   onFileClick: (file: FileNode) => void
+  onFileDoubleClick?: (file: FileNode) => void
   activeFilePath?: string
 }
 
@@ -85,6 +86,7 @@ interface DialogState {
 export const FileTree: React.FC<FileTreeProps> = ({
   projectPath,
   onFileClick,
+  onFileDoubleClick,
   activeFilePath
 }) => {
   const [nodes, setNodes] = useState<FileNode[]>([])
@@ -568,6 +570,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
             level={0}
             onToggle={handleToggle}
             onClick={onFileClick}
+            onDoubleClick={onFileDoubleClick}
             onContextMenu={handleContextMenu}
             activeFilePath={activeFilePath}
             gitChanges={gitChanges}

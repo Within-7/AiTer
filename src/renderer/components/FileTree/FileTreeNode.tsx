@@ -7,6 +7,7 @@ interface FileTreeNodeProps {
   level: number
   onToggle: (node: FileNode) => void
   onClick: (node: FileNode) => void
+  onDoubleClick?: (node: FileNode) => void
   onContextMenu: (e: React.MouseEvent, node: FileNode, isProjectRoot?: boolean) => void
   activeFilePath?: string
   gitChanges?: Map<string, ExtendedGitStatus>
@@ -194,6 +195,7 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({
   level,
   onToggle,
   onClick,
+  onDoubleClick,
   onContextMenu,
   activeFilePath,
   gitChanges,
@@ -211,6 +213,13 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({
       onToggle(node)
     } else {
       onClick(node)
+    }
+  }
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (node.type === 'file' && onDoubleClick) {
+      onDoubleClick(node)
     }
   }
 
@@ -241,6 +250,7 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({
         className={`file-tree-item ${gitStatusClass} ${isActive ? 'selected' : ''} ${isIgnored ? 'gitignored' : ''} ${isDragging ? 'dragging' : ''} ${isDropTarget ? 'drop-target' : ''}`}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
         onContextMenu={handleContextMenu}
         draggable
         onDragStart={(e) => onDragStart?.(e, node.path)}
@@ -268,6 +278,7 @@ export const FileTreeNode: React.FC<FileTreeNodeProps> = ({
               level={level + 1}
               onToggle={onToggle}
               onClick={onClick}
+              onDoubleClick={onDoubleClick}
               onContextMenu={onContextMenu}
               activeFilePath={activeFilePath}
               gitChanges={gitChanges}

@@ -53,6 +53,7 @@ export type AppAction =
   | { type: 'REORDER_TABS'; payload: string[] }
   | { type: 'UPDATE_EDITOR_CONTENT'; payload: { id: string; content: string } }
   | { type: 'MARK_TAB_DIRTY'; payload: { id: string; isDirty: boolean } }
+  | { type: 'PIN_EDITOR_TAB'; payload: string }
   | { type: 'TERMINAL_DATA'; payload: { id: string; data: string } }
   | { type: 'TERMINAL_EXIT'; payload: { id: string; exitCode: number } }
   | { type: 'SET_SETTINGS'; payload: AppSettings }
@@ -228,12 +229,45 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       })
 
       if (existing) {
+        // If existing tab is a preview tab, pin it (user explicitly opened the same file again)
+        if (existing.isPreview) {
+          return {
+            ...state,
+            editorTabs: state.editorTabs.map(t =>
+              t.id === existing.id ? { ...t, isPreview: false } : t
+            ),
+            activeEditorTabId: existing.id,
+            activeTerminalId: undefined
+          }
+        }
         return {
           ...state,
           activeEditorTabId: existing.id,
           activeTerminalId: undefined  // Clear terminal selection when switching to editor
         }
       }
+
+      // Check if there's an existing preview tab that should be replaced
+      const existingPreviewTab = state.editorTabs.find(t => t.isPreview)
+
+      if (existingPreviewTab && action.payload.isPreview) {
+        // Replace the existing preview tab with the new one
+        const previewTabOrderId = `editor-${existingPreviewTab.id}`
+        const newTabOrderId = `editor-${action.payload.id}`
+
+        return {
+          ...state,
+          editorTabs: state.editorTabs
+            .filter(t => t.id !== existingPreviewTab.id)
+            .concat(action.payload),
+          tabOrder: state.tabOrder.map(id =>
+            id === previewTabOrderId ? newTabOrderId : id
+          ),
+          activeEditorTabId: action.payload.id,
+          activeTerminalId: undefined
+        }
+      }
+
       return {
         ...state,
         editorTabs: [...state.editorTabs, action.payload],
@@ -318,7 +352,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         editorTabs: state.editorTabs.map(tab =>
           tab.id === action.payload.id
-            ? { ...tab, content: action.payload.content, isDirty: true }
+            ? { ...tab, content: action.payload.content, isDirty: true, isPreview: false }
             : tab
         )
       }
@@ -329,6 +363,16 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         editorTabs: state.editorTabs.map(tab =>
           tab.id === action.payload.id
             ? { ...tab, isDirty: action.payload.isDirty }
+            : tab
+        )
+      }
+
+    case 'PIN_EDITOR_TAB':
+      return {
+        ...state,
+        editorTabs: state.editorTabs.map(tab =>
+          tab.id === action.payload
+            ? { ...tab, isPreview: false }
             : tab
         )
       }
