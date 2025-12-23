@@ -52,40 +52,80 @@ function Test-Administrator {
 }
 
 # Get latest release information
+# Uses releases page redirect instead of API to avoid rate limiting
 function Get-LatestRelease {
     Write-Info "Fetching latest release information from GitHub..."
 
+    $version = $null
+
+    # First, try to get version from the releases/latest redirect (no API, no rate limit)
     try {
-        $response = Invoke-RestMethod -Uri $GITHUB_API -Method Get -ErrorAction Stop
+        $latestUrl = "https://github.com/$GITHUB_REPO/releases/latest"
+        $request = [System.Net.WebRequest]::Create($latestUrl)
+        $request.AllowAutoRedirect = $false
+        $request.Method = "HEAD"
+        $response = $request.GetResponse()
+        $redirectUrl = $response.GetResponseHeader("Location")
+        $response.Close()
 
-        $version = $response.tag_name -replace '^v', ''
-        $assets = $response.assets
-
-        $windowsAsset = $assets | Where-Object { $_.name -like "*win-x64.exe" } | Select-Object -First 1
-
-        if (-not $windowsAsset) {
-            Write-Error "Could not find Windows installer in the latest release."
-            exit 1
-        }
-
-        $downloadUrl = $windowsAsset.browser_download_url
-        $fileName = $windowsAsset.name
-        $fileSize = [math]::Round($windowsAsset.size / 1MB, 2)
-
-        Write-Success "Latest version: v$version"
-        Write-Info "File: $fileName ($fileSize MB)"
-        Write-Info "Download URL: $downloadUrl"
-
-        return @{
-            Version = $version
-            DownloadUrl = $downloadUrl
-            FileName = $fileName
-            FileSize = $fileSize
+        if ($redirectUrl) {
+            # Extract version from redirect URL (e.g., .../releases/tag/v0.1.20 -> 0.1.20)
+            if ($redirectUrl -match '/tag/v?(.+)$') {
+                $version = $matches[1]
+            }
         }
     }
     catch {
-        Write-Error "Failed to fetch release information: $($_.Exception.Message)"
+        Write-Info "Redirect method failed, trying API..."
+    }
+
+    # Fallback: try API (may fail if rate limited)
+    if (-not $version) {
+        try {
+            $response = Invoke-RestMethod -Uri $GITHUB_API -Method Get -ErrorAction Stop
+            $version = $response.tag_name -replace '^v', ''
+        }
+        catch {
+            Write-Error "Failed to fetch release information: $($_.Exception.Message)"
+            Write-Info "Tip: Try disabling proxy or use direct download links from:"
+            Write-Info "  https://github.com/$GITHUB_REPO/releases/latest"
+            exit 1
+        }
+    }
+
+    if (-not $version) {
+        Write-Error "Could not determine latest version."
         exit 1
+    }
+
+    # Construct download URL directly (no API needed)
+    $fileName = "AiTer-$version-win-x64.exe"
+    $downloadUrl = "https://github.com/$GITHUB_REPO/releases/download/v$version/$fileName"
+
+    # Verify the URL exists
+    try {
+        $request = [System.Net.WebRequest]::Create($downloadUrl)
+        $request.Method = "HEAD"
+        $request.AllowAutoRedirect = $true
+        $response = $request.GetResponse()
+        $fileSize = [math]::Round($response.ContentLength / 1MB, 2)
+        $response.Close()
+    }
+    catch {
+        Write-Error "Download URL not accessible: $downloadUrl"
+        Write-Info "Please check https://github.com/$GITHUB_REPO/releases/latest manually"
+        exit 1
+    }
+
+    Write-Success "Latest version: v$version"
+    Write-Info "File: $fileName ($fileSize MB)"
+    Write-Info "Download URL: $downloadUrl"
+
+    return @{
+        Version = $version
+        DownloadUrl = $downloadUrl
+        FileName = $fileName
+        FileSize = $fileSize
     }
 }
 

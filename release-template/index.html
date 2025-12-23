@@ -647,29 +647,30 @@ Write-Host "AiTer 静默安装完成"</pre>
   </footer>
 
   <script>
-    const GITHUB_API = 'https://api.github.com/repos/Within-7/aiter/releases/latest';
-    const GITHUB_RELEASES_URL = 'https://github.com/Within-7/aiter/releases/latest';
+    const GITHUB_REPO = 'Within-7/aiter';
+    const GITHUB_API = 'https://api.github.com/repos/' + GITHUB_REPO + '/releases/latest';
+    const GITHUB_RELEASES_URL = 'https://github.com/' + GITHUB_REPO + '/releases/latest';
 
-    // 静态 fallback - 当 API 请求失败时使用（尤其是 file:// 协议）
+    // 静态 fallback - 当所有方法都失败时使用（尤其是 file:// 协议）
     // 注意：每次发布新版本后需要更新此数据
     const FALLBACK_RELEASE = {
-      tag_name: 'v0.1.19',
+      tag_name: 'v0.1.20',
       published_at: '2025-12-23T00:00:00Z',
       assets: [
         {
-          name: 'AiTer-0.1.19-mac-arm64.dmg',
+          name: 'AiTer-0.1.20-mac-arm64.dmg',
           size: 252500000,
-          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.19/AiTer-0.1.19-mac-arm64.dmg'
+          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.20/AiTer-0.1.20-mac-arm64.dmg'
         },
         {
-          name: 'AiTer-0.1.19-mac-x64.dmg',
+          name: 'AiTer-0.1.20-mac-x64.dmg',
           size: 257400000,
-          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.19/AiTer-0.1.19-mac-x64.dmg'
+          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.20/AiTer-0.1.20-mac-x64.dmg'
         },
         {
-          name: 'AiTer-0.1.19-win-x64.exe',
+          name: 'AiTer-0.1.20-win-x64.exe',
           size: 116900000,
-          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.19/AiTer-0.1.19-win-x64.exe'
+          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.20/AiTer-0.1.20-win-x64.exe'
         }
       ]
     };
@@ -681,13 +682,85 @@ Write-Host "AiTer 静默安装完成"</pre>
       return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     }
 
+    // 通过 redirect 获取版本号（避免 API 限流）
+    async function getVersionFromRedirect() {
+      try {
+        // 使用 HEAD 请求获取重定向 URL，不跟随重定向
+        const res = await fetch(GITHUB_RELEASES_URL, {
+          method: 'HEAD',
+          redirect: 'manual'
+        });
+
+        // 从 redirect URL 中提取版本号
+        const redirectUrl = res.headers.get('location');
+        if (redirectUrl) {
+          const match = redirectUrl.match(/\/tag\/v?(.+)$/);
+          if (match) {
+            return match[1];
+          }
+        }
+      } catch (err) {
+        console.log('Redirect method failed:', err);
+      }
+      return null;
+    }
+
+    // 构建 release 对象（基于版本号，不需要 API）
+    function buildReleaseFromVersion(version) {
+      return {
+        tag_name: 'v' + version,
+        published_at: new Date().toISOString(),
+        assets: [
+          {
+            name: 'AiTer-' + version + '-mac-arm64.dmg',
+            size: 0, // 未知大小
+            browser_download_url: 'https://github.com/' + GITHUB_REPO + '/releases/download/v' + version + '/AiTer-' + version + '-mac-arm64.dmg'
+          },
+          {
+            name: 'AiTer-' + version + '-mac-x64.dmg',
+            size: 0,
+            browser_download_url: 'https://github.com/' + GITHUB_REPO + '/releases/download/v' + version + '/AiTer-' + version + '-mac-x64.dmg'
+          },
+          {
+            name: 'AiTer-' + version + '-win-x64.exe',
+            size: 0,
+            browser_download_url: 'https://github.com/' + GITHUB_REPO + '/releases/download/v' + version + '/AiTer-' + version + '-win-x64.exe'
+          }
+        ],
+        isConstructed: true
+      };
+    }
+
     // 获取最新版本信息
+    // 优先使用 redirect 方式（避免 API 限流），失败时回退到 API，最后使用静态 fallback
     async function fetchLatestRelease() {
       // 如果是 file:// 协议，直接使用 fallback（无法发起 CORS 请求）
       if (window.location.protocol === 'file:') {
         return { ...FALLBACK_RELEASE, isFallback: true };
       }
 
+      // 1. 首先尝试 redirect 方式（不消耗 API 配额）
+      const version = await getVersionFromRedirect();
+      if (version) {
+        console.log('Got version from redirect:', version);
+        // 尝试用 API 获取完整信息（用于文件大小等）
+        try {
+          const res = await fetch(GITHUB_API);
+          if (res.ok) {
+            const data = await res.json();
+            // 验证版本匹配
+            if (data.tag_name === 'v' + version || data.tag_name === version) {
+              return data;
+            }
+          }
+        } catch (err) {
+          console.log('API failed, using constructed release');
+        }
+        // API 失败时，使用构建的 release 对象
+        return buildReleaseFromVersion(version);
+      }
+
+      // 2. Redirect 失败，尝试 API
       try {
         const res = await fetch(GITHUB_API);
         if (!res.ok) throw new Error('Failed to fetch release');
@@ -726,7 +799,8 @@ Write-Host "AiTer 静默安装完成"</pre>
         btn.href = asset.browser_download_url;
         btn.classList.remove('disabled');
         nameEl.textContent = asset.name;
-        sizeEl.textContent = formatSize(asset.size);
+        // 如果文件大小为 0（从 redirect 构建的），显示 "-"
+        sizeEl.textContent = asset.size > 0 ? formatSize(asset.size) : '-';
       } else {
         btn.removeAttribute('href');
         btn.classList.add('disabled');
