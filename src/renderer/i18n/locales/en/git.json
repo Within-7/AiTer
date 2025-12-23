@@ -1,0 +1,90 @@
+{
+  "title": "Source Control",
+  "emptyState": {
+    "title": "No Git repositories found",
+    "hint": "Projects with Git will appear here"
+  },
+  "branch": {
+    "current": "Current Branch",
+    "main": "main",
+    "master": "master",
+    "develop": "develop",
+    "switchBranch": "Switch Branch",
+    "createBranch": "Create Branch",
+    "deleteBranch": "Delete Branch",
+    "renameBranch": "Rename Branch"
+  },
+  "status": {
+    "ahead": "{{count}} commit ahead of remote",
+    "ahead_other": "{{count}} commits ahead of remote",
+    "behind": "{{count}} commit behind remote",
+    "behind_other": "{{count}} commits behind remote",
+    "uncommitted": "Uncommitted changes",
+    "clean": "Working tree clean",
+    "staged": "{{count}} file staged",
+    "staged_other": "{{count}} files staged",
+    "modified": "{{count}} file modified",
+    "modified_other": "{{count}} files modified",
+    "untracked": "{{count}} untracked file",
+    "untracked_other": "{{count}} untracked files",
+    "conflicted": "{{count}} file with conflicts",
+    "conflicted_other": "{{count}} files with conflicts"
+  },
+  "changes": {
+    "title": "Changes",
+    "staged": "Staged Changes",
+    "unstaged": "Unstaged Changes",
+    "untracked": "Untracked Files"
+  },
+  "actions": {
+    "commit": "Commit",
+    "push": "Push",
+    "pull": "Pull",
+    "fetch": "Fetch",
+    "stash": "Stash",
+    "unstash": "Pop Stash",
+    "stage": "Stage",
+    "unstage": "Unstage",
+    "discard": "Discard Changes",
+    "stageAll": "Stage All",
+    "unstageAll": "Unstage All",
+    "discardAll": "Discard All"
+  },
+  "commit": {
+    "message": "Message",
+    "placeholder": "Enter commit message...",
+    "emptyMessage": "Please enter a commit message",
+    "noChanges": "No changes to commit"
+  },
+  "fileStatus": {
+    "added": "Added",
+    "modified": "Modified",
+    "deleted": "Deleted",
+    "renamed": "Renamed",
+    "copied": "Copied",
+    "untracked": "Untracked",
+    "ignored": "Ignored",
+    "conflicted": "Conflicted"
+  },
+  "dialogs": {
+    "discardChanges": {
+      "title": "Discard Changes",
+      "message": "Are you sure you want to discard all changes in \"{{fileName}}\"?",
+      "confirm": "Discard",
+      "cancel": "Cancel"
+    },
+    "discardAll": {
+      "title": "Discard All Changes",
+      "message": "Are you sure you want to discard all changes? This cannot be undone.",
+      "confirm": "Discard All",
+      "cancel": "Cancel"
+    }
+  },
+  "errors": {
+    "notGitRepo": "Not a Git repository",
+    "commitFailed": "Commit failed",
+    "pushFailed": "Push failed",
+    "pullFailed": "Pull failed",
+    "conflictDetected": "Merge conflict detected"
+  }
+}

@@ -180,6 +180,7 @@ export class PTYManager {
       cursorBlink: true,
       cursorStyle: 'block',
       terminalTheme: 'homebrew',
+      language: 'en',
       shellLoginMode: true,
       macOptionIsMeta: true,
       nodeSource: 'builtin',

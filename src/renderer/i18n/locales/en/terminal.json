@@ -1,0 +1,53 @@
+{
+  "title": "Terminal",
+  "newTerminal": "New Terminal",
+  "closeTerminal": "Close Terminal",
+  "splitTerminal": "Split Terminal",
+  "killProcess": "Kill Process",
+  "clear": "Clear",
+  "copy": "Copy",
+  "paste": "Paste",
+  "selectAll": "Select All",
+  "find": "Find",
+  "defaultName": "Terminal",
+  "status": {
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "running": "Running",
+    "idle": "Idle",
+    "shell": "Shell: {{shell}}",
+    "pid": "PID: {{pid}}",
+    "processId": "Process ID",
+    "project": "Project: {{path}}"
+  },
+  "contextMenu": {
+    "copy": "Copy",
+    "paste": "Paste",
+    "selectAll": "Select All",
+    "clear": "Clear Terminal",
+    "split": "Split Terminal",
+    "kill": "Kill Process"
+  },
+  "toolbar": {
+    "newTerminal": "New Terminal",
+    "split": "Split",
+    "clear": "Clear",
+    "kill": "Kill",
+    "scrollToBottom": "Scroll to Bottom",
+    "scrollToTop": "Scroll to Top"
+  },
+  "errors": {
+    "failedToCreate": "Failed to create terminal",
+    "failedToConnect": "Failed to connect to terminal",
+    "processExited": "Process exited with code {{code}}",
+    "shellNotFound": "Shell not found: {{shell}}"
+  },
+  "shells": {
+    "bash": "Bash",
+    "zsh": "Zsh",
+    "fish": "Fish",
+    "powershell": "PowerShell",
+    "cmd": "Command Prompt",
+    "sh": "Shell"
+  }
+}

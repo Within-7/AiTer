@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import './UpdateNotification.css'
 
 type UpdateStatus = 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error'
@@ -24,6 +25,7 @@ interface UpdateEventData {
 }
 
 export const UpdateNotification: React.FC = () => {
+  const { t } = useTranslation('update')
   const [status, setStatus] = useState<UpdateStatus | null>(null)
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null)
   const [progress, setProgress] = useState<DownloadProgress | null>(null)
@@ -125,12 +127,6 @@ export const UpdateNotification: React.FC = () => {
     return `${formatBytes(bytesPerSecond)}/s`
   }
 
-  // Parse release notes into array
-  const parseReleaseNotes = (notes: string | null | undefined): string[] => {
-    if (!notes) return []
-    return notes.split('\n').filter(line => line.trim())
-  }
-
   if (!isVisible) {
     return null
   }
@@ -145,29 +141,29 @@ export const UpdateNotification: React.FC = () => {
             {status === 'error' ? '❌' : status === 'downloaded' ? '✅' : '🎉'}
           </div>
           <h2>
-            {status === 'available' && '发现新版本'}
-            {status === 'downloading' && '正在下载更新'}
-            {status === 'downloaded' && '更新已就绪'}
-            {status === 'error' && '更新失败'}
+            {status === 'available' && t('status.available')}
+            {status === 'downloading' && t('status.downloading')}
+            {status === 'downloaded' && t('status.ready')}
+            {status === 'error' && t('status.failed')}
           </h2>
         </div>
 
         {status === 'error' ? (
           <div className="update-error">
-            <p>{error || '未知错误'}</p>
+            <p>{error || t('messages.unknownError')}</p>
             <button className="update-button dismiss" onClick={handleDismiss}>
-              关闭
+              {t('actions.close')}
             </button>
           </div>
         ) : (
           <>
             <div className="update-version-info">
               <div className="version-badge current">
-                当前版本: {currentVersion}
+                {t('version.current')} {currentVersion}
               </div>
               <div className="version-arrow">→</div>
               <div className="version-badge latest">
-                最新版本: {updateInfo?.version || '未知'}
+                {t('version.latest')} {updateInfo?.version || t('version.unknown')}
               </div>
             </div>
 
@@ -196,17 +192,17 @@ export const UpdateNotification: React.FC = () => {
                     className="update-button download"
                     onClick={handleDownload}
                   >
-                    立即下载
+                    {t('actions.downloadNow')}
                   </button>
                   <button className="update-button dismiss" onClick={handleDismiss}>
-                    稍后提醒
+                    {t('actions.remindLater')}
                   </button>
                 </>
               )}
 
               {status === 'downloading' && (
                 <button className="update-button dismiss" onClick={handleBackgroundDownload}>
-                  后台下载
+                  {t('actions.backgroundDownload')}
                 </button>
               )}
 
@@ -216,10 +212,10 @@ export const UpdateNotification: React.FC = () => {
                     className="update-button install"
                     onClick={handleInstall}
                   >
-                    立即安装并重启
+                    {t('actions.installRestart')}
                   </button>
                   <button className="update-button dismiss" onClick={handleDismiss}>
-                    稍后安装
+                    {t('actions.installLater')}
                   </button>
                 </>
               )}

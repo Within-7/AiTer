@@ -1,0 +1,47 @@
+{
+  "status": {
+    "available": "New Version Available",
+    "downloading": "Downloading Update",
+    "ready": "Update Ready",
+    "failed": "Update Failed",
+    "checking": "Checking for Updates",
+    "upToDate": "Up to Date",
+    "error": "Update Error"
+  },
+  "version": {
+    "current": "Current Version:",
+    "latest": "Latest Version:",
+    "unknown": "Unknown"
+  },
+  "progress": {
+    "downloading": "Downloading...",
+    "percent": "{{percent}}%",
+    "speed": "{{speed}}/s",
+    "remaining": "{{time}} remaining"
+  },
+  "actions": {
+    "downloadNow": "Download Now",
+    "remindLater": "Remind Later",
+    "backgroundDownload": "Background Download",
+    "installRestart": "Install and Restart Now",
+    "installLater": "Install Later",
+    "close": "Close",
+    "retry": "Retry",
+    "viewChangelog": "View Changelog"
+  },
+  "messages": {
+    "downloadComplete": "Download complete. Ready to install.",
+    "downloadFailed": "Download failed. Please try again.",
+    "installPrompt": "The update has been downloaded. Restart to apply the update?",
+    "unknownError": "Unknown error occurred"
+  },
+  "releaseNotes": {
+    "title": "What's New",
+    "viewAll": "View All Release Notes"
+  },
+  "notifications": {
+    "updateAvailable": "A new version ({{version}}) is available",
+    "updateReady": "Update is ready to install",
+    "updateFailed": "Failed to download update"
+  }
+}

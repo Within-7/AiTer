@@ -100,6 +100,9 @@ export interface AppSettings {
   cursorStyle: 'block' | 'underline' | 'bar'
   terminalTheme: TerminalThemeName
 
+  // Internationalization
+  language: 'en' | 'zh-CN'          // Display language
+
   // Shell configuration
   shellLoginMode: boolean           // Whether to use login shell (-l/--login)
 

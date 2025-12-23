@@ -1,0 +1,70 @@
+{
+  "title": "Explorer",
+  "addProject": "Add Project",
+  "removeProject": "Remove Project",
+  "openTerminal": "Open Terminal",
+  "newFile": "New File",
+  "newFolder": "New Folder",
+  "uploadFiles": "Upload Files...",
+  "emptyState": {
+    "title": "No projects added yet",
+    "hint": "Click the + button to add a project"
+  },
+  "contextMenu": {
+    "newFile": "New File",
+    "newFolder": "New Folder",
+    "uploadFiles": "Upload Files...",
+    "copyPath": "Copy Path",
+    "rename": "Rename",
+    "delete": "Delete",
+    "openInTerminal": "Open in Terminal",
+    "openWithDefaultApp": "Open with Default App",
+    "revealInFinder": "Reveal in Finder",
+    "revealInExplorer": "Reveal in Explorer"
+  },
+  "dialogs": {
+    "newFile": {
+      "title": "New File",
+      "placeholder": "Enter file name"
+    },
+    "newFolder": {
+      "title": "New Folder",
+      "placeholder": "Enter folder name"
+    },
+    "rename": {
+      "title": "Rename",
+      "placeholder": "Enter new name"
+    },
+    "delete": {
+      "title": "Delete",
+      "message": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
+    },
+    "removeProject": {
+      "title": "Remove Project",
+      "message": "Are you sure you want to remove \"{{name}}\" from the workspace? The files will not be deleted."
+    }
+  },
+  "fileTypes": {
+    "file": "File",
+    "folder": "Folder",
+    "image": "Image",
+    "video": "Video",
+    "audio": "Audio",
+    "document": "Document",
+    "code": "Code",
+    "config": "Configuration",
+    "data": "Data"
+  },
+  "sorting": {
+    "name": "Name",
+    "type": "Type",
+    "size": "Size",
+    "modified": "Date Modified"
+  },
+  "filters": {
+    "all": "All Files",
+    "code": "Code Files",
+    "documents": "Documents",
+    "images": "Images"
+  }
+}

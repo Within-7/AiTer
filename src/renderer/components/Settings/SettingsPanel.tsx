@@ -1,34 +1,31 @@
 import React, { useContext, useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AppContext } from '../../context/AppContext'
 import { getTerminalThemeNames } from '../../themes/terminalThemes'
 import { TerminalThemeName, DetectedShell, VersionManagerInfo, ShellType, ShortcutConfig, KeyboardShortcut } from '../../../types'
-import { ShortcutInput, formatShortcut } from './ShortcutInput'
+import { ShortcutInput } from './ShortcutInput'
+import { availableLanguages, changeLanguage, type LanguageCode } from '../../i18n'
 import './SettingsPanel.css'
 
-// Default shortcuts for reset
+// Default shortcuts for reset (labels will be translated via i18n)
 const defaultShortcuts: ShortcutConfig[] = [
-  { action: 'newTerminal', label: '新建终端', shortcut: { key: 't', metaKey: true }, enabled: true },
-  { action: 'closeTab', label: '关闭标签页', shortcut: { key: 'w', metaKey: true }, enabled: true },
-  { action: 'saveFile', label: '保存文件', shortcut: { key: 's', metaKey: true }, enabled: true },
-  { action: 'openSettings', label: '打开设置', shortcut: { key: ',', metaKey: true }, enabled: true },
-  { action: 'newWindow', label: '新窗口', shortcut: { key: 'n', metaKey: true, shiftKey: true }, enabled: true },
-  { action: 'toggleSidebar', label: '切换侧边栏', shortcut: { key: 'b', metaKey: true }, enabled: true },
-  { action: 'nextTab', label: '下一个标签页', shortcut: { key: ']', metaKey: true, shiftKey: true }, enabled: true },
-  { action: 'prevTab', label: '上一个标签页', shortcut: { key: '[', metaKey: true, shiftKey: true }, enabled: true },
-  { action: 'focusTerminal', label: '聚焦终端', shortcut: { key: '`', ctrlKey: true }, enabled: true },
-  { action: 'focusEditor', label: '聚焦编辑器', shortcut: { key: 'e', metaKey: true, shiftKey: true }, enabled: true }
+  { action: 'newTerminal', label: 'New Terminal', shortcut: { key: 't', metaKey: true }, enabled: true },
+  { action: 'closeTab', label: 'Close Tab', shortcut: { key: 'w', metaKey: true }, enabled: true },
+  { action: 'saveFile', label: 'Save File', shortcut: { key: 's', metaKey: true }, enabled: true },
+  { action: 'openSettings', label: 'Open Settings', shortcut: { key: ',', metaKey: true }, enabled: true },
+  { action: 'newWindow', label: 'New Window', shortcut: { key: 'n', metaKey: true, shiftKey: true }, enabled: true },
+  { action: 'toggleSidebar', label: 'Toggle Sidebar', shortcut: { key: 'b', metaKey: true }, enabled: true },
+  { action: 'nextTab', label: 'Next Tab', shortcut: { key: ']', metaKey: true, shiftKey: true }, enabled: true },
+  { action: 'prevTab', label: 'Previous Tab', shortcut: { key: '[', metaKey: true, shiftKey: true }, enabled: true },
+  { action: 'focusTerminal', label: 'Focus Terminal', shortcut: { key: '`', ctrlKey: true }, enabled: true },
+  { action: 'focusEditor', label: 'Focus Editor', shortcut: { key: 'e', metaKey: true, shiftKey: true }, enabled: true }
 ]
 
 // Tab definitions
 type SettingsTab = 'general' | 'appearance' | 'shortcuts'
 
-const SETTINGS_TABS: { id: SettingsTab; label: string }[] = [
-  { id: 'general', label: '通用' },
-  { id: 'appearance', label: '外观' },
-  { id: 'shortcuts', label: '快捷键' }
-]
-
 export const SettingsPanel: React.FC = () => {
+  const { t } = useTranslation('settings')
   const { state, dispatch } = useContext(AppContext)
   const isOpen = state.showSettingsPanel
   const { settings } = state
@@ -107,10 +104,22 @@ export const SettingsPanel: React.FC = () => {
     await window.api.settings.update({ [key]: value })
   }
 
+  // Handle language change
+  const handleLanguageChange = async (newLanguage: LanguageCode) => {
+    await changeLanguage(newLanguage)
+    handleSettingChange('language', newLanguage)
+  }
+
   const themeOptions = getTerminalThemeNames()
 
   // Get current shortcuts or use defaults
   const shortcuts = settings.shortcuts || defaultShortcuts
+
+  // Get translated shortcut label
+  const getShortcutLabel = (action: string): string => {
+    const key = `shortcuts.keys.${action}` as const
+    return t(key)
+  }
 
   // Update a specific shortcut
   const handleShortcutChange = useCallback((action: string, newShortcut: KeyboardShortcut) => {
@@ -134,9 +143,7 @@ export const SettingsPanel: React.FC = () => {
   }, [handleSettingChange])
 
   // Format path for display (shorten home directory)
-  // Note: We can't access process.env in renderer, so we detect ~ prefix from the path patterns
   const formatPath = (path: string): string => {
-    // Common home directory patterns on different platforms
     const homePatterns = isWindows
       ? [/^C:\\Users\\[^\\]+/, /^\/c\/Users\/[^/]+/]
       : [/^\/Users\/[^/]+/, /^\/home\/[^/]+/]
@@ -155,12 +162,32 @@ export const SettingsPanel: React.FC = () => {
   // Render General tab content
   const renderGeneralTab = () => (
     <>
-      {/* Shell Configuration Section */}
+      {/* Language Section */}
       <section className="settings-section">
-        <h3>Shell</h3>
+        <h3>{t('general.language.title')}</h3>
 
         <div className="setting-item">
-          <label htmlFor="shell-select">Default Shell</label>
+          <label htmlFor="language-select">{t('general.language.displayLanguage')}</label>
+          <select
+            id="language-select"
+            value={settings.language || 'en'}
+            onChange={(e) => handleLanguageChange(e.target.value as LanguageCode)}
+          >
+            {availableLanguages.map(lang => (
+              <option key={lang.code} value={lang.code}>
+                {lang.nativeName} ({lang.name})
+              </option>
+            ))}
+          </select>
+        </div>
+      </section>
+
+      {/* Shell Configuration Section */}
+      <section className="settings-section">
+        <h3>{t('general.shell.title')}</h3>
+
+        <div className="setting-item">
+          <label htmlFor="shell-select">{t('general.shell.defaultShell')}</label>
           <select
             id="shell-select"
             value={settings.shell || 'system-default'}
@@ -168,17 +195,17 @@ export const SettingsPanel: React.FC = () => {
               e.target.value === 'system-default' ? undefined : e.target.value
             )}
           >
-            <option value="system-default">System Default</option>
+            <option value="system-default">{t('general.shell.systemDefault')}</option>
             {availableShells.map(shell => (
               <option key={shell.path} value={shell.path}>
-                {shell.name} {shell.isDefault ? '(Default)' : ''}
+                {shell.name} {shell.isDefault ? t('general.shell.defaultBadge') : ''}
               </option>
             ))}
           </select>
         </div>
 
         <div className="setting-item setting-item-checkbox">
-          <label htmlFor="login-shell">Login Shell Mode</label>
+          <label htmlFor="login-shell">{t('general.shell.loginShellMode')}</label>
           <input
             id="login-shell"
             type="checkbox"
@@ -186,13 +213,13 @@ export const SettingsPanel: React.FC = () => {
             onChange={(e) => handleSettingChange('shellLoginMode', e.target.checked)}
           />
           <span className="setting-hint">
-            Load shell configuration files
+            {t('general.shell.loginShellHint')}
           </span>
         </div>
 
         {settings.shellLoginMode && currentConfigFiles.length > 0 && (
           <div className="setting-info">
-            <span className="setting-info-label">Config files to load:</span>
+            <span className="setting-info-label">{t('general.shell.configFilesToLoad')}</span>
             <ul className="config-files-list">
               {currentConfigFiles.map(file => (
                 <li key={file}>{formatPath(file)}</li>
@@ -204,10 +231,10 @@ export const SettingsPanel: React.FC = () => {
 
       {/* AI CLI Integration Section */}
       <section className="settings-section">
-        <h3>AI CLI</h3>
+        <h3>{t('general.aiCli.title')}</h3>
 
         <div className="setting-item setting-item-checkbox">
-          <label htmlFor="auto-start-minto">自动启动 Minto</label>
+          <label htmlFor="auto-start-minto">{t('general.aiCli.autoStartMinto')}</label>
           <input
             id="auto-start-minto"
             type="checkbox"
@@ -215,30 +242,30 @@ export const SettingsPanel: React.FC = () => {
             onChange={(e) => handleSettingChange('autoStartMinto', e.target.checked)}
           />
           <span className="setting-hint">
-            打开新终端时自动运行 minto 命令
+            {t('general.aiCli.autoStartMintoHint')}
           </span>
         </div>
       </section>
 
       {/* Node.js Configuration Section */}
       <section className="settings-section">
-        <h3>Node.js</h3>
+        <h3>{t('general.nodejs.title')}</h3>
 
         <div className="setting-item">
-          <label htmlFor="node-source">Node.js Source</label>
+          <label htmlFor="node-source">{t('general.nodejs.source')}</label>
           <select
             id="node-source"
             value={settings.nodeSource ?? 'builtin'}
             onChange={(e) => handleSettingChange('nodeSource', e.target.value as 'builtin' | 'system' | 'auto')}
           >
-            <option value="builtin">Built-in Node.js</option>
-            <option value="system">System Node.js</option>
-            <option value="auto">Auto (System if available)</option>
+            <option value="builtin">{t('general.nodejs.builtIn')}</option>
+            <option value="system">{t('general.nodejs.system')}</option>
+            <option value="auto">{t('general.nodejs.auto')}</option>
           </select>
         </div>
 
         <div className="setting-item setting-item-checkbox">
-          <label htmlFor="preserve-vm">Preserve Version Managers</label>
+          <label htmlFor="preserve-vm">{t('general.nodejs.preserveVersionManagers')}</label>
           <input
             id="preserve-vm"
             type="checkbox"
@@ -246,13 +273,13 @@ export const SettingsPanel: React.FC = () => {
             onChange={(e) => handleSettingChange('preserveVersionManagers', e.target.checked)}
           />
           <span className="setting-hint">
-            Keep nvm, fnm, asdf environment variables
+            {t('general.nodejs.preserveVersionManagersHint')}
           </span>
         </div>
 
         {detectedVersionManagers.length > 0 && (
           <div className="setting-info">
-            <span className="setting-info-label">Detected:</span>
+            <span className="setting-info-label">{t('general.nodejs.detected')}</span>
             <span className="detected-items">
               {detectedVersionManagers.map(vm => vm.name).join(', ')}
             </span>
@@ -263,10 +290,10 @@ export const SettingsPanel: React.FC = () => {
       {/* macOS-specific section */}
       {isMac && (
         <section className="settings-section">
-          <h3>macOS</h3>
+          <h3>{t('general.macos.title')}</h3>
 
           <div className="setting-item setting-item-checkbox">
-            <label htmlFor="mac-option-meta">Option as Meta Key</label>
+            <label htmlFor="mac-option-meta">{t('general.macos.optionAsMetaKey')}</label>
             <input
               id="mac-option-meta"
               type="checkbox"
@@ -274,7 +301,7 @@ export const SettingsPanel: React.FC = () => {
               onChange={(e) => handleSettingChange('macOptionIsMeta', e.target.checked)}
             />
             <span className="setting-hint">
-              Use Option key for Alt+key shortcuts (e.g., Alt+t)
+              {t('general.macos.optionAsMetaKeyHint')}
             </span>
           </div>
         </section>
@@ -283,10 +310,10 @@ export const SettingsPanel: React.FC = () => {
       {/* Windows-specific section */}
       {isWindows && (
         <section className="settings-section">
-          <h3>Windows</h3>
+          <h3>{t('general.windows.title')}</h3>
 
           <div className="setting-item setting-item-checkbox">
-            <label htmlFor="windows-utf8">UTF-8 Encoding</label>
+            <label htmlFor="windows-utf8">{t('general.windows.utf8Encoding')}</label>
             <input
               id="windows-utf8"
               type="checkbox"
@@ -294,7 +321,7 @@ export const SettingsPanel: React.FC = () => {
               onChange={(e) => handleSettingChange('windowsUseUtf8', e.target.checked)}
             />
             <span className="setting-hint">
-              Enable UTF-8 encoding for terminal
+              {t('general.windows.utf8EncodingHint')}
             </span>
           </div>
         </section>
@@ -305,10 +332,10 @@ export const SettingsPanel: React.FC = () => {
   // Render Appearance tab content
   const renderAppearanceTab = () => (
     <section className="settings-section">
-      <h3>终端外观</h3>
+      <h3>{t('appearance.terminal.title')}</h3>
 
       <div className="setting-item">
-        <label htmlFor="terminal-theme">主题</label>
+        <label htmlFor="terminal-theme">{t('appearance.terminal.theme')}</label>
         <select
           id="terminal-theme"
           value={settings.terminalTheme}
@@ -323,7 +350,7 @@ export const SettingsPanel: React.FC = () => {
       </div>
 
       <div className="setting-item">
-        <label htmlFor="font-size">字体大小</label>
+        <label htmlFor="font-size">{t('appearance.terminal.fontSize')}</label>
         <div className="setting-input-group">
           <input
             id="font-size"
@@ -338,7 +365,7 @@ export const SettingsPanel: React.FC = () => {
       </div>
 
       <div className="setting-item">
-        <label htmlFor="font-family">字体</label>
+        <label htmlFor="font-family">{t('appearance.terminal.fontFamily')}</label>
         <select
           id="font-family"
           value={settings.fontFamily}
@@ -354,20 +381,20 @@ export const SettingsPanel: React.FC = () => {
       </div>
 
       <div className="setting-item">
-        <label htmlFor="cursor-style">光标样式</label>
+        <label htmlFor="cursor-style">{t('appearance.terminal.cursorStyle')}</label>
         <select
           id="cursor-style"
           value={settings.cursorStyle}
           onChange={(e) => handleSettingChange('cursorStyle', e.target.value as 'block' | 'underline' | 'bar')}
         >
-          <option value="block">方块</option>
-          <option value="underline">下划线</option>
-          <option value="bar">竖线</option>
+          <option value="block">{t('appearance.terminal.cursorStyles.block')}</option>
+          <option value="underline">{t('appearance.terminal.cursorStyles.underline')}</option>
+          <option value="bar">{t('appearance.terminal.cursorStyles.bar')}</option>
         </select>
       </div>
 
       <div className="setting-item setting-item-checkbox">
-        <label htmlFor="cursor-blink">光标闪烁</label>
+        <label htmlFor="cursor-blink">{t('appearance.terminal.cursorBlink')}</label>
         <input
           id="cursor-blink"
           type="checkbox"
@@ -377,7 +404,7 @@ export const SettingsPanel: React.FC = () => {
       </div>
 
       <div className="setting-item">
-        <label htmlFor="scrollback-lines">回滚行数</label>
+        <label htmlFor="scrollback-lines">{t('appearance.terminal.scrollback')}</label>
         <input
           id="scrollback-lines"
           type="number"
@@ -405,7 +432,7 @@ export const SettingsPanel: React.FC = () => {
                 className="shortcut-toggle"
               />
               <span className={`shortcut-label ${!shortcutConfig.enabled ? 'disabled' : ''}`}>
-                {shortcutConfig.label}
+                {getShortcutLabel(shortcutConfig.action)}
               </span>
             </div>
             <ShortcutInput
@@ -422,7 +449,7 @@ export const SettingsPanel: React.FC = () => {
         className="reset-shortcuts-button"
         onClick={handleResetShortcuts}
       >
-        恢复默认快捷键
+        {t('shortcuts.resetDefault')}
       </button>
     </section>
   )
@@ -433,17 +460,26 @@ export const SettingsPanel: React.FC = () => {
         <button className="settings-close-button" onClick={handleClose}>x</button>
 
         <div className="settings-header">
-          <h2>设置</h2>
+          <h2>{t('title')}</h2>
           <div className="settings-tabs">
-            {SETTINGS_TABS.map(tab => (
-              <button
-                key={tab.id}
-                className={`settings-tab ${activeTab === tab.id ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                {tab.label}
-              </button>
-            ))}
+            <button
+              className={`settings-tab ${activeTab === 'general' ? 'active' : ''}`}
+              onClick={() => setActiveTab('general')}
+            >
+              {t('tabs.general')}
+            </button>
+            <button
+              className={`settings-tab ${activeTab === 'appearance' ? 'active' : ''}`}
+              onClick={() => setActiveTab('appearance')}
+            >
+              {t('tabs.appearance')}
+            </button>
+            <button
+              className={`settings-tab ${activeTab === 'shortcuts' ? 'active' : ''}`}
+              onClick={() => setActiveTab('shortcuts')}
+            >
+              {t('tabs.shortcuts')}
+            </button>
           </div>
         </div>
 

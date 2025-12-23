@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { KeyboardShortcut } from '../../../types'
 
 interface ShortcutInputProps {
@@ -62,6 +63,7 @@ export const ShortcutInput: React.FC<ShortcutInputProps> = ({
   onChange,
   disabled = false
 }) => {
+  const { t } = useTranslation('settings')
   const [isRecording, setIsRecording] = useState(false)
   const inputRef = useRef<HTMLButtonElement>(null)
   const isMac = navigator.platform.toLowerCase().includes('mac')
@@ -125,7 +127,7 @@ export const ShortcutInput: React.FC<ShortcutInputProps> = ({
       disabled={disabled}
     >
       {isRecording ? (
-        <span className="recording-text">按下快捷键...</span>
+        <span className="recording-text">{t('shortcuts.pressKey', 'Press a key...')}</span>
       ) : (
         <span className="shortcut-display">{formatShortcut(value, isMac)}</span>
       )}

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import Editor, { OnMount } from '@monaco-editor/react'
@@ -27,6 +28,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   mode,
   currentFilePath
 }) => {
+  const { t } = useTranslation('editor')
   const { state } = useContext(AppContext)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
   const [preview, setPreview] = useState('')
@@ -214,11 +216,11 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           {toc.length > 0 && (
             <div className={`markdown-toc ${showToc ? 'show' : 'hide'}`}>
               <div className="markdown-toc-header">
-                <span className="markdown-toc-title">目录</span>
+                <span className="markdown-toc-title">{t('markdown.toc', 'Table of Contents')}</span>
                 <button
                   className="markdown-toc-toggle"
                   onClick={() => setShowToc(!showToc)}
-                  title={showToc ? '隐藏目录' : '显示目录'}
+                  title={showToc ? t('markdown.hideToc', 'Hide Table of Contents') : t('markdown.showToc', 'Show Table of Contents')}
                 >
                   {showToc ? '◀' : '▶'}
                 </button>

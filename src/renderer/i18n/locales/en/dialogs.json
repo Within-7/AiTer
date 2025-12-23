@@ -1,0 +1,78 @@
+{
+  "confirm": {
+    "defaultTitle": "Confirm",
+    "defaultMessage": "Are you sure?",
+    "ok": "OK",
+    "cancel": "Cancel",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "input": {
+    "defaultTitle": "Input",
+    "ok": "OK",
+    "cancel": "Cancel",
+    "placeholder": "Enter value..."
+  },
+  "alert": {
+    "defaultTitle": "Alert",
+    "ok": "OK"
+  },
+  "workspace": {
+    "manageTitle": "Manage Workspaces",
+    "workspaces": "Workspaces",
+    "createWorkspace": "Create workspace",
+    "createNew": {
+      "title": "Create New Workspace",
+      "name": "Name",
+      "namePlaceholder": "Workspace name",
+      "color": "Color (optional)",
+      "noColor": "No color",
+      "projectsToInclude": "Projects to include ({{count}} selected)",
+      "noProjects": "No projects available",
+      "leaveEmpty": "Leave empty to show all projects",
+      "alreadyExists": "A workspace with this name already exists",
+      "cancel": "Cancel",
+      "create": "Create Workspace"
+    },
+    "edit": {
+      "title": "Edit Workspace",
+      "name": "Name",
+      "namePlaceholder": "Workspace name",
+      "color": "Color",
+      "projects": "Projects ({{count}} selected)",
+      "leaveEmpty": "Leave empty to show all projects",
+      "alreadyExists": "A workspace with this name already exists",
+      "cancel": "Cancel",
+      "save": "Save Changes"
+    },
+    "details": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "projects": "Projects:",
+      "allProjects": "All projects",
+      "selectedCount": "{{count}} selected",
+      "description": "Description:",
+      "openInNewWindow": "Open in New Window"
+    },
+    "emptyState": {
+      "title": "Select a workspace to view details",
+      "hint": "or create a new one to organize your projects"
+    },
+    "deleteConfirm": {
+      "title": "Delete Workspace",
+      "message": "Are you sure you want to delete \"{{name}}\"? This cannot be undone.",
+      "cancel": "Cancel",
+      "delete": "Delete"
+    }
+  },
+  "selectFolder": {
+    "title": "Select Folder",
+    "select": "Select",
+    "cancel": "Cancel"
+  },
+  "selectFile": {
+    "title": "Select File",
+    "select": "Select",
+    "cancel": "Cancel"
+  }
+}

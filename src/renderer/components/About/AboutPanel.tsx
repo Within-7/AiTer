@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AppContext } from '../../context/AppContext'
 import './AboutPanel.css'
 
@@ -12,6 +13,8 @@ interface VersionInfo {
 }
 
 export const AboutPanel: React.FC = () => {
+  const { t } = useTranslation('about')
+  const { t: tCommon } = useTranslation('common')
   const { state, dispatch } = useContext(AppContext)
   const isOpen = state.showAboutPanel
 
@@ -64,13 +67,13 @@ export const AboutPanel: React.FC = () => {
           ...prev,
           isChecking: false,
           lastCheckTime: new Date(),
-          error: data.error || '检查更新失败'
+          error: data.error || t('version.checkFailed', 'Update check failed')
         }))
       }
     })
 
     return () => unsubscribe()
-  }, [])
+  }, [t])
 
   const handleClose = () => {
     dispatch({ type: 'SET_ABOUT_PANEL', payload: false })
@@ -88,7 +91,7 @@ export const AboutPanel: React.FC = () => {
           ...prev,
           isChecking: false,
           lastCheckTime: new Date(),
-          error: result.error || '检查更新失败'
+          error: result.error || t('version.checkFailed', 'Update check failed')
         }))
       } else {
         // Update check started, wait for status events
@@ -111,7 +114,7 @@ export const AboutPanel: React.FC = () => {
         ...prev,
         isChecking: false,
         lastCheckTime: new Date(),
-        error: '网络连接失败'
+        error: t('version.networkError', 'Network connection failed')
       }))
     }
   }
@@ -139,33 +142,33 @@ export const AboutPanel: React.FC = () => {
           <div className="about-logo">
             <span className="about-logo-text">AiTer</span>
           </div>
-          <h2 className="about-title">AI Terminal Client</h2>
-          <p className="about-subtitle">AI CLI 工具协作终端</p>
+          <h2 className="about-title">{t('tagline')}</h2>
+          <p className="about-subtitle">{t('subtitle')}</p>
         </div>
 
         <div className="about-content">
           {/* Version Section */}
           <section className="about-section">
-            <h3>版本信息</h3>
+            <h3>{t('version.title')}</h3>
             <div className="version-display">
               <div className="version-item">
-                <span className="version-label">当前版本:</span>
+                <span className="version-label">{t('version.current')}</span>
                 <span className="version-value current">{versionInfo.current}</span>
               </div>
               {versionInfo.latest && (
                 <div className="version-item">
-                  <span className="version-label">最新版本:</span>
+                  <span className="version-label">{t('version.latest')}</span>
                   <span className={`version-value ${versionInfo.updateAvailable ? 'latest-new' : 'latest-same'}`}>
                     {versionInfo.latest}
                     {versionInfo.updateAvailable && (
-                      <span className="update-badge">有更新</span>
+                      <span className="update-badge">{t('version.updateAvailable')}</span>
                     )}
                   </span>
                 </div>
               )}
               {versionInfo.lastCheckTime && (
                 <div className="version-check-time">
-                  上次检查: {versionInfo.lastCheckTime.toLocaleString('zh-CN')}
+                  {t('version.lastCheck')} {versionInfo.lastCheckTime.toLocaleString()}
                 </div>
               )}
               {versionInfo.error && (
@@ -179,57 +182,57 @@ export const AboutPanel: React.FC = () => {
                 onClick={handleCheckUpdate}
                 disabled={versionInfo.isChecking}
               >
-                {versionInfo.isChecking ? '检查中...' : '检查更新'}
+                {versionInfo.isChecking ? t('version.checking') : t('version.checkUpdate')}
               </button>
             </div>
           </section>
 
           {/* Features Section */}
           <section className="about-section">
-            <h3>主要功能</h3>
+            <h3>{t('features.title')}</h3>
             <ul className="feature-list">
-              <li>多项目管理</li>
-              <li>多终端标签支持</li>
-              <li>HTML 文件实时预览</li>
-              <li>Monaco 代码编辑器</li>
-              <li>Markdown 预览</li>
-              <li>插件系统（Minto CLI 等）</li>
-              <li>自动检查更新</li>
-              <li>跨平台支持</li>
+              <li>{t('features.multiProject')}</li>
+              <li>{t('features.multiTerminal')}</li>
+              <li>{t('features.htmlPreview')}</li>
+              <li>{t('features.monacoEditor')}</li>
+              <li>{t('features.markdownPreview')}</li>
+              <li>{t('features.pluginSystem')}</li>
+              <li>{t('features.autoUpdate')}</li>
+              <li>{t('features.crossPlatform')}</li>
             </ul>
           </section>
 
           {/* Links Section */}
           <section className="about-section">
-            <h3>相关链接</h3>
+            <h3>{t('links.title')}</h3>
             <div className="link-buttons">
               <button className="about-link-button" onClick={handleOpenWebsite}>
                 <span className="link-icon">🌐</span>
-                <span className="link-text">官方网站</span>
+                <span className="link-text">{t('links.website')}</span>
               </button>
             </div>
           </section>
 
           {/* Tech Stack Section */}
           <section className="about-section">
-            <h3>技术栈</h3>
+            <h3>{t('techStack.title')}</h3>
             <div className="tech-tags">
-              <span className="tech-tag">Electron 28</span>
-              <span className="tech-tag">React 18</span>
-              <span className="tech-tag">TypeScript</span>
-              <span className="tech-tag">xterm.js</span>
-              <span className="tech-tag">Monaco Editor</span>
-              <span className="tech-tag">node-pty</span>
+              <span className="tech-tag">{t('techStack.electron')}</span>
+              <span className="tech-tag">{t('techStack.react')}</span>
+              <span className="tech-tag">{t('techStack.typescript')}</span>
+              <span className="tech-tag">{t('techStack.xterm')}</span>
+              <span className="tech-tag">{t('techStack.monaco')}</span>
+              <span className="tech-tag">{t('techStack.nodePty')}</span>
             </div>
           </section>
 
           {/* Copyright Section */}
           <section className="about-footer">
             <p className="copyright">
-              © 2025-2026 Within-7.com - 任小姐出海战略咨询
+              {t('copyright.text')}
             </p>
             <p className="copyright-note">
-              本应用专为 AI CLI 工具协作设计
+              {t('description')}
             </p>
           </section>
         </div>

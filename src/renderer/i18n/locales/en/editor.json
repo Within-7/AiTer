@@ -1,0 +1,117 @@
+{
+  "title": "Editor",
+  "untitled": "Untitled",
+  "unsavedChanges": "Unsaved changes",
+  "readOnly": "Read Only",
+  "preview": "Preview",
+  "edit": "Edit",
+  "split": "Split",
+  "emptyState": {
+    "title": "No files or terminals open",
+    "hint": "Click a file to edit or create a terminal"
+  },
+  "tabs": {
+    "close": "Close",
+    "closeOthers": "Close Others",
+    "closeAll": "Close All",
+    "closeSaved": "Close Saved",
+    "closeToRight": "Close to the Right",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "splitRight": "Split Right",
+    "splitDown": "Split Down"
+  },
+  "toolbar": {
+    "save": "Save",
+    "saveAll": "Save All",
+    "undo": "Undo",
+    "redo": "Redo",
+    "find": "Find",
+    "replace": "Replace",
+    "format": "Format Document",
+    "toggleWordWrap": "Toggle Word Wrap",
+    "toggleMinimap": "Toggle Minimap"
+  },
+  "modes": {
+    "edit": "Edit Mode",
+    "preview": "Preview Mode",
+    "switchToEdit": "Switch to Edit Mode",
+    "switchToPreview": "Switch to Preview Mode",
+    "previewNotAvailable": "Preview not available"
+  },
+  "languages": {
+    "plaintext": "Plain Text",
+    "javascript": "JavaScript",
+    "typescript": "TypeScript",
+    "html": "HTML",
+    "css": "CSS",
+    "json": "JSON",
+    "markdown": "Markdown",
+    "python": "Python",
+    "java": "Java",
+    "cpp": "C++",
+    "csharp": "C#",
+    "go": "Go",
+    "rust": "Rust",
+    "php": "PHP",
+    "ruby": "Ruby",
+    "swift": "Swift",
+    "kotlin": "Kotlin",
+    "sql": "SQL",
+    "yaml": "YAML",
+    "xml": "XML",
+    "shell": "Shell Script"
+  },
+  "status": {
+    "line": "Line",
+    "column": "Col",
+    "encoding": "Encoding",
+    "lineEnding": "Line Ending",
+    "language": "Language",
+    "spaces": "Spaces",
+    "tabs": "Tabs"
+  },
+  "markdown": {
+    "preview": "Preview",
+    "source": "Source",
+    "splitView": "Split View",
+    "toc": "Table of Contents",
+    "showToc": "Show Table of Contents",
+    "hideToc": "Hide Table of Contents"
+  },
+  "image": {
+    "zoomIn": "Zoom In (Scroll Up)",
+    "zoomOut": "Zoom Out (Scroll Down)",
+    "resetSize": "Reset to Original Size",
+    "fitToWindow": "Fit to Window",
+    "fit": "Fit"
+  },
+  "html": {
+    "preview": "Preview",
+    "source": "Source",
+    "refresh": "Refresh Preview",
+    "openInBrowser": "Open in Browser"
+  },
+  "errors": {
+    "failedToLoad": "Failed to load file",
+    "failedToSave": "Failed to save file",
+    "fileNotFound": "File not found",
+    "permissionDenied": "Permission denied",
+    "fileTooLarge": "File is too large to open"
+  },
+  "dialogs": {
+    "saveChanges": {
+      "title": "Save Changes",
+      "message": "Do you want to save the changes you made to {{fileName}}?",
+      "save": "Save",
+      "dontSave": "Don't Save",
+      "cancel": "Cancel"
+    },
+    "reloadFile": {
+      "title": "File Changed",
+      "message": "The file \"{{fileName}}\" has been changed on disk. Do you want to reload it?",
+      "reload": "Reload",
+      "ignore": "Ignore"
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "title": "About AiTer",
+  "subtitle": "AI CLI Collaboration Terminal",
+  "tagline": "AI Terminal Client",
+  "description": "This application is designed for AI CLI tool collaboration",
+  "version": {
+    "title": "Version Info",
+    "current": "Current Version:",
+    "latest": "Latest Version:",
+    "updateAvailable": "Update Available",
+    "upToDate": "Up to Date",
+    "lastCheck": "Last Check:",
+    "checkUpdate": "Check Update",
+    "checking": "Checking..."
+  },
+  "features": {
+    "title": "Main Features",
+    "multiProject": "Multi-project Management",
+    "multiTerminal": "Multi-terminal Tab Support",
+    "htmlPreview": "HTML Real-time Preview",
+    "monacoEditor": "Monaco Code Editor",
+    "markdownPreview": "Markdown Preview",
+    "pluginSystem": "Plugin System (Minto CLI, etc.)",
+    "autoUpdate": "Auto Update Check",
+    "crossPlatform": "Cross-platform Support"
+  },
+  "links": {
+    "title": "Related Links",
+    "website": "Official Website",
+    "documentation": "Documentation",
+    "github": "GitHub Repository",
+    "issues": "Report Issues",
+    "changelog": "Changelog"
+  },
+  "techStack": {
+    "title": "Tech Stack",
+    "electron": "Electron 28",
+    "react": "React 18",
+    "typescript": "TypeScript",
+    "xterm": "xterm.js",
+    "monaco": "Monaco Editor",
+    "nodePty": "node-pty"
+  },
+  "copyright": {
+    "text": "© 2025-2026 Within-7.com",
+    "company": "任小姐出海战略咨询"
+  },
+  "statusBar": {
+    "about": "About",
+    "aboutTooltip": "About AiTer"
+  }
+}

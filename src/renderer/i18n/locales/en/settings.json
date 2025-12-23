@@ -1,0 +1,110 @@
+{
+  "title": "Settings",
+  "tabs": {
+    "general": "General",
+    "appearance": "Appearance",
+    "shortcuts": "Shortcuts"
+  },
+  "general": {
+    "shell": {
+      "title": "Shell",
+      "defaultShell": "Default Shell",
+      "systemDefault": "System Default",
+      "defaultBadge": "(Default)",
+      "loginShellMode": "Login Shell Mode",
+      "loginShellHint": "Load shell configuration files",
+      "configFilesToLoad": "Config files to load:"
+    },
+    "aiCli": {
+      "title": "AI CLI",
+      "autoStartMinto": "Auto-start Minto",
+      "autoStartMintoHint": "Automatically run minto command when opening new terminal"
+    },
+    "nodejs": {
+      "title": "Node.js",
+      "source": "Node.js Source",
+      "builtIn": "Built-in Node.js",
+      "system": "System Node.js",
+      "auto": "Auto (System if available)",
+      "preserveVersionManagers": "Preserve Version Managers",
+      "preserveVersionManagersHint": "Keep nvm, fnm, asdf environment variables",
+      "detected": "Detected:"
+    },
+    "language": {
+      "title": "Language",
+      "displayLanguage": "Display Language",
+      "displayLanguageHint": "Change the application display language"
+    },
+    "macos": {
+      "title": "macOS",
+      "optionAsMetaKey": "Option as Meta Key",
+      "optionAsMetaKeyHint": "Use Option key for Alt+key shortcuts"
+    },
+    "windows": {
+      "title": "Windows",
+      "utf8Encoding": "UTF-8 Encoding",
+      "utf8EncodingHint": "Enable UTF-8 encoding for terminal"
+    }
+  },
+  "appearance": {
+    "terminal": {
+      "title": "Terminal Appearance",
+      "theme": "Theme",
+      "themes": {
+        "dark": "Dark",
+        "light": "Light",
+        "custom": "Custom"
+      },
+      "fontSize": "Font Size",
+      "fontFamily": "Font",
+      "fonts": {
+        "menlo": "Menlo",
+        "monaco": "Monaco",
+        "sfMono": "SF Mono",
+        "firaCode": "Fira Code",
+        "jetbrainsMono": "JetBrains Mono",
+        "consolas": "Consolas"
+      },
+      "cursorStyle": "Cursor Style",
+      "cursorStyles": {
+        "block": "Block",
+        "underline": "Underline",
+        "bar": "Bar"
+      },
+      "cursorBlink": "Cursor Blink",
+      "scrollback": "Scrollback Lines"
+    }
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "resetDefault": "Reset Default Shortcuts",
+    "resetConfirm": "Are you sure you want to reset all shortcuts to default?",
+    "pressKey": "Press a key...",
+    "keys": {
+      "newTerminal": "New Terminal",
+      "closeTab": "Close Tab",
+      "saveFile": "Save File",
+      "openSettings": "Open Settings",
+      "newWindow": "New Window",
+      "toggleSidebar": "Toggle Sidebar",
+      "nextTab": "Next Tab",
+      "prevTab": "Previous Tab",
+      "focusTerminal": "Focus Terminal",
+      "focusEditor": "Focus Editor",
+      "find": "Find",
+      "replace": "Find and Replace",
+      "commandPalette": "Command Palette",
+      "toggleFullscreen": "Toggle Fullscreen",
+      "zoomIn": "Zoom In",
+      "zoomOut": "Zoom Out",
+      "resetZoom": "Reset Zoom"
+    },
+    "categories": {
+      "general": "General",
+      "tabs": "Tabs",
+      "editor": "Editor",
+      "terminal": "Terminal",
+      "view": "View"
+    }
+  }
+}

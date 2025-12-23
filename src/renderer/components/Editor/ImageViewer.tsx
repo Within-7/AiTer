@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import './ImageViewer.css'
 
 interface ImageViewerProps {
@@ -7,6 +8,7 @@ interface ImageViewerProps {
 }
 
 export const ImageViewer: React.FC<ImageViewerProps> = ({ src, fileName }) => {
+  const { t } = useTranslation('editor')
   const [scale, setScale] = useState(1)
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
@@ -150,7 +152,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({ src, fileName }) => {
           <button
             className="image-viewer-button"
             onClick={handleZoomOut}
-            title="缩小 (Scroll Down)"
+            title={t('image.zoomOut', 'Zoom Out (Scroll Down)')}
             disabled={scale <= 0.1}
           >
             -
@@ -158,7 +160,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({ src, fileName }) => {
           <button
             className="image-viewer-button"
             onClick={handleZoomIn}
-            title="放大 (Scroll Up)"
+            title={t('image.zoomIn', 'Zoom In (Scroll Up)')}
             disabled={scale >= 5}
           >
             +
@@ -166,16 +168,16 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({ src, fileName }) => {
           <button
             className="image-viewer-button"
             onClick={handleReset}
-            title="重置为原始大小"
+            title={t('image.resetSize', 'Reset to Original Size')}
           >
             1:1
           </button>
           <button
             className="image-viewer-button"
             onClick={() => handleFitToWindow()}
-            title="适应窗口"
+            title={t('image.fitToWindow', 'Fit to Window')}
           >
-            适应
+            {t('image.fit', 'Fit')}
           </button>
         </div>
       </div>
