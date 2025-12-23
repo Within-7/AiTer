@@ -648,6 +648,30 @@ Write-Host "AiTer 静默安装完成"</pre>
 
   <script>
     const GITHUB_API = 'https://api.github.com/repos/Within-7/aiter/releases/latest';
+    const GITHUB_RELEASES_URL = 'https://github.com/Within-7/aiter/releases/latest';
+
+    // 静态 fallback - 当 API 请求失败时使用（尤其是 file:// 协议）
+    const FALLBACK_RELEASE = {
+      tag_name: 'v0.1.18',
+      published_at: '2025-12-21T04:06:57Z',
+      assets: [
+        {
+          name: 'AiTer-0.1.18-mac-arm64.dmg',
+          size: 252481715,
+          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.18/AiTer-0.1.18-mac-arm64.dmg'
+        },
+        {
+          name: 'AiTer-0.1.18-mac-x64.dmg',
+          size: 257397731,
+          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.18/AiTer-0.1.18-mac-x64.dmg'
+        },
+        {
+          name: 'AiTer-0.1.18-win-x64.exe',
+          size: 116845291,
+          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.18/AiTer-0.1.18-win-x64.exe'
+        }
+      ]
+    };
 
     // 格式化文件大小
     function formatSize(bytes) {
@@ -658,13 +682,31 @@ Write-Host "AiTer 静默安装完成"</pre>
 
     // 获取最新版本信息
     async function fetchLatestRelease() {
+      // 如果是 file:// 协议，直接使用 fallback（无法发起 CORS 请求）
+      if (window.location.protocol === 'file:') {
+        console.log('Using fallback release data (file:// protocol detected)');
+        return { ...FALLBACK_RELEASE, isFallback: true };
+      }
+
       try {
+        console.log('Fetching from:', GITHUB_API);
+
         const res = await fetch(GITHUB_API);
-        if (!res.ok) throw new Error('Failed to fetch release');
-        return await res.json();
+        console.log('Response status:', res.status);
+
+        if (!res.ok) {
+          console.error('Response not OK:', res.status, res.statusText);
+          throw new Error('Failed to fetch release: ' + res.status);
+        }
+
+        const data = await res.json();
+        console.log('Release data:', data.tag_name, 'Assets count:', data.assets?.length);
+        return data;
       } catch (err) {
-        console.error('Error fetching release:', err);
-        return null;
+        console.error('Error fetching release:', err.name, err.message);
+        // 网络错误时使用 fallback
+        console.log('Using fallback release data due to network error');
+        return { ...FALLBACK_RELEASE, isFallback: true };
       }
     }
 
@@ -722,6 +764,8 @@ Write-Host "AiTer 静默安装完成"</pre>
 
       const release = await fetchLatestRelease();
 
+      // 由于 fallback 机制，release 永远不会为 null
+      // 保留错误处理以防万一
       if (!release) {
         loadingState.classList.add('hidden');
         errorState.classList.remove('hidden');
@@ -734,7 +778,11 @@ Write-Host "AiTer 静默安装完成"</pre>
 
       // 更新版本徽章
       const releaseDate = new Date(release.published_at).toLocaleDateString('zh-CN');
-      versionBadge.textContent = 'v' + version + ' · ' + releaseDate;
+      if (release.isFallback) {
+        versionBadge.textContent = 'v' + version + ' · ' + releaseDate + ' (缓存版本)';
+      } else {
+        versionBadge.textContent = 'v' + version + ' · ' + releaseDate;
+      }
 
       // 更新下载卡片
       updateDownloadCard('mac-arm', assets.macArm);
