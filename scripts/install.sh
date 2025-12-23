@@ -79,10 +79,20 @@ get_latest_release() {
         exit 1
     fi
 
-    RELEASE_JSON=$(curl -s "$GITHUB_API")
+    # Use -H to set proper headers, helps with proxy compatibility
+    RELEASE_JSON=$(curl -s -H "Accept: application/vnd.github.v3+json" -H "User-Agent: AiTer-Installer" "$GITHUB_API")
+    CURL_EXIT_CODE=$?
 
-    if [ $? -ne 0 ]; then
-        print_error "Failed to fetch release information from GitHub."
+    if [ $CURL_EXIT_CODE -ne 0 ]; then
+        print_error "Failed to fetch release information from GitHub. (curl exit code: $CURL_EXIT_CODE)"
+        exit 1
+    fi
+
+    # Check if response contains an error message (API rate limit, etc.)
+    if echo "$RELEASE_JSON" | grep -q '"message":'; then
+        ERROR_MSG=$(echo "$RELEASE_JSON" | grep '"message":' | sed -E 's/.*"message":\s*"([^"]+)".*/\1/' | head -1)
+        print_error "GitHub API error: $ERROR_MSG"
+        print_info "If you're behind a proxy, try disabling it temporarily or wait for rate limit reset."
         exit 1
     fi
 
@@ -90,9 +100,17 @@ get_latest_release() {
     VERSION=$(echo "$RELEASE_JSON" | grep '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/' | head -1)
     DOWNLOAD_URL=$(echo "$RELEASE_JSON" | grep '"browser_download_url":' | grep "$INSTALLER_PATTERN" | sed -E 's/.*"([^"]+)".*/\1/' | head -1)
 
-    if [ -z "$VERSION" ] || [ -z "$DOWNLOAD_URL" ]; then
-        print_error "Could not find release information for your system."
+    if [ -z "$VERSION" ]; then
+        print_error "Could not find version information."
+        print_info "Response preview: $(echo "$RELEASE_JSON" | head -c 200)"
+        exit 1
+    fi
+
+    if [ -z "$DOWNLOAD_URL" ]; then
+        print_error "Could not find download URL for your system."
         echo "Pattern searched: $INSTALLER_PATTERN"
+        print_info "Available assets:"
+        echo "$RELEASE_JSON" | grep '"browser_download_url":' | sed -E 's/.*"browser_download_url":\s*"([^"]+)".*/  - \1/' | head -5
         exit 1
     fi
 
