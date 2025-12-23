@@ -302,7 +302,7 @@ export function GitHistoryPanel({ projectId, projectPath, projectName, gitStatus
         // Create a unique ID for this diff tab
         const tabId = `diff-${commit.shortHash}-${file.path.replace(/[^a-zA-Z0-9]/g, '-')}`
 
-        // Create editor tab for diff view
+        // Create editor tab for diff view (preview mode - replaced on next click)
         const diffTab: EditorTab = {
           id: tabId,
           filePath: file.path,
@@ -310,6 +310,7 @@ export function GitHistoryPanel({ projectId, projectPath, projectName, gitStatus
           fileType: 'diff',
           content: '',
           isDirty: false,
+          isPreview: true,
           isDiff: true,
           diffContent: result.diff,
           commitHash: commit.hash,
@@ -364,7 +365,7 @@ ${lines.map(line => `+${line}`).join('\n')}`
         }
       }
 
-      // Create editor tab for diff view
+      // Create editor tab for diff view (preview mode - replaced on next click)
       const diffTab: EditorTab = {
         id: tabId,
         filePath: change.path,
@@ -372,6 +373,7 @@ ${lines.map(line => `+${line}`).join('\n')}`
         fileType: 'diff',
         content: '',
         isDirty: false,
+        isPreview: true,
         isDiff: true,
         diffContent: diffContent,
         commitHash: undefined,
