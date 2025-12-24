@@ -229,22 +229,38 @@ export const SettingsPanel: React.FC = () => {
         )}
       </section>
 
-      {/* AI CLI Integration Section */}
+      {/* Terminal Startup Command Section */}
       <section className="settings-section">
-        <h3>{t('general.aiCli.title')}</h3>
+        <h3>{t('general.startupCommand.title')}</h3>
 
         <div className="setting-item setting-item-checkbox">
-          <label htmlFor="auto-start-minto">{t('general.aiCli.autoStartMinto')}</label>
+          <label htmlFor="enable-startup-command">{t('general.startupCommand.enable')}</label>
           <input
-            id="auto-start-minto"
+            id="enable-startup-command"
             type="checkbox"
-            checked={settings.autoStartMinto ?? true}
-            onChange={(e) => handleSettingChange('autoStartMinto', e.target.checked)}
+            checked={settings.enableStartupCommand ?? true}
+            onChange={(e) => handleSettingChange('enableStartupCommand', e.target.checked)}
           />
           <span className="setting-hint">
-            {t('general.aiCli.autoStartMintoHint')}
+            {t('general.startupCommand.enableHint')}
           </span>
         </div>
+
+        {settings.enableStartupCommand && (
+          <div className="setting-item">
+            <label htmlFor="startup-command">{t('general.startupCommand.command')}</label>
+            <input
+              id="startup-command"
+              type="text"
+              value={settings.startupCommand ?? 'minto'}
+              onChange={(e) => handleSettingChange('startupCommand', e.target.value)}
+              placeholder="minto"
+            />
+            <span className="setting-hint">
+              {t('general.startupCommand.commandHint')}
+            </span>
+          </div>
+        )}
       </section>
 
       {/* Node.js Configuration Section */}

@@ -203,12 +203,12 @@ export function setupIPC(
         }
       )
 
-      // Auto-start Minto if enabled in settings
-      if (settings.autoStartMinto) {
+      // Run startup command if enabled in settings
+      if (settings.enableStartupCommand && settings.startupCommand) {
         // Wait a bit for the shell to initialize before sending command
         setTimeout(() => {
           if (ptyManager.exists(id)) {
-            ptyManager.write(id, 'minto\r')
+            ptyManager.write(id, `${settings.startupCommand}\r`)
           }
         }, 500)
       }

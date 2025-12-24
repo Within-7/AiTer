@@ -49,9 +49,10 @@ const defaultSettings: AppSettings = {
   // Keyboard shortcuts
   shortcuts: defaultShortcuts,
 
-  // AI CLI integration
-  autoStartMinto: true,              // Auto-start Minto when opening a new terminal (default: enabled)
-  mintoInstalled: false              // Track Minto CLI installation status
+  // Terminal startup command
+  enableStartupCommand: true,        // Enable running a command when opening a new terminal
+  startupCommand: 'minto',           // Default command to run on terminal startup
+  mintoInstalled: false              // Track Minto CLI installation status (legacy)
 }
 
 export class StoreManager {

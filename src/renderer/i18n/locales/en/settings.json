@@ -15,10 +15,12 @@
       "loginShellHint": "Load shell configuration files",
       "configFilesToLoad": "Config files to load:"
     },
-    "aiCli": {
-      "title": "AI CLI",
-      "autoStartMinto": "Auto-start Minto",
-      "autoStartMintoHint": "Automatically run minto command when opening new terminal"
+    "startupCommand": {
+      "title": "Startup Command",
+      "enable": "Run Command on Startup",
+      "enableHint": "Automatically run a command when opening a new terminal",
+      "command": "Command",
+      "commandHint": "The command to run (e.g., minto, claude, gemini)"
     },
     "nodejs": {
       "title": "Node.js",

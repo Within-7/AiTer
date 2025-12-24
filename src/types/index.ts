@@ -119,9 +119,10 @@ export interface AppSettings {
   // Keyboard shortcuts
   shortcuts?: ShortcutConfig[]      // Custom keyboard shortcuts
 
-  // AI CLI integration
-  autoStartMinto: boolean           // Auto-start Minto when opening a new terminal
-  mintoInstalled?: boolean          // Track if Minto CLI has been installed
+  // Terminal startup command
+  enableStartupCommand: boolean     // Enable running a command when opening a new terminal
+  startupCommand: string            // The command to run on terminal startup (e.g., 'minto', 'claude')
+  mintoInstalled?: boolean          // Track if Minto CLI has been installed (legacy)
 
   // File handling preferences
   openExternally?: ExternalOpenConfig[]  // File types to open with external apps

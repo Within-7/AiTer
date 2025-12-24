@@ -100,8 +100,9 @@ export const initialState: AppState = {
     windowsUseUtf8: true,
     // Keyboard shortcuts
     shortcuts: defaultShortcuts,
-    // AI CLI integration
-    autoStartMinto: true
+    // Terminal startup command
+    enableStartupCommand: true,
+    startupCommand: 'minto'
   },
   terminalDataBuffer: new Map(),
   showPluginPanel: false,

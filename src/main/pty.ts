@@ -186,7 +186,8 @@ export class PTYManager {
       nodeSource: 'builtin',
       preserveVersionManagers: false,
       windowsUseUtf8: true,
-      autoStartMinto: true
+      enableStartupCommand: true,
+      startupCommand: 'minto'
     }
 
     try {
