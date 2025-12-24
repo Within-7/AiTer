@@ -8,7 +8,7 @@ import { autoUpdater, UpdateInfo, ProgressInfo, UpdateDownloadedEvent } from 'el
 import log from 'electron-log'
 import * as fs from 'fs'
 import * as path from 'path'
-import { spawn } from 'child_process'
+import { spawn, execFileSync } from 'child_process'
 import * as https from 'https'
 import * as http from 'http'
 
@@ -55,6 +55,9 @@ export interface UpdateEventData {
   error?: string
 }
 
+// 更新模式
+export type UpdateMode = 'electron-updater' | 'install-script'
+
 export class AutoUpdateManager {
   private mainWindow: BrowserWindow | null = null
   private isCheckingForUpdate = false
@@ -62,6 +65,8 @@ export class AutoUpdateManager {
   private downloadedFilePath: string | null = null
   private latestReleaseInfo: GitHubRelease | null = null
   private isScriptUpdateMode = false  // macOS 使用脚本更新模式
+  private _isAppSigned: boolean | null = null  // 缓存签名检测结果
+  private _updateMode: UpdateMode = 'electron-updater'
 
   constructor() {
     // 配置 autoUpdater
@@ -69,21 +74,85 @@ export class AutoUpdateManager {
     autoUpdater.autoInstallOnAppQuit = true // 退出时自动安装
     autoUpdater.allowDowngrade = false // 不允许降级
 
-    // macOS: 完全禁用签名验证（临时方案）
-    // 生产环境应该使用代码签名和公证，但目前暂时禁用签名验证以支持未签名应用的更新
+    // 检测应用签名状态并决定更新模式
     if (process.platform === 'darwin') {
-      // 强制跳过签名验证（开发和生产环境都生效）
-      autoUpdater.forceDevUpdateConfig = true
+      const isSigned = this.isAppSigned()
+      log.info(`[AutoUpdater] App signature status: ${isSigned ? 'signed' : 'unsigned'}`)
 
-      // 额外配置：禁用差量更新（差量更新需要签名）
-      autoUpdater.disableDifferentialDownload = true
+      if (isSigned) {
+        // 已签名：使用 electron-updater 标准流程，支持差量更新
+        this._updateMode = 'electron-updater'
+        log.info('[AutoUpdater] Using electron-updater with differential updates')
+      } else {
+        // 未签名：使用 install.sh 脚本更新
+        this._updateMode = 'install-script'
+        log.info('[AutoUpdater] Using install.sh script for updates (unsigned app)')
 
-      // 禁用 Web installer（需要签名）
-      autoUpdater.disableWebInstaller = true
+        // 禁用 electron-updater 的 macOS 相关功能
+        autoUpdater.forceDevUpdateConfig = true
+        autoUpdater.disableDifferentialDownload = true
+        autoUpdater.disableWebInstaller = true
+      }
+    } else if (process.platform === 'win32') {
+      // Windows：目前使用标准 electron-updater
+      this._updateMode = 'electron-updater'
     }
 
     // 设置事件监听
     this.setupEventListeners()
+  }
+
+  /**
+   * 检测应用是否已签名（macOS）
+   * 使用 codesign 命令验证签名
+   */
+  isAppSigned(): boolean {
+    // 使用缓存结果
+    if (this._isAppSigned !== null) {
+      return this._isAppSigned
+    }
+
+    // 非 macOS 默认认为已签名（使用标准更新）
+    if (process.platform !== 'darwin') {
+      this._isAppSigned = true
+      return true
+    }
+
+    // 开发模式下认为未签名
+    if (!app.isPackaged) {
+      this._isAppSigned = false
+      return false
+    }
+
+    try {
+      // 获取 .app 路径
+      const appPath = path.dirname(path.dirname(path.dirname(app.getPath('exe'))))
+      log.info('[AutoUpdater] Checking signature for:', appPath)
+
+      // 使用 codesign -v 验证签名
+      // 如果应用已正确签名，此命令将成功退出（退出码 0）
+      // 如果未签名或签名无效，将抛出错误
+      execFileSync('/usr/bin/codesign', ['-v', '--strict', appPath], {
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe']
+      })
+
+      log.info('[AutoUpdater] App is properly signed')
+      this._isAppSigned = true
+      return true
+    } catch (error) {
+      // codesign 返回非 0 退出码，说明未签名或签名无效
+      log.info('[AutoUpdater] App is not signed or signature is invalid:', (error as Error).message)
+      this._isAppSigned = false
+      return false
+    }
+  }
+
+  /**
+   * 获取当前更新模式
+   */
+  getUpdateMode(): UpdateMode {
+    return this._updateMode
   }
 
   /**
@@ -715,6 +784,100 @@ export class AutoUpdateManager {
     setTimeout(() => {
       app.quit()
     }, 500)
+  }
+
+  /**
+   * 使用 install.sh 脚本安装更新（适用于未签名的 macOS 应用）
+   * 这是最简单的更新方式：直接运行 install.sh 脚本完成下载和安装
+   */
+  async installViaInstallScript(): Promise<void> {
+    if (process.platform !== 'darwin') {
+      throw new Error('installViaInstallScript only works on macOS')
+    }
+
+    log.info('[AutoUpdater] Starting install.sh based update...')
+    this.sendToRenderer({ status: 'installing' })
+
+    const pid = process.pid
+
+    // 创建一个临时脚本，用于：
+    // 1. 等待当前应用退出
+    // 2. 运行 install.sh
+    // 3. 启动新版本
+    const tempScriptPath = path.join(app.getPath('temp'), 'aiter-update-wrapper.sh')
+
+    const wrapperScript = `#!/bin/bash
+# AiTer Update Wrapper Script
+# Waits for app to exit, runs install.sh, then launches new version
+
+LOG_DIR="$HOME/Library/Logs/AiTer"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/update.log"
+
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
+}
+
+log "=========================================="
+log "AiTer Update Wrapper Started"
+log "Waiting for PID: ${pid}"
+log "=========================================="
+
+# Wait for the application to exit
+MAX_WAIT=60
+WAIT_COUNT=0
+while kill -0 ${pid} 2>/dev/null; do
+    sleep 1
+    WAIT_COUNT=$((WAIT_COUNT + 1))
+    if [ $WAIT_COUNT -ge $MAX_WAIT ]; then
+        log "Application did not exit within $MAX_WAIT seconds, force killing..."
+        kill -9 ${pid} 2>/dev/null || true
+        sleep 2
+        break
+    fi
+done
+
+log "Application has exited, running install.sh..."
+
+# Download and run install.sh
+curl -fsSL https://raw.githubusercontent.com/Within-7/aiter/main/scripts/install.sh | bash >> "$LOG_FILE" 2>&1
+
+if [ $? -eq 0 ]; then
+    log "Install.sh completed successfully"
+else
+    log "Install.sh failed"
+fi
+
+log "Update wrapper finished"
+
+# Clean up this script
+rm -f "${tempScriptPath}"
+`
+
+    try {
+      // 写入临时脚本
+      fs.writeFileSync(tempScriptPath, wrapperScript, { mode: 0o755 })
+      log.info('[AutoUpdater] Created wrapper script:', tempScriptPath)
+
+      // 启动独立进程运行脚本
+      const child = spawn('/bin/bash', [tempScriptPath], {
+        detached: true,
+        stdio: 'ignore',
+        env: { ...process.env }
+      })
+
+      child.unref()
+      log.info('[AutoUpdater] Update wrapper launched with PID:', child.pid)
+
+      // 退出应用，让脚本完成更新
+      log.info('[AutoUpdater] Quitting app for update...')
+      setTimeout(() => {
+        app.quit()
+      }, 500)
+    } catch (error) {
+      log.error('[AutoUpdater] Failed to create/run wrapper script:', error)
+      throw error
+    }
   }
 
   /**

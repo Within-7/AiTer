@@ -681,9 +681,10 @@ export function setupIPC(
   })
 
   // Auto-update management
-  // macOS 使用脚本更新模式绕过 Squirrel.Mac 的签名验证
-  // Windows 可以使用标准 electron-updater 或脚本模式
-  const useScriptUpdate = process.platform === 'darwin'
+  // 更新策略：
+  // - macOS 已签名应用：使用 electron-updater（支持差量更新）
+  // - macOS 未签名应用：使用 install.sh 脚本更新
+  // - Windows：使用 electron-updater
 
   ipcMain.handle('autoUpdate:check', async () => {
     try {
@@ -692,9 +693,13 @@ export function setupIPC(
         return { success: false, error: 'Auto-update manager not initialized' }
       }
 
-      if (useScriptUpdate) {
+      const updateMode = autoUpdateManager.getUpdateMode()
+
+      if (updateMode === 'install-script') {
+        // 使用脚本模式检查更新（获取 GitHub release 信息）
         await autoUpdateManager.checkForUpdatesScript()
       } else {
+        // 使用 electron-updater 检查更新（支持差量更新）
         await autoUpdateManager.checkForUpdates()
       }
       return { success: true }
@@ -711,9 +716,14 @@ export function setupIPC(
         return { success: false, error: 'Auto-update manager not initialized' }
       }
 
-      if (useScriptUpdate) {
-        await autoUpdateManager.downloadUpdateScript()
+      const updateMode = autoUpdateManager.getUpdateMode()
+
+      if (updateMode === 'install-script') {
+        // 使用 install.sh 模式时，不需要预下载
+        // 直接返回成功，让用户点击安装时再下载
+        return { success: true, skipDownload: true }
       } else {
+        // 使用 electron-updater 下载更新
         await autoUpdateManager.downloadUpdate()
       }
       return { success: true }
@@ -730,9 +740,13 @@ export function setupIPC(
         return { success: false, error: 'Auto-update manager not initialized' }
       }
 
-      if (useScriptUpdate) {
-        await autoUpdateManager.installUpdateScript()
+      const updateMode = autoUpdateManager.getUpdateMode()
+
+      if (updateMode === 'install-script') {
+        // macOS 未签名应用：使用 install.sh 脚本一键更新
+        await autoUpdateManager.installViaInstallScript()
       } else {
+        // 已签名应用：使用 electron-updater 安装
         autoUpdateManager.quitAndInstall()
       }
       return { success: true }
