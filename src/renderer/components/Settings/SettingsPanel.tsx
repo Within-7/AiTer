@@ -247,18 +247,18 @@ export const SettingsPanel: React.FC = () => {
         </div>
 
         {settings.enableStartupCommand && (
-          <div className="setting-item">
+          <div className="setting-item setting-item-command">
             <label htmlFor="startup-command">{t('general.startupCommand.command')}</label>
             <input
               id="startup-command"
               type="text"
+              className="command-input"
               value={settings.startupCommand ?? 'minto'}
               onChange={(e) => handleSettingChange('startupCommand', e.target.value)}
               placeholder="minto"
+              spellCheck={false}
+              autoComplete="off"
             />
-            <span className="setting-hint">
-              {t('general.startupCommand.commandHint')}
-            </span>
           </div>
         )}
       </section>
