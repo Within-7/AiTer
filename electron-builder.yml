@@ -19,6 +19,10 @@ extraResources:
     to: nodejs
     filter:
       - '**/*'
+  - from: assets
+    to: assets
+    filter:
+      - '**/*'
 
 # ==========================================
 # GitHub Releases 发布配置

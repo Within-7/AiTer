@@ -60,8 +60,8 @@ export function createMainWindow(workspaceManager?: WorkspaceManager): BrowserWi
   // In development, use path relative to project root
   // In production, use path relative to resources
   const iconPath = process.env.VITE_DEV_SERVER_URL
-    ? path.join(app.getAppPath(), 'assets/logo.png')
-    : path.join(process.resourcesPath, 'assets/logo.png')
+    ? path.join(app.getAppPath(), 'assets/APP_ICON.png')
+    : path.join(process.resourcesPath, 'assets/APP_ICON.png')
 
   // Set window title based on workspace (includes dev mode indicator)
   const windowTitle = workspaceManager?.getWindowTitle() || app.getName()

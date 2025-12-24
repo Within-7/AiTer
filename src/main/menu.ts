@@ -231,7 +231,7 @@ export function setupMenu() {
       version: app.getVersion(),
       copyright: 'Copyright © 2025-2026 Within-7.com\n任小姐出海战略咨询\n开发者: Lib',
       website: 'https://within-7.com',
-      iconPath: path.join(app.getAppPath(), 'assets/logo.png')
+      iconPath: path.join(app.getAppPath(), 'assets/APP_ICON.png')
     })
   }
 }

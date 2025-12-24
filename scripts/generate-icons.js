@@ -2,11 +2,11 @@ const png2icons = require('png2icons');
 const fs = require('fs');
 const path = require('path');
 
-const input = path.join(__dirname, '../assets/logo.png');
+const input = path.join(__dirname, '../assets/APP_ICON.png');
 const outputIcns = path.join(__dirname, '../build/icon.icns');
 const outputIco = path.join(__dirname, '../build/icon.ico');
 
-console.log('Reading logo.png...');
+console.log('Reading APP_ICON.png...');
 const pngBuffer = fs.readFileSync(input);
 
 console.log('Generating icon.icns for macOS...');
