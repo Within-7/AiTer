@@ -80,6 +80,10 @@ export const UpdateNotification: React.FC = () => {
       const result = await window.api.autoUpdate.download()
       if (!result.success) {
         setError(result.error || 'Download failed')
+      } else if (result.skipDownload) {
+        // install-script 模式: 跳过下载，直接显示安装按钮
+        // 因为 install.sh 脚本会自己下载
+        setStatus('downloaded')
       }
     } catch (err) {
       console.error('[UpdateNotification] Download error:', err)

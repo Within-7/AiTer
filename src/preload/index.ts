@@ -532,7 +532,7 @@ export interface API {
   }
   autoUpdate: {
     check(): Promise<{ success: boolean; error?: string }>
-    download(): Promise<{ success: boolean; error?: string }>
+    download(): Promise<{ success: boolean; skipDownload?: boolean; mode?: string; error?: string }>
     install(): Promise<{ success: boolean; error?: string }>
     getVersion(): Promise<{ success: boolean; version?: string; error?: string }>
     onStatus(callback: (data: {

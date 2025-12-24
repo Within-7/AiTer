@@ -720,8 +720,8 @@ export function setupIPC(
 
       if (updateMode === 'install-script') {
         // 使用 install.sh 模式时，不需要预下载
-        // 直接返回成功，让用户点击安装时再下载
-        return { success: true, skipDownload: true }
+        // 直接返回 skipDownload 标志，让前端知道可以直接安装
+        return { success: true, skipDownload: true, mode: 'install-script' }
       } else {
         // 使用 electron-updater 下载更新
         await autoUpdateManager.downloadUpdate()
