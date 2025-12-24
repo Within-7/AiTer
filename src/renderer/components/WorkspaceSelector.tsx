@@ -216,7 +216,7 @@ export const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({ onManageWo
             </div>
             <div className="workspace-confirm-body">
               <p>
-                Open another window for <strong>"{confirmState.workspaceName}"</strong>?
+                Open another window for <strong>&quot;{confirmState.workspaceName}&quot;</strong>?
               </p>
               <p className="workspace-confirm-hint">
                 Multiple windows of the same workspace may have conflicting window positions when closed.

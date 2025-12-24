@@ -220,13 +220,14 @@ export class ShellDetector {
         ].filter(f => this.fileExists(f))
 
       case 'powershell':
-      case 'pwsh':
+      case 'pwsh': {
         // PowerShell profile locations
         const psProfiles = [
           path.join(home, 'Documents', 'PowerShell', 'Microsoft.PowerShell_profile.ps1'),
           path.join(home, 'Documents', 'WindowsPowerShell', 'Microsoft.PowerShell_profile.ps1')
         ]
         return psProfiles.filter(f => this.fileExists(f))
+      }
 
       case 'gitbash':
         return [

@@ -1,4 +1,6 @@
 import path from 'path';
+import os from 'os';
+import { execFileSync } from 'child_process';
 import { app } from 'electron';
 import fs from 'fs-extra';
 import { AppSettings } from '../../types';
@@ -422,7 +424,7 @@ export class NodeManager {
    */
   private checkSystemNode(): boolean {
     try {
-      const { execFileSync } = require('child_process');
+      // execFileSync is imported at top of file
       // 尝试在不包含我们内置 Node.js 的 PATH 中查找 node
       const originalPath = process.env.PATH || '';
       const binPath = this.getNodeBinPath();
@@ -695,7 +697,7 @@ fi
    * 获取用户的 shell 配置文件路径
    */
   private getShellConfigPath(): string | null {
-    const homeDir = require('os').homedir();
+    const homeDir = os.homedir();
     const shell = process.env.SHELL || '';
 
     // Windows 不需要配置

@@ -349,23 +349,18 @@ export const PluginPanel: React.FC = () => {
     setStatusMessage('Adding plugin...')
     setError(null)
 
-    try {
-      const result = await window.api.plugins.addCustom(urlOrPackageName)
+    const result = await window.api.plugins.addCustom(urlOrPackageName)
 
-      if (result.success) {
-        setStatusMessage(`✓ Plugin added successfully: ${result.pluginId}`)
-        await loadPlugins()
-        setTimeout(() => setStatusMessage(null), 5000)
-      } else {
-        const errorMsg = result.error || 'Failed to add plugin'
-        setStatusMessage(`✗ ${errorMsg}`)
-        setError(errorMsg)
-        setTimeout(() => setStatusMessage(null), 5000)
-        throw new Error(errorMsg)
-      }
-    } catch (err) {
-      // Error already handled above, just propagate
-      throw err
+    if (result.success) {
+      setStatusMessage(`✓ Plugin added successfully: ${result.pluginId}`)
+      await loadPlugins()
+      setTimeout(() => setStatusMessage(null), 5000)
+    } else {
+      const errorMsg = result.error || 'Failed to add plugin'
+      setStatusMessage(`✗ ${errorMsg}`)
+      setError(errorMsg)
+      setTimeout(() => setStatusMessage(null), 5000)
+      throw new Error(errorMsg)
     }
   }
 
