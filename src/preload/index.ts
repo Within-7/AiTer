@@ -116,7 +116,13 @@ contextBridge.exposeInMainWorld('api', {
 
   // Window APIs
   window: {
-    create: () => ipcRenderer.invoke('window:create')
+    create: () => ipcRenderer.invoke('window:create'),
+    isFullScreen: () => ipcRenderer.invoke('window:isFullScreen'),
+    onFullScreenChanged: (callback: (isFullScreen: boolean) => void) => {
+      const listener = (_: unknown, isFullScreen: boolean) => callback(isFullScreen)
+      ipcRenderer.on('window:fullscreen-changed', listener)
+      return () => ipcRenderer.removeListener('window:fullscreen-changed', listener)
+    }
   },
 
   // Shell APIs
@@ -496,6 +502,8 @@ export interface API {
   }
   window: {
     create(): Promise<{ success: boolean; error?: string }>
+    isFullScreen(): Promise<{ success: boolean; isFullScreen?: boolean; error?: string }>
+    onFullScreenChanged(callback: (isFullScreen: boolean) => void): () => void
   }
   shell: {
     openExternal(url: string): Promise<{ success: boolean; error?: string }>

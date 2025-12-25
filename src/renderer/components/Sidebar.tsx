@@ -23,29 +23,34 @@ export function Sidebar() {
   const [isResizing, setIsResizing] = useState(false)
   const sidebarRef = useRef<HTMLDivElement>(null)
 
-  // Monitor fullscreen state changes
+  // Monitor fullscreen state changes via Electron API
   useEffect(() => {
-    const checkFullscreen = () => {
-      const isFs =
-        !!(document.fullscreenElement ||
-           (document as any).webkitFullscreenElement ||
-           (document as any).mozFullScreenElement) ||
-        (window.innerHeight >= window.screen.height - 50)
+    let unsubscribe: (() => void) | null = null
 
-      setIsFullscreen(isFs)
+    // Get initial fullscreen state from Electron
+    window.api.window.isFullScreen()
+      .then((result) => {
+        if (result.success && result.isFullScreen !== undefined) {
+          setIsFullscreen(result.isFullScreen)
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to get fullscreen state:', err)
+      })
+
+    // Listen for fullscreen state changes from Electron
+    try {
+      unsubscribe = window.api.window.onFullScreenChanged((isFs) => {
+        setIsFullscreen(isFs)
+      })
+    } catch (err) {
+      console.warn('Failed to subscribe to fullscreen changes:', err)
     }
 
-    checkFullscreen()
-    window.addEventListener('resize', checkFullscreen)
-    document.addEventListener('fullscreenchange', checkFullscreen)
-    document.addEventListener('webkitfullscreenchange', checkFullscreen)
-    document.addEventListener('mozfullscreenchange', checkFullscreen)
-
     return () => {
-      window.removeEventListener('resize', checkFullscreen)
-      document.removeEventListener('fullscreenchange', checkFullscreen)
-      document.removeEventListener('webkitfullscreenchange', checkFullscreen)
-      document.removeEventListener('mozfullscreenchange', checkFullscreen)
+      if (unsubscribe) {
+        unsubscribe()
+      }
     }
   }, [])
 

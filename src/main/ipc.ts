@@ -1320,6 +1320,25 @@ export function setupIPC(
     }
   })
 
+  // Window state management
+  ipcMain.handle('window:isFullScreen', async () => {
+    try {
+      return { success: true, isFullScreen: window.isFullScreen() }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
+    }
+  })
+
+  // Listen for fullscreen state changes and notify renderer
+  window.on('enter-full-screen', () => {
+    window.webContents.send('window:fullscreen-changed', true)
+  })
+
+  window.on('leave-full-screen', () => {
+    window.webContents.send('window:fullscreen-changed', false)
+  })
+
   // File watcher management
   ipcMain.handle('fileWatcher:watch', async (_, { projectPath }) => {
     try {
