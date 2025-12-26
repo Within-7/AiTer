@@ -48,19 +48,20 @@
 /* Filter Buttons */
 .plugin-panel-filters {
   display: flex;
-  gap: 8px;
-  padding: 12px 20px;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 16px;
   background-color: #1e1e1e;
   border-bottom: 1px solid #3c3c3c;
 }
 
 .plugin-filter-btn {
-  padding: 6px 12px;
+  padding: 4px 8px;
   background-color: #3c3c3c;
   border: 1px solid #555555;
   border-radius: 4px;
   color: #cccccc;
-  font-size: 12px;
+  font-size: 11px;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
