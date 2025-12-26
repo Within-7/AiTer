@@ -15,7 +15,7 @@ interface PluginCardData extends Plugin {
   platforms: string[]
 }
 
-type PluginFilter = 'all' | 'installed' | 'not-installed'
+type PluginFilter = 'all' | 'installed' | 'not-installed' | 'built-in' | 'custom'
 
 export const PluginPanel: React.FC = () => {
   const { state, dispatch } = useContext(AppContext)
@@ -395,6 +395,10 @@ export const PluginPanel: React.FC = () => {
       filtered = plugins.filter(p => p.installed)
     } else if (filter === 'not-installed') {
       filtered = plugins.filter(p => !p.installed)
+    } else if (filter === 'built-in') {
+      filtered = plugins.filter(p => p.isBuiltIn)
+    } else if (filter === 'custom') {
+      filtered = plugins.filter(p => !p.isBuiltIn)
     }
 
     // Then, sort: installed plugins first, then not-installed
@@ -419,9 +423,11 @@ export const PluginPanel: React.FC = () => {
   const builtInPlugins = sortedAndFilteredPlugins.filter(p => p.isBuiltIn)
   const customPlugins = sortedAndFilteredPlugins.filter(p => !p.isBuiltIn)
 
-  // Count plugins by status
+  // Count plugins by status and type
   const installedCount = plugins.filter(p => p.installed).length
   const notInstalledCount = plugins.filter(p => !p.installed).length
+  const builtInCount = plugins.filter(p => p.isBuiltIn).length
+  const customCount = plugins.filter(p => !p.isBuiltIn).length
 
   if (!isOpen) return null
 
@@ -456,6 +462,18 @@ export const PluginPanel: React.FC = () => {
               onClick={() => setFilter('all')}
             >
               All ({plugins.length})
+            </button>
+            <button
+              className={`plugin-filter-btn ${filter === 'built-in' ? 'active' : ''}`}
+              onClick={() => setFilter('built-in')}
+            >
+              Built-in ({builtInCount})
+            </button>
+            <button
+              className={`plugin-filter-btn ${filter === 'custom' ? 'active' : ''}`}
+              onClick={() => setFilter('custom')}
+            >
+              Custom ({customCount})
             </button>
             <button
               className={`plugin-filter-btn ${filter === 'installed' ? 'active' : ''}`}
