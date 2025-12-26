@@ -102,22 +102,29 @@ export abstract class NpmPluginInstaller implements PluginInstaller {
   async getCurrentVersion(): Promise<string | null> {
     try {
       // Get the global node_modules path
+      console.log(`[NpmPluginInstaller] Getting current version for ${this.packageName}...`);
       const { stdout } = await execFileAsync(this.npmPath, ['root', '-g'], {
         env: this.env,
         timeout: 5000 // 5 second timeout
       });
 
       const globalModulesPath = stdout.trim();
+      console.log(`[NpmPluginInstaller] Global modules path: ${globalModulesPath}`);
+
       const path = await import('path');
       const packageJsonPath = path.join(globalModulesPath, this.packageName, 'package.json');
+      console.log(`[NpmPluginInstaller] Looking for package.json at: ${packageJsonPath}`);
 
       // Read package.json directly
       const fs = await import('fs-extra');
       if (await fs.pathExists(packageJsonPath)) {
         const packageJson = await fs.readJson(packageJsonPath);
-        return packageJson.version || null;
+        const version = packageJson.version?.trim() || null;
+        console.log(`[NpmPluginInstaller] Found version for ${this.packageName}: "${version}"`);
+        return version;
       }
 
+      console.log(`[NpmPluginInstaller] package.json not found for ${this.packageName}`);
       return null;
     } catch (error) {
       console.error(`[NpmPluginInstaller] Error getting current version for ${this.packageName}:`, error);
@@ -130,8 +137,11 @@ export abstract class NpmPluginInstaller implements PluginInstaller {
    */
   async getLatestVersion(): Promise<string | null> {
     try {
+      console.log(`[NpmPluginInstaller] Getting latest version for ${this.packageName}...`);
       const { stdout } = await execFileAsync(this.npmPath, ['view', this.packageName, 'version'], { env: this.env });
-      return stdout.trim() || null;
+      const version = stdout.trim() || null;
+      console.log(`[NpmPluginInstaller] Latest version for ${this.packageName}: "${version}"`);
+      return version;
     } catch (error) {
       console.error(`[NpmPluginInstaller] Error getting latest version for ${this.packageName}:`, error);
       return null;

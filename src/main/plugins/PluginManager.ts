@@ -335,14 +335,16 @@ export class PluginManager {
       if (isInstalled) {
         console.log(`[PluginManager] Getting current version for ${definition.id}...`);
         // Add timeout to prevent hanging on slow commands
-        const currentVersion = await Promise.race([
+        const rawVersion = await Promise.race([
           installer.getCurrentVersion(),
           new Promise<null>((resolve) => setTimeout(() => {
             console.warn(`[PluginManager] getCurrentVersion() timed out for ${definition.id}`);
             resolve(null);
           }, 3000)) // 3 second timeout
         ]);
-        console.log(`[PluginManager] ${definition.id} current version: ${currentVersion}`);
+        // Trim version to avoid whitespace issues
+        const currentVersion = rawVersion?.trim() || null;
+        console.log(`[PluginManager] ${definition.id} rawVersion: "${rawVersion}", trimmed: "${currentVersion}"`);
         plugin.status = 'installed';
         plugin.installedVersion = currentVersion;
         registryEntry.installedVersion = currentVersion;
@@ -457,16 +459,21 @@ export class PluginManager {
     try {
       // Check if installed
       const isInstalled = await plugin.installer.checkInstallation();
+      console.log(`[PluginManager] ${pluginId} isInstalled: ${isInstalled}`);
 
       if (isInstalled) {
         // Get current version with timeout
-        const currentVersion = await Promise.race([
+        const rawVersion = await Promise.race([
           plugin.installer.getCurrentVersion(),
           new Promise<null>((resolve) => setTimeout(() => {
             console.warn(`[PluginManager] getCurrentVersion() timed out for ${pluginId}`);
             resolve(null);
           }, 5000)) // 5 second timeout
         ]);
+
+        // Trim version to avoid whitespace issues
+        const currentVersion = rawVersion?.trim() || null;
+        console.log(`[PluginManager] ${pluginId} rawVersion: "${rawVersion}", trimmed: "${currentVersion}"`);
 
         plugin.status = 'installed';
         plugin.installedVersion = currentVersion;
@@ -811,6 +818,9 @@ export class PluginManager {
         plugin.installer.getLatestVersion(),
       ]);
 
+      console.log(`[PluginManager] checkForUpdate ${pluginId}: currentVersion="${currentVersion}" (type: ${typeof currentVersion}), latestVersion="${latestVersion}" (type: ${typeof latestVersion})`);
+      console.log(`[PluginManager] checkForUpdate ${pluginId}: versions equal? ${currentVersion === latestVersion}, strict equal? ${currentVersion === latestVersion}`);
+
       plugin.installedVersion = currentVersion;
       plugin.latestVersion = latestVersion;
       plugin.lastChecked = new Date();
@@ -820,10 +830,16 @@ export class PluginManager {
         lastChecked: plugin.lastChecked.toISOString(),
       });
 
+      // Trim versions before comparison to avoid whitespace issues
+      const trimmedCurrent = currentVersion?.trim() || null;
+      const trimmedLatest = latestVersion?.trim() || null;
+
       const hasUpdate =
-        currentVersion !== null &&
-        latestVersion !== null &&
-        currentVersion !== latestVersion;
+        trimmedCurrent !== null &&
+        trimmedLatest !== null &&
+        trimmedCurrent !== trimmedLatest;
+
+      console.log(`[PluginManager] checkForUpdate ${pluginId}: trimmedCurrent="${trimmedCurrent}", trimmedLatest="${trimmedLatest}", hasUpdate=${hasUpdate}`);
 
       if (hasUpdate && plugin.status === 'installed') {
         plugin.status = 'update-available';
@@ -831,8 +847,8 @@ export class PluginManager {
 
       return {
         hasUpdate,
-        currentVersion,
-        latestVersion,
+        currentVersion: trimmedCurrent,
+        latestVersion: trimmedLatest,
       };
     } catch (error) {
       console.error(`[PluginManager] Error checking update for ${pluginId}:`, error);
