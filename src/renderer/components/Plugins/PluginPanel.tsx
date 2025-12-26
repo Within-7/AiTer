@@ -372,6 +372,12 @@ export const PluginPanel: React.FC = () => {
 
   // Sort and filter plugins
   const sortedAndFilteredPlugins = React.useMemo(() => {
+    // Define built-in plugin order (lower index = higher priority)
+    const builtInOrder: Record<string, number> = {
+      'minto': 0,
+      'jetr': 1,
+    }
+
     // First, filter plugins based on selected filter
     let filtered = plugins
     if (filter === 'installed') {
@@ -382,6 +388,13 @@ export const PluginPanel: React.FC = () => {
 
     // Then, sort: installed plugins first, then not-installed
     return filtered.sort((a, b) => {
+      // Built-in plugins: use defined order
+      if (a.isBuiltIn && b.isBuiltIn) {
+        const orderA = builtInOrder[a.id] ?? 999
+        const orderB = builtInOrder[b.id] ?? 999
+        return orderA - orderB
+      }
+
       // Installed plugins come first
       if (a.installed && !b.installed) return -1
       if (!a.installed && b.installed) return 1
