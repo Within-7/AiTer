@@ -189,8 +189,9 @@ export class LocalFileServer {
     })
 
     // Serve static files from project directory
+    // SECURITY: Deny dotfiles to prevent exposure of sensitive files (.env, .ssh/id_rsa, .git/config)
     this.app.use(express.static(this.projectPath, {
-      dotfiles: 'allow', // Allow hidden files
+      dotfiles: 'deny', // Prevent access to hidden files for security
       index: false // Don't serve index.html automatically
     }))
 

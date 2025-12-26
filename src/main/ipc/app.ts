@@ -384,6 +384,15 @@ export function registerAppHandlers(
 
   ipcMain.handle('workspace:launch', async (_, { workspaceId }) => {
     try {
+      // SECURITY: Validate workspaceId to prevent command injection
+      // Only allow alphanumeric characters, hyphens, and underscores
+      if (!/^[a-zA-Z0-9_-]+$/.test(workspaceId)) {
+        return {
+          success: false,
+          error: 'Invalid workspace ID format. Only alphanumeric characters, hyphens, and underscores are allowed.'
+        }
+      }
+
       // Launch new instance with specified workspace
       if (app.isPackaged) {
         // Production mode: use the app executable
