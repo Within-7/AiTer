@@ -2,7 +2,6 @@ import { BrowserWindow, ipcMain } from 'electron'
 import { v4 as uuidv4 } from 'uuid'
 import { PTYManager } from '../pty'
 import { StoreManager } from '../store'
-import { createIPCHandler } from './middleware'
 
 export function registerTerminalHandlers(
   window: BrowserWindow,
@@ -53,9 +52,8 @@ export function registerTerminalHandlers(
   }
 
   // Terminal management
-  ipcMain.handle('terminal:create', createIPCHandler(
-    'terminal:create',
-    async (_, { cwd, shell, projectId, projectName, skipStartupCommand }) => {
+  ipcMain.handle('terminal:create', async (_, { cwd, shell, projectId, projectName, skipStartupCommand }) => {
+    try {
       const id = uuidv4()
 
       // Get current settings to pass to PTY
@@ -88,9 +86,12 @@ export function registerTerminalHandlers(
         }, 500)
       }
 
-      return terminal
+      return { success: true, terminal }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: message }
     }
-  ))
+  })
 
   ipcMain.handle('terminal:write', async (_, { id, data }) => {
     try {
