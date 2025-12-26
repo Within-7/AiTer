@@ -121,32 +121,31 @@ function App() {
           // The session will be re-saved with new IDs after restoration completes
           await window.api.session.clear()
 
-          // Restore editor tabs (reloading content from files)
-          for (const tabInfo of session.editorTabs) {
-            // Skip diff tabs as they can't be restored easily
-            if (tabInfo.isDiff) continue
-
-            try {
-              const fileResult = await window.api.fs.readFile(tabInfo.filePath)
-              if (fileResult.success && fileResult.content !== undefined) {
-                dispatch({
-                  type: 'ADD_EDITOR_TAB',
-                  payload: {
-                    id: tabInfo.id,
-                    filePath: tabInfo.filePath,
-                    fileName: tabInfo.fileName,
-                    fileType: tabInfo.fileType,
-                    content: fileResult.content,
-                    isDirty: false,
-                    serverUrl: tabInfo.serverUrl,
-                    projectPath: tabInfo.projectPath
-                  }
-                })
+          // Restore editor tabs and terminals in parallel for faster startup
+          const editorTabPromises = session.editorTabs
+            .filter(tabInfo => !tabInfo.isDiff) // Skip diff tabs
+            .map(async (tabInfo) => {
+              try {
+                const fileResult = await window.api.fs.readFile(tabInfo.filePath)
+                if (fileResult.success && fileResult.content !== undefined) {
+                  dispatch({
+                    type: 'ADD_EDITOR_TAB',
+                    payload: {
+                      id: tabInfo.id,
+                      filePath: tabInfo.filePath,
+                      fileName: tabInfo.fileName,
+                      fileType: tabInfo.fileType,
+                      content: fileResult.content,
+                      isDirty: false,
+                      serverUrl: tabInfo.serverUrl,
+                      projectPath: tabInfo.projectPath
+                    }
+                  })
+                }
+              } catch (error) {
+                console.warn(`[Session] Failed to restore editor tab: ${tabInfo.filePath}`, error)
               }
-            } catch (error) {
-              console.warn(`[Session] Failed to restore editor tab: ${tabInfo.filePath}`, error)
-            }
-          }
+            })
 
           // Limit restored terminals to prevent runaway accumulation
           const MAX_RESTORED_TERMINALS = 10
@@ -155,14 +154,13 @@ function App() {
             console.warn(`[Session] Limiting terminal restoration from ${session.terminals.length} to ${MAX_RESTORED_TERMINALS}`)
           }
 
-          // Restore terminals (create new PTY processes)
-          for (const termInfo of terminalsToRestore) {
+          const terminalPromises = terminalsToRestore.map(async (termInfo) => {
             try {
               // Find project for this terminal
               const project = projectsResult.projects?.find(p => p.id === termInfo.projectId)
               if (!project) {
                 console.warn(`[Session] Project not found for terminal: ${termInfo.projectId}`)
-                continue
+                return
               }
 
               const terminalResult = await window.api.terminal.create(
@@ -180,7 +178,10 @@ function App() {
             } catch (error) {
               console.warn(`[Session] Failed to restore terminal: ${termInfo.id}`, error)
             }
-          }
+          })
+
+          // Wait for all restorations to complete in parallel
+          await Promise.all([...editorTabPromises, ...terminalPromises])
 
           // Note: We don't restore tab order since IDs have changed
           // The new tabs are added in order, so the order is preserved

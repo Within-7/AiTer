@@ -16,6 +16,9 @@ interface XTerminalProps {
   isActive?: boolean
 }
 
+// Maximum size for inactive buffer (1MB) to prevent memory leaks
+const MAX_INACTIVE_BUFFER_SIZE = 1024 * 1024
+
 // Memoize the component to prevent unnecessary re-renders from parent state changes
 export const XTerminal = memo(function XTerminal({ terminal, settings, isActive = true }: XTerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null)
@@ -244,6 +247,10 @@ export const XTerminal = memo(function XTerminal({ terminal, settings, isActive 
         } else {
           // Inactive terminal: accumulate in inactive buffer for later
           inactiveBufferRef.current += dataBuffer
+          // Limit inactive buffer size to prevent memory leaks
+          if (inactiveBufferRef.current.length > MAX_INACTIVE_BUFFER_SIZE) {
+            inactiveBufferRef.current = inactiveBufferRef.current.slice(-MAX_INACTIVE_BUFFER_SIZE)
+          }
         }
         dataBuffer = ''
       }
@@ -281,6 +288,10 @@ export const XTerminal = memo(function XTerminal({ terminal, settings, isActive 
           xtermRef.current.write(dataBuffer)
         } else {
           inactiveBufferRef.current += dataBuffer
+          // Limit inactive buffer size to prevent memory leaks
+          if (inactiveBufferRef.current.length > MAX_INACTIVE_BUFFER_SIZE) {
+            inactiveBufferRef.current = inactiveBufferRef.current.slice(-MAX_INACTIVE_BUFFER_SIZE)
+          }
         }
       }
     }

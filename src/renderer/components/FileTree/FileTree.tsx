@@ -77,6 +77,28 @@ interface ContextMenuState {
   isProjectRoot: boolean
 }
 
+// Calculate adaptive git polling interval based on project size
+const getGitPollInterval = (nodeCount: number): number => {
+  if (nodeCount > 1000) return 10000  // 10s for large projects
+  if (nodeCount > 500) return 5000    // 5s for medium projects
+  return 3000                          // 3s for small projects
+}
+
+// Count total nodes in the tree
+const countNodes = (nodes: FileNode[]): number => {
+  let count = 0
+  const traverse = (nodeList: FileNode[]) => {
+    for (const node of nodeList) {
+      count++
+      if (node.children) {
+        traverse(node.children)
+      }
+    }
+  }
+  traverse(nodes)
+  return count
+}
+
 interface DialogState {
   type: 'new-file' | 'new-folder' | 'rename' | 'delete' | null
   targetPath: string
@@ -141,8 +163,13 @@ export const FileTree: React.FC<FileTreeProps> = ({
     loadDirectory(projectPath)
     loadGitChanges()
 
-    // Poll git status every 3 seconds
-    gitPollIntervalRef.current = setInterval(loadGitChanges, 3000)
+    // Calculate adaptive polling interval based on project size
+    const nodeCount = countNodes(nodesRef.current)
+    const pollInterval = getGitPollInterval(nodeCount)
+    console.log(`[FileTree] Using ${pollInterval}ms git poll interval for ${nodeCount} nodes`)
+
+    // Poll git status with adaptive interval
+    gitPollIntervalRef.current = setInterval(loadGitChanges, pollInterval)
 
     // Start file watcher for this project
     window.api.fileWatcher.watch(projectPath)
@@ -165,6 +192,23 @@ export const FileTree: React.FC<FileTreeProps> = ({
       unsubscribe()
     }
   }, [projectPath, loadGitChanges])
+
+  // Update git polling interval when node count changes (directories expanded/collapsed)
+  useEffect(() => {
+    if (!gitPollIntervalRef.current) return
+
+    const nodeCount = countNodes(nodes)
+    const newInterval = getGitPollInterval(nodeCount)
+
+    // Only update if interval has changed
+    const currentInterval = gitPollIntervalRef.current
+    if (currentInterval) {
+      // Check if we need to update the interval by comparing node count thresholds
+      clearInterval(currentInterval)
+      gitPollIntervalRef.current = setInterval(loadGitChanges, newInterval)
+      console.log(`[FileTree] Updated git poll interval to ${newInterval}ms for ${nodeCount} nodes`)
+    }
+  }, [nodes, loadGitChanges])
 
   const loadDirectory = async (path: string) => {
     setLoading(true)
