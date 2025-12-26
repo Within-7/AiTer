@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import { LocalFileServer } from './LocalFileServer'
 import { PortManager } from './PortManager'
+import { logger } from '../utils/logger'
 
 interface ServerInfo {
   server: LocalFileServer

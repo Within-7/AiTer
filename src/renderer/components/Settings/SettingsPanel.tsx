@@ -44,18 +44,26 @@ export const SettingsPanel: React.FC = () => {
   useEffect(() => {
     if (isOpen) {
       // Detect available shells
-      window.api.shell.detectAvailable().then(result => {
-        if (result.success && result.shells) {
-          setAvailableShells(result.shells)
-        }
-      })
+      window.api.shell.detectAvailable()
+        .then(result => {
+          if (result.success && result.shells) {
+            setAvailableShells(result.shells)
+          }
+        })
+        .catch(error => {
+          console.error('Failed to detect available shells:', error)
+        })
 
       // Detect version managers
-      window.api.versionManager.getDetected().then(result => {
-        if (result.success && result.managers) {
-          setDetectedVersionManagers(result.managers)
-        }
-      })
+      window.api.versionManager.getDetected()
+        .then(result => {
+          if (result.success && result.managers) {
+            setDetectedVersionManagers(result.managers)
+          }
+        })
+        .catch(error => {
+          console.error('Failed to detect version managers:', error)
+        })
     }
   }, [isOpen])
 
@@ -72,11 +80,15 @@ export const SettingsPanel: React.FC = () => {
       else if (shellName.includes('pwsh')) shellType = 'pwsh'
       else if (shellName.includes('cmd')) shellType = 'cmd'
 
-      window.api.shell.getConfigFiles(shellType).then(result => {
-        if (result.success && result.files) {
-          setCurrentConfigFiles(result.files)
-        }
-      })
+      window.api.shell.getConfigFiles(shellType)
+        .then(result => {
+          if (result.success && result.files) {
+            setCurrentConfigFiles(result.files)
+          }
+        })
+        .catch(error => {
+          console.error('Failed to get shell config files:', error)
+        })
     } else if (isOpen && availableShells.length > 0) {
       // Use default shell's config files
       const defaultShell = availableShells.find(s => s.isDefault) || availableShells[0]

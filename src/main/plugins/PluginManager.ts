@@ -9,6 +9,7 @@
 import {
   Plugin,
   PluginDefinition,
+  PartialPluginDefinition,
   PluginInstaller,
   PluginStatus,
   PluginListItem,
@@ -117,8 +118,8 @@ export class PluginManager {
           platforms: ['darwin', 'linux', 'win32'],
           tags: ['ai', 'cli', 'strategic-thinking', 'research'],
           isBuiltIn: true
-        } as any,
-        new MintoInstaller(this.store as any, nodeEnv, npmPath)
+        },
+        new MintoInstaller(this.store, nodeEnv, npmPath)
       );
 
       // Register Jetr CLI plugin
@@ -134,8 +135,8 @@ export class PluginManager {
           platforms: ['darwin', 'linux', 'win32'],
           tags: ['cli', 'deploy', 'static-site', 'hosting'],
           isBuiltIn: true
-        } as any,
-        new JetrInstaller(this.store as any, nodeEnv, npmPath)
+        },
+        new JetrInstaller(this.store, nodeEnv, npmPath)
       );
 
       // Load custom plugins from store
@@ -257,7 +258,7 @@ export class PluginManager {
         }
 
         const installer = new GenericNpmInstaller(
-          this.store as any,
+          this.store,
           entry.packageName,
           commandName,
           nodeEnv,
@@ -276,7 +277,7 @@ export class PluginManager {
             platforms: ['darwin', 'linux', 'win32'],
             tags: entry.tags || ['custom', 'npm'],
             isBuiltIn: false  // Mark as custom plugin
-          } as any,
+          },
           installer
         );
 
@@ -302,7 +303,7 @@ export class PluginManager {
    * @param installer Plugin installer implementation
    */
   public async registerPlugin(
-    definition: PluginDefinition,
+    definition: PartialPluginDefinition,
     installer: PluginInstaller
   ): Promise<void> {
     console.log(`[PluginManager] Registering plugin: ${definition.id}`);
@@ -316,6 +317,13 @@ export class PluginManager {
       return;
     }
 
+    // Normalize definition to PluginDefinition with defaults
+    const normalizedDefinition: PluginDefinition = {
+      ...definition,
+      version: definition.version || '1.0.0',
+      author: definition.author || 'Unknown',
+    };
+
     // Get registry entry or create default
     const registry = this.store.get('plugins.registry', {});
     const registryEntry = registry[definition.id] || {
@@ -328,7 +336,7 @@ export class PluginManager {
 
     // Create plugin object
     const plugin: Plugin = {
-      definition,
+      definition: normalizedDefinition,
       installer,
       status: 'not-installed',
       installedVersion: null,
@@ -586,7 +594,7 @@ export class PluginManager {
       // Register plugin
       const { GenericNpmInstaller } = await import('./installers/GenericNpmInstaller');
       const installer = new GenericNpmInstaller(
-        this.store as any,
+        this.store,
         packageName,
         commandName,
         nodeEnv,
@@ -604,7 +612,7 @@ export class PluginManager {
           homepage: metadata.homepage,
           platforms: ['darwin', 'linux', 'win32'],
           tags: metadata.keywords || ['custom', 'npm']
-        } as any,
+        },
         installer
       );
 

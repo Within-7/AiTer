@@ -1,6 +1,6 @@
 import React, { useContext, useState, useCallback, useMemo } from 'react'
 import { AppContext } from '../context/AppContext'
-import { MonacoEditor } from './Editor/MonacoEditor'
+import { MonacoEditorLazy } from './Editor/MonacoEditorLazy'
 import { MarkdownEditor } from './Editor/MarkdownEditor'
 import { HTMLPreview } from './Editor/HTMLPreview'
 import { DiffViewer } from './Editor/DiffViewer'
@@ -402,7 +402,7 @@ export const WorkArea: React.FC = () => {
                 fileType={activeEditorTab.fileType}
               />
             ) : (
-              <MonacoEditor
+              <MonacoEditorLazy
                 value={activeEditorTab.content}
                 language={activeEditorTab.fileType}
                 onChange={handleContentChange}

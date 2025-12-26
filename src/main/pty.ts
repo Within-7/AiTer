@@ -4,6 +4,7 @@ import * as fs from 'fs'
 import { Terminal, AppSettings, ShellType } from '../types'
 import { NodeManager } from './nodejs/manager'
 import { ShellDetector } from './shell/ShellDetector'
+import { logger } from './utils/logger'
 
 interface PTYInstance {
   terminal: Terminal
@@ -270,10 +271,10 @@ export class PTYManager {
 
       this.instances.set(id, instance)
 
-      console.log(`PTY created: ${id} (PID: ${ptyProcess.pid})`)
+      logger.info('PTYManager', 'PTY created', { id, pid: ptyProcess.pid, cwd, shell: shellPath })
       return terminal
     } catch (error) {
-      console.error('Failed to create PTY:', error)
+      logger.error('PTYManager', 'Failed to create PTY', { id, cwd, error: error instanceof Error ? error.message : String(error) })
       throw error
     }
   }
@@ -281,7 +282,7 @@ export class PTYManager {
   write(id: string, data: string): boolean {
     const instance = this.instances.get(id)
     if (!instance) {
-      console.warn(`PTY not found: ${id}`)
+      logger.warn('PTYManager', 'PTY not found', { id })
       return false
     }
 
@@ -296,6 +297,7 @@ export class PTYManager {
           // Update terminal name with last command
           const projectName = instance.terminal.name.split(' | ')[0]
           instance.terminal.name = `${projectName} | ${command}`
+          logger.debug('PTYManager', 'Command executed', { id, command })
         }
         instance.commandBuffer = ''
       } else if (data === '\x7f' || data === '\b') {
@@ -308,7 +310,7 @@ export class PTYManager {
 
       return true
     } catch (error) {
-      console.error(`Failed to write to PTY ${id}:`, error)
+      logger.error('PTYManager', 'Failed to write to PTY', { id, error: error instanceof Error ? error.message : String(error) })
       return false
     }
   }
@@ -321,15 +323,16 @@ export class PTYManager {
   resize(id: string, cols: number, rows: number): boolean {
     const instance = this.instances.get(id)
     if (!instance) {
-      console.warn(`PTY not found: ${id}`)
+      logger.warn('PTYManager', 'PTY not found for resize', { id })
       return false
     }
 
     try {
       instance.process.resize(cols, rows)
+      logger.debug('PTYManager', 'PTY resized', { id, cols, rows })
       return true
     } catch (error) {
-      console.error(`Failed to resize PTY ${id}:`, error)
+      logger.error('PTYManager', 'Failed to resize PTY', { id, cols, rows, error: error instanceof Error ? error.message : String(error) })
       return false
     }
   }
@@ -344,19 +347,19 @@ export class PTYManager {
   async kill(id: string, force: boolean = false): Promise<boolean> {
     const instance = this.instances.get(id)
     if (!instance) {
-      console.warn(`[PTYManager] PTY not found: ${id}`)
+      logger.warn('PTYManager', 'PTY not found for kill', { id })
       return false
     }
 
     // Prevent duplicate kill attempts
     if (instance.isKilling) {
-      console.log(`[PTYManager] PTY ${id} is already being killed, skipping`)
+      logger.debug('PTYManager', 'PTY already being killed, skipping', { id })
       return true
     }
     instance.isKilling = true
 
     const pid = instance.process.pid
-    console.log(`[PTYManager] Killing PTY ${id} (PID: ${pid})${force ? ' [FORCE]' : ''}`)
+    logger.info('PTYManager', 'Killing PTY', { id, pid, force })
 
     return new Promise((resolve) => {
       let resolved = false
@@ -374,7 +377,7 @@ export class PTYManager {
         if (resolved) return
         resolved = true
         cleanup()
-        console.log(`[PTYManager] PTY ${id} killed via ${method}`)
+        logger.info('PTYManager', 'PTY killed', { id, method })
         resolve(success)
       }
 
@@ -410,7 +413,7 @@ export class PTYManager {
         // Set up force kill timer
         forceKillTimer = setTimeout(() => {
           if (resolved) return
-          console.log(`[PTYManager] PTY ${id} did not exit gracefully, sending SIGKILL`)
+          logger.warn('PTYManager', 'PTY did not exit gracefully, sending SIGKILL', { id })
           try {
             instance.process.kill('SIGKILL')
           } catch {
@@ -428,7 +431,7 @@ export class PTYManager {
         instance.process.onExit(exitHandler)
 
       } catch (error) {
-        console.error(`[PTYManager] Error killing PTY ${id}:`, error)
+        logger.error('PTYManager', 'Error killing PTY', { id, error: error instanceof Error ? error.message : String(error) })
         cleanup()
         resolve(false)
       }
@@ -442,17 +445,17 @@ export class PTYManager {
   killSync(id: string): boolean {
     const instance = this.instances.get(id)
     if (!instance) {
-      console.warn(`[PTYManager] PTY not found: ${id}`)
+      logger.warn('PTYManager', 'PTY not found for killSync', { id })
       return false
     }
 
     try {
       instance.process.kill()
       this.instances.delete(id)
-      console.log(`[PTYManager] PTY killed (sync): ${id}`)
+      logger.info('PTYManager', 'PTY killed (sync)', { id })
       return true
     } catch (error) {
-      console.error(`[PTYManager] Failed to kill PTY ${id}:`, error)
+      logger.error('PTYManager', 'Failed to kill PTY (sync)', { id, error: error instanceof Error ? error.message : String(error) })
       return false
     }
   }
@@ -464,7 +467,7 @@ export class PTYManager {
    */
   async killAll(): Promise<{ success: number; failed: number; timeout: boolean }> {
     const count = this.instances.size
-    console.log(`[PTYManager] Killing all PTY instances (${count})`)
+    logger.info('PTYManager', 'Killing all PTY instances', { count })
 
     if (count === 0) {
       return { success: 0, failed: 0, timeout: false }
@@ -509,7 +512,10 @@ export class PTYManager {
     } catch (error) {
       // Timeout occurred, force kill remaining instances
       timedOut = true
-      console.warn(`[PTYManager] killAll timeout after ${KILL_ALL_TIMEOUT}ms, force killing remaining instances`)
+      logger.warn('PTYManager', 'killAll timeout, force killing remaining instances', {
+        timeoutMs: KILL_ALL_TIMEOUT,
+        remaining: this.instances.size
+      })
 
       // Force kill any remaining instances
       for (const id of this.instances.keys()) {
@@ -524,11 +530,11 @@ export class PTYManager {
 
     // Final cleanup - ensure the map is empty
     if (this.instances.size > 0) {
-      console.warn(`[PTYManager] ${this.instances.size} instances still remaining after killAll, clearing`)
+      logger.warn('PTYManager', 'Instances remaining after killAll, clearing', { remaining: this.instances.size })
       this.instances.clear()
     }
 
-    console.log(`[PTYManager] killAll complete: ${success} success, ${failed} failed, timeout: ${timedOut}`)
+    logger.info('PTYManager', 'killAll complete', { success, failed, timeout: timedOut })
     return { success, failed, timeout: timedOut }
   }
 
@@ -537,7 +543,7 @@ export class PTYManager {
    * @deprecated Use killAll() instead for proper cleanup
    */
   killAllSync(): void {
-    console.log(`[PTYManager] Killing all PTY instances sync (${this.instances.size})`)
+    logger.info('PTYManager', 'Killing all PTY instances (sync)', { count: this.instances.size })
     for (const id of this.instances.keys()) {
       this.killSync(id)
     }

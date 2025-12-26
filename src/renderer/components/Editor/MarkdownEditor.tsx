@@ -2,10 +2,12 @@ import React, { useEffect, useState, useContext, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
-import Editor, { OnMount } from '@monaco-editor/react'
-import * as monaco from 'monaco-editor'
+import type { OnMount } from '@monaco-editor/react'
+import type * as monaco from 'monaco-editor'
 import { AppContext } from '../../context/AppContext'
+import { MonacoMarkdownEditor } from './MonacoMarkdownEditor'
 import './MarkdownEditor.css'
+import './MonacoEditorLazy.css'
 
 interface TocItem {
   level: number
@@ -199,23 +201,10 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     <div className="markdown-editor">
       {mode === 'edit' ? (
         <div className="markdown-editor-pane-full">
-          <Editor
-            height="100%"
-            language="markdown"
+          <MonacoMarkdownEditor
             value={value}
-            theme="vs-dark"
             onChange={handleEditorChange}
             onMount={handleEditorDidMount}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 14,
-              lineNumbers: 'on',
-              scrollBeyondLastLine: false,
-              automaticLayout: true,
-              tabSize: 2,
-              wordWrap: 'on',
-              renderWhitespace: 'selection'
-            }}
           />
         </div>
       ) : (

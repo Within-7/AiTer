@@ -8,6 +8,15 @@ import session from 'express-session'
 import cookieParser from 'cookie-parser'
 
 /**
+ * Extend Express session data to include authentication flag
+ */
+declare module 'express-session' {
+  interface SessionData {
+    authenticated?: boolean
+  }
+}
+
+/**
  * Local HTTP file server for a single project
  * Serves static files from the project directory
  */
@@ -62,7 +71,7 @@ export class LocalFileServer {
     // Token validation with session and same-origin Referer support
     this.app.use((req, res, next) => {
       // Check if already authenticated in this session
-      if ((req.session as any).authenticated) {
+      if (req.session.authenticated) {
         this.lastAccessed = Date.now()
         return next()
       }
@@ -73,7 +82,7 @@ export class LocalFileServer {
       // Use timing-safe comparison to prevent timing attacks
       if (token && typeof token === 'string' && this.isValidToken(token)) {
         // Token is valid, mark session as authenticated
-        (req.session as any).authenticated = true
+        req.session.authenticated = true
         this.lastAccessed = Date.now()
         return next()
       }

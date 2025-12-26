@@ -162,6 +162,15 @@ export interface PluginDefinition {
 }
 
 /**
+ * Partial plugin definition for registration
+ * Used when creating plugin definitions with only required fields
+ */
+export type PartialPluginDefinition = Omit<PluginDefinition, 'version' | 'author'> & {
+  version?: string;
+  author?: string;
+}
+
+/**
  * Complete plugin with installer and metadata
  */
 export interface Plugin {

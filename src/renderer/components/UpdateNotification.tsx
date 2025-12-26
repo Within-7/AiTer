@@ -41,11 +41,15 @@ export const UpdateNotification: React.FC = () => {
 
   // Get current version on mount
   useEffect(() => {
-    window.api.autoUpdate.getVersion().then(result => {
-      if (result.success && result.version) {
-        setCurrentVersion(result.version)
-      }
-    })
+    window.api.autoUpdate.getVersion()
+      .then(result => {
+        if (result.success && result.version) {
+          setCurrentVersion(result.version)
+        }
+      })
+      .catch(error => {
+        console.error('Failed to get current version:', error)
+      })
   }, [])
 
   // Listen for update events

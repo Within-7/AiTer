@@ -212,7 +212,12 @@ async function initialize() {
 }
 
 // This method will be called when Electron has finished initialization
-app.whenReady().then(initialize)
+app.whenReady()
+  .then(initialize)
+  .catch(error => {
+    console.error('Failed to initialize app:', error)
+    app.quit()
+  })
 
 // Quit when all windows are closed, except on macOS
 app.on('window-all-closed', () => {

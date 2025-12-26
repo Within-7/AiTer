@@ -25,9 +25,12 @@ import Store from 'electron-store';
 
 const execFileAsync = promisify(execFile);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyStore = Store<any>;
+
 interface NpmPluginInstallerOptions {
   /** electron-store instance for configuration persistence */
-  store: Store;
+  store: AnyStore;
   /** NPM package name (e.g., '@within-7/minto') */
   packageName: string;
   /** Command name to check installation (e.g., 'minto') */
@@ -52,7 +55,7 @@ interface NpmListOutput {
 }
 
 export abstract class NpmPluginInstaller implements PluginInstaller {
-  protected store: Store;
+  protected store: AnyStore;
   protected packageName: string;
   protected commandName: string;
   protected configStoreKey: string;

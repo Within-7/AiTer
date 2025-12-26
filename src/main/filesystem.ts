@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid'
 import ignore, { Ignore } from 'ignore'
 import { getFileType as getFileTypeFromConfig, isBinaryType, FileType } from '../shared/fileTypeConfig'
 import { extractLargestPNG, isValidICNS } from './utils/icnsParser'
+import { testWithTimeout, RegexTimeoutError } from './utils/safeRegex'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB for reading
 const MAX_WRITE_SIZE = 50 * 1024 * 1024 // 50MB for writing (DoS protection)
@@ -557,7 +558,7 @@ export class SecureFileSystemManager {
         const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
         searchRegex = new RegExp(escaped, caseSensitive ? '' : 'i')
       }
-    } catch {
+    } catch (error) {
       throw new Error('Invalid regular expression pattern')
     }
 
@@ -595,13 +596,20 @@ export class SecureFileSystemManager {
             // Recurse into subdirectory
             await searchDir(fullPath, isIgnored)
           } else {
-            // Check if filename matches pattern
-            if (searchRegex.test(entry.name)) {
-              results.push({
-                filePath: fullPath,
-                fileName: entry.name,
-                relativePath
-              })
+            // Check if filename matches pattern with timeout protection
+            try {
+              if (testWithTimeout(searchRegex, entry.name, 1000)) {
+                results.push({
+                  filePath: fullPath,
+                  fileName: entry.name,
+                  relativePath
+                })
+              }
+            } catch (error) {
+              if (error instanceof RegexTimeoutError) {
+                throw new Error('Search pattern is too complex and timed out. Please simplify your regular expression.')
+              }
+              throw error
             }
           }
         }
@@ -687,7 +695,7 @@ export class SecureFileSystemManager {
         const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
         searchRegex = new RegExp(escaped, caseSensitive ? 'g' : 'gi')
       }
-    } catch {
+    } catch (error) {
       throw new Error('Invalid regular expression pattern')
     }
 

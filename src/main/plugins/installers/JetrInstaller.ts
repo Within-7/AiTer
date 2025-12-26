@@ -12,8 +12,9 @@
 import { NpmPluginInstaller } from './NpmPluginInstaller';
 import Store from 'electron-store';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class JetrInstaller extends NpmPluginInstaller {
-  constructor(store: Store, env?: NodeJS.ProcessEnv, npmPath?: string) {
+  constructor(store: Store<any>, env?: NodeJS.ProcessEnv, npmPath?: string) {
     super({
       store,
       packageName: '@within-7/jetr',
