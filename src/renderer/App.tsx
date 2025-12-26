@@ -10,6 +10,7 @@ import { SettingsPanel } from './components/Settings/SettingsPanel'
 import { WorkspaceManagerDialog } from './components/WorkspaceManagerDialog'
 import { UpdateNotification } from './components/UpdateNotification'
 import { KeyboardShortcutsHandler } from './components/KeyboardShortcutsHandler'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import './styles/App.css'
 
 function App() {
@@ -292,24 +293,38 @@ function App() {
   const activeTerminal = state.terminals.find(t => t.id === state.activeTerminalId)
 
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
-      <div className="app">
-        <div className="app-main">
-          <Sidebar />
-          <WorkArea />
+    <ErrorBoundary name="App">
+      <AppContext.Provider value={{ state, dispatch }}>
+        <div className="app">
+          <div className="app-main">
+            <ErrorBoundary name="Sidebar">
+              <Sidebar />
+            </ErrorBoundary>
+            <ErrorBoundary name="WorkArea">
+              <WorkArea />
+            </ErrorBoundary>
+          </div>
+          <ErrorBoundary name="StatusBar">
+            <StatusBar activeTerminal={activeTerminal} />
+          </ErrorBoundary>
+          <ErrorBoundary name="PluginPanel">
+            <PluginPanel />
+          </ErrorBoundary>
+          <ErrorBoundary name="AboutPanel">
+            <AboutPanel />
+          </ErrorBoundary>
+          <ErrorBoundary name="SettingsPanel">
+            <SettingsPanel />
+          </ErrorBoundary>
+          <WorkspaceManagerDialog
+            isOpen={state.showWorkspaceManager}
+            onClose={() => dispatch({ type: 'SET_WORKSPACE_MANAGER', payload: false })}
+          />
+          <UpdateNotification />
+          <KeyboardShortcutsHandler />
         </div>
-        <StatusBar activeTerminal={activeTerminal} />
-        <PluginPanel />
-        <AboutPanel />
-        <SettingsPanel />
-        <WorkspaceManagerDialog
-          isOpen={state.showWorkspaceManager}
-          onClose={() => dispatch({ type: 'SET_WORKSPACE_MANAGER', payload: false })}
-        />
-        <UpdateNotification />
-        <KeyboardShortcutsHandler />
-      </div>
-    </AppContext.Provider>
+      </AppContext.Provider>
+    </ErrorBoundary>
   )
 }
 
