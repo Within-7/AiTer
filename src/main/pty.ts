@@ -12,7 +12,13 @@ interface PTYInstance {
   onExit: (exitCode: number) => void
   commandBuffer: string
   lastCommand: string
+  isKilling: boolean  // Track if kill is in progress
 }
+
+// Kill timeout constants
+const GRACEFUL_KILL_TIMEOUT = 2000  // Wait 2 seconds for graceful shutdown
+const FORCE_KILL_TIMEOUT = 3000     // Wait 3 seconds for force kill
+const KILL_ALL_TIMEOUT = 5000       // Total timeout for killAll()
 
 export class PTYManager {
   private instances: Map<string, PTYInstance> = new Map()
@@ -248,7 +254,8 @@ export class PTYManager {
         onData: onData || (() => {}),
         onExit: onExit || (() => {}),
         commandBuffer: '',
-        lastCommand: ''
+        lastCommand: '',
+        isKilling: false
       }
 
       // Setup event handlers
@@ -327,28 +334,212 @@ export class PTYManager {
     }
   }
 
-  kill(id: string): boolean {
+  /**
+   * Kill a PTY instance with graceful shutdown
+   * First sends SIGTERM, waits for graceful exit, then forces SIGKILL if needed
+   * @param id - Terminal ID
+   * @param force - If true, skip graceful shutdown and force kill immediately
+   * @returns Promise that resolves when the process is killed
+   */
+  async kill(id: string, force: boolean = false): Promise<boolean> {
     const instance = this.instances.get(id)
     if (!instance) {
-      console.warn(`PTY not found: ${id}`)
+      console.warn(`[PTYManager] PTY not found: ${id}`)
+      return false
+    }
+
+    // Prevent duplicate kill attempts
+    if (instance.isKilling) {
+      console.log(`[PTYManager] PTY ${id} is already being killed, skipping`)
+      return true
+    }
+    instance.isKilling = true
+
+    const pid = instance.process.pid
+    console.log(`[PTYManager] Killing PTY ${id} (PID: ${pid})${force ? ' [FORCE]' : ''}`)
+
+    return new Promise((resolve) => {
+      let resolved = false
+      let forceKillTimer: NodeJS.Timeout | null = null
+
+      const cleanup = () => {
+        if (forceKillTimer) {
+          clearTimeout(forceKillTimer)
+          forceKillTimer = null
+        }
+        this.instances.delete(id)
+      }
+
+      const done = (success: boolean, method: string) => {
+        if (resolved) return
+        resolved = true
+        cleanup()
+        console.log(`[PTYManager] PTY ${id} killed via ${method}`)
+        resolve(success)
+      }
+
+      // Listen for process exit
+      const exitHandler = () => {
+        done(true, 'graceful exit')
+      }
+
+      try {
+        // Check if process is still alive
+        if (pid === undefined || pid <= 0) {
+          done(true, 'already dead')
+          return
+        }
+
+        // On Windows, we can only use the default kill
+        if (process.platform === 'win32' || force) {
+          instance.process.kill()
+          // Give it a moment to clean up
+          setTimeout(() => done(true, force ? 'force kill' : 'windows kill'), 100)
+          return
+        }
+
+        // Unix: Graceful shutdown with SIGTERM first
+        try {
+          instance.process.kill('SIGTERM')
+        } catch {
+          // Process might already be dead
+          done(true, 'already terminated')
+          return
+        }
+
+        // Set up force kill timer
+        forceKillTimer = setTimeout(() => {
+          if (resolved) return
+          console.log(`[PTYManager] PTY ${id} did not exit gracefully, sending SIGKILL`)
+          try {
+            instance.process.kill('SIGKILL')
+          } catch {
+            // Process might be dead by now
+          }
+          // Give SIGKILL a moment to work
+          setTimeout(() => {
+            if (!resolved) {
+              done(true, 'SIGKILL timeout')
+            }
+          }, 500)
+        }, GRACEFUL_KILL_TIMEOUT)
+
+        // Also listen for the process exit event
+        instance.process.onExit(exitHandler)
+
+      } catch (error) {
+        console.error(`[PTYManager] Error killing PTY ${id}:`, error)
+        cleanup()
+        resolve(false)
+      }
+    })
+  }
+
+  /**
+   * Synchronous kill for backwards compatibility
+   * Used internally when async is not needed
+   */
+  killSync(id: string): boolean {
+    const instance = this.instances.get(id)
+    if (!instance) {
+      console.warn(`[PTYManager] PTY not found: ${id}`)
       return false
     }
 
     try {
       instance.process.kill()
       this.instances.delete(id)
-      console.log(`PTY killed: ${id}`)
+      console.log(`[PTYManager] PTY killed (sync): ${id}`)
       return true
     } catch (error) {
-      console.error(`Failed to kill PTY ${id}:`, error)
+      console.error(`[PTYManager] Failed to kill PTY ${id}:`, error)
       return false
     }
   }
 
-  killAll(): void {
-    console.log(`Killing all PTY instances (${this.instances.size})`)
+  /**
+   * Kill all PTY instances with timeout protection
+   * Runs kills in parallel for faster shutdown
+   * @returns Promise that resolves when all processes are killed or timeout
+   */
+  async killAll(): Promise<{ success: number; failed: number; timeout: boolean }> {
+    const count = this.instances.size
+    console.log(`[PTYManager] Killing all PTY instances (${count})`)
+
+    if (count === 0) {
+      return { success: 0, failed: 0, timeout: false }
+    }
+
+    const ids = Array.from(this.instances.keys())
+    let success = 0
+    let failed = 0
+    let timedOut = false
+
+    // Create a promise that rejects after timeout
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('killAll timeout'))
+      }, KILL_ALL_TIMEOUT)
+    })
+
+    try {
+      // Kill all instances in parallel with timeout
+      const killPromises = ids.map(async (id) => {
+        try {
+          const result = await this.kill(id, false)
+          return { id, success: result }
+        } catch {
+          return { id, success: false }
+        }
+      })
+
+      const results = await Promise.race([
+        Promise.all(killPromises),
+        timeoutPromise
+      ])
+
+      // Count results
+      for (const result of results) {
+        if (result.success) {
+          success++
+        } else {
+          failed++
+        }
+      }
+    } catch (error) {
+      // Timeout occurred, force kill remaining instances
+      timedOut = true
+      console.warn(`[PTYManager] killAll timeout after ${KILL_ALL_TIMEOUT}ms, force killing remaining instances`)
+
+      // Force kill any remaining instances
+      for (const id of this.instances.keys()) {
+        try {
+          this.killSync(id)
+          success++
+        } catch {
+          failed++
+        }
+      }
+    }
+
+    // Final cleanup - ensure the map is empty
+    if (this.instances.size > 0) {
+      console.warn(`[PTYManager] ${this.instances.size} instances still remaining after killAll, clearing`)
+      this.instances.clear()
+    }
+
+    console.log(`[PTYManager] killAll complete: ${success} success, ${failed} failed, timeout: ${timedOut}`)
+    return { success, failed, timeout: timedOut }
+  }
+
+  /**
+   * Synchronous version of killAll for backwards compatibility
+   * @deprecated Use killAll() instead for proper cleanup
+   */
+  killAllSync(): void {
+    console.log(`[PTYManager] Killing all PTY instances sync (${this.instances.size})`)
     for (const id of this.instances.keys()) {
-      this.kill(id)
+      this.killSync(id)
     }
   }
 

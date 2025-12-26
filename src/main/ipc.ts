@@ -250,7 +250,7 @@ export function setupIPC(
 
   ipcMain.handle('terminal:kill', async (_, { id }) => {
     try {
-      const success = ptyManager.kill(id)
+      const success = await ptyManager.kill(id)
       return { success }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'

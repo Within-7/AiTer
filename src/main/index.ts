@@ -230,15 +230,22 @@ app.on('activate', () => {
 
 // Cleanup on quit
 app.on('before-quit', async () => {
+  console.log('[App] before-quit: Starting cleanup...')
+
   if (ptyManager) {
-    ptyManager.killAll()
+    const result = await ptyManager.killAll()
+    console.log(`[App] PTY cleanup: ${result.success} success, ${result.failed} failed, timeout: ${result.timeout}`)
   }
   if (serverManager) {
     await serverManager.stopAllServers()
+    console.log('[App] File servers stopped')
   }
   if (pluginManager) {
     await pluginManager.cleanup()
+    console.log('[App] Plugins cleaned up')
   }
+
+  console.log('[App] Cleanup complete')
 })
 
 // Handle uncaught exceptions
