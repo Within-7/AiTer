@@ -405,7 +405,9 @@ AiTer implements defense-in-depth security measures:
    - Random access token per project (cryptographically secure)
    - **Timing-safe token comparison** using `crypto.timingSafeEqual()`
    - Session-based authentication after initial token validation
-   - No Referer-based authentication bypasses
+   - **Referer validation for sub-resources only** (HTML pages always require token/session)
+   - **Security headers**: X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, CSP
+   - dotfiles denied (prevents .env, .git exposure)
 
 4. **Shell/PTY Security** (`src/main/pty.ts`)
    - **Shell whitelist**: Only known safe shells allowed
@@ -464,6 +466,88 @@ AiTer uses `electron-updater` for automatic updates:
 - **Windows**: Standard NSIS installer with auto-update support
 
 See `docs/CODE_SIGNING.md` for signing configuration.
+
+## MCP (Model Context Protocol) Compatibility
+
+AiTer supports AI CLI tools that use MCP for extended functionality:
+
+### Supported AI CLI Tools
+
+| Tool | Node.js Required | MCP Support |
+|------|------------------|-------------|
+| Minto CLI | 18+ | Yes |
+| Claude Code CLI | 18+ | Yes |
+| Gemini CLI | 20+ | Yes |
+
+### Node.js Version Strategy
+
+AiTer bundles Node.js 22.x LTS for maximum compatibility:
+- All AI CLI tools work with Node.js 20+
+- LTS support until April 2027
+- Latest ES features and performance
+
+### Proxy Compatibility Issues
+
+**Known Issue:** Node.js 22 has a proxy compatibility issue with `axios` + `http-proxy-agent` (llhttp stricter parsing). This affects some MCP services when running through a system proxy.
+
+**Symptoms:**
+- MCP connection works in development but fails in production
+- Error: "stream has been aborted" or similar axios errors
+- Works when system proxy is disabled
+
+**Root Cause:**
+- Production AiTer (launched from Finder) inherits system proxy settings
+- Development AiTer (launched from terminal) may not use system proxy
+- Node.js 22's stricter HTTP parsing conflicts with some proxy agents
+
+### Troubleshooting MCP Connection Failures
+
+**Solution 1: Disable proxy for specific MCP service**
+
+Add `no_proxy` to the MCP configuration in `~/.minto.json` (or equivalent config):
+
+```json
+{
+  "mcpServers": {
+    "brightdata": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-brightdata"],
+      "env": {
+        "API_TOKEN": "your-token",
+        "no_proxy": "*",
+        "NO_PROXY": "*"
+      }
+    }
+  }
+}
+```
+
+This disables proxy only for that specific MCP service, not the entire terminal.
+
+**Solution 2: Check system proxy settings**
+
+If all MCP services fail:
+1. Check if you're using a proxy tool (e.g., ShadowsocksX-NG, Clash)
+2. Verify if the proxy uses PAC (auto-configuration)
+3. Try disabling system proxy temporarily to confirm the issue
+
+**Solution 3: Use terminal proxy commands**
+
+If you need proxy for some operations but not MCP:
+```bash
+# In terminal, disable proxy temporarily
+unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+
+# Or use no_proxy for specific domains
+export no_proxy="localhost,127.0.0.1,.local"
+```
+
+### Architecture Note
+
+AiTer uses a layered proxy approach:
+- **Electron main process**: Uses system proxy (for auto-updates, web requests)
+- **PTY terminals**: Inherit system proxy environment (configurable per-command)
+- **MCP services**: Should use `no_proxy=*` if they have compatibility issues
 
 ## Documentation Structure
 

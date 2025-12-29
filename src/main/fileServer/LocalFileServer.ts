@@ -60,11 +60,21 @@ export class LocalFileServer {
       }
     }))
 
-    // Disable caching for development
+    // Security and cache headers
     this.app.use((req, res, next) => {
+      // Disable caching for development
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
       res.setHeader('Pragma', 'no-cache')
       res.setHeader('Expires', '0')
+
+      // Security headers
+      res.setHeader('X-Content-Type-Options', 'nosniff')
+      res.setHeader('X-Frame-Options', 'SAMEORIGIN')
+      res.setHeader('X-XSS-Protection', '1; mode=block')
+
+      // Content Security Policy - restrictive but allows same-origin resources
+      res.setHeader('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; img-src 'self' data: blob: https:; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ws: wss: http: https:;")
+
       next()
     })
 
@@ -87,20 +97,32 @@ export class LocalFileServer {
         return next()
       }
 
-      // SECURITY: Allow same-origin requests from pages served by this server
-      // This enables CSS, JS, images, and other resources to load properly
-      // when referenced from HTML files that were accessed with a valid token.
-      // The Referer header cannot be spoofed by JavaScript in browsers,
-      // so this is safe for same-origin resource loading.
+      // SECURITY: Allow same-origin requests for sub-resources (CSS, JS, images, etc.)
+      // This enables resources to load properly when referenced from HTML files
+      // that were initially accessed with a valid token.
+      //
+      // The Referer header cannot be spoofed by JavaScript in browsers (enforced by browser security).
+      // We add extra validation:
+      // 1. Only allow for non-HTML resources (prevents direct HTML access via Referer spoofing)
+      // 2. Verify the Referer matches our server's origin exactly
       const referer = req.headers.referer
       if (referer) {
         try {
           const refererUrl = new URL(referer)
           const serverOrigin = `localhost:${this.port}`
+
           // Check if the referer is from the same server (same host and port)
           if (refererUrl.host === serverOrigin) {
-            this.lastAccessed = Date.now()
-            return next()
+            // Only allow Referer-based auth for sub-resources (not HTML pages)
+            // This prevents an attacker from crafting a page that loads our HTML via Referer
+            const requestPath = req.path.toLowerCase()
+            const isHtmlRequest = requestPath.endsWith('.html') || requestPath.endsWith('.htm') || requestPath === '/'
+
+            if (!isHtmlRequest) {
+              this.lastAccessed = Date.now()
+              return next()
+            }
+            // HTML requests still require token or session auth
           }
         } catch {
           // Invalid referer URL, continue to deny

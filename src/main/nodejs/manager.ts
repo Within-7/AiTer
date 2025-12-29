@@ -20,9 +20,23 @@ export interface NodeUpgradeResult {
 }
 
 /**
- * Minimum required Node.js version for MCP compatibility
- * MCP servers often depend on packages requiring Node.js 20.19.0+
- * We use v22.x LTS as the bundled version for best compatibility
+ * Minimum required Node.js version for AI CLI tool compatibility
+ *
+ * Version requirements:
+ * - MCP SDK: requires Node.js 20+
+ * - Gemini CLI: requires Node.js 20+ (v0.4.0+)
+ * - Claude Code CLI: requires Node.js 18+
+ * - Minto CLI: requires Node.js 18+
+ *
+ * We bundle and require Node.js 22.x LTS for:
+ * - Best compatibility with all AI CLI tools
+ * - Long-term support until April 2027
+ * - Latest ES features and performance improvements
+ * - Consistent behavior between bundled and system Node.js
+ *
+ * Note: Node.js 22 has a known proxy compatibility issue with axios + http-proxy-agent
+ * (see: https://github.com/TooTallNate/proxy-agents/issues/346)
+ * Workaround: MCP services that fail with proxy should add "no_proxy": "*" to their env config
  */
 const MINIMUM_NODE_VERSION = '22.0.0';
 
