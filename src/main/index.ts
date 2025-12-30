@@ -162,6 +162,19 @@ async function initialize() {
       console.warn('[NodeManager] Failed to configure shell automatically')
     }
 
+    // Verify and repair npx cache if corrupted
+    // This prevents MCP connection failures due to corrupted package cache
+    const cacheResult = await nodeManager.verifyAndRepairNpxCache()
+    if (cacheResult.wasCorrupted) {
+      if (cacheResult.repaired) {
+        console.log('[NodeManager] npx cache was corrupted and has been repaired')
+      } else {
+        console.warn('[NodeManager] npx cache corruption detected but repair failed:', cacheResult.details)
+      }
+    } else {
+      console.log('[NodeManager] npx cache is healthy')
+    }
+
     // Check and install Minto CLI if needed (first-time setup)
     const settings = storeManager.getSettings()
     if (!settings.mintoInstalled) {

@@ -316,6 +316,154 @@ export class NodeManager {
   }
 
   /**
+   * Check if a cached npx package is healthy (has all required files)
+   * @param packageHash - The hash directory name in _npx cache
+   * @returns Object with health status and list of corrupted packages
+   */
+  async checkNpxCacheHealth(packageHash?: string): Promise<{
+    healthy: boolean;
+    corruptedPackages: string[];
+    checkedPackages: number;
+  }> {
+    const npxCachePath = path.join(this.nodejsDir, '.npm-cache', '_npx');
+    const corruptedPackages: string[] = [];
+    let checkedPackages = 0;
+
+    try {
+      if (!(await fs.pathExists(npxCachePath))) {
+        return { healthy: true, corruptedPackages: [], checkedPackages: 0 };
+      }
+
+      // Get all hash directories or just the specified one
+      const hashDirs = packageHash
+        ? [packageHash]
+        : await fs.readdir(npxCachePath);
+
+      for (const hashDir of hashDirs) {
+        const hashPath = path.join(npxCachePath, hashDir);
+        const stat = await fs.stat(hashPath).catch(() => null);
+
+        if (!stat || !stat.isDirectory()) continue;
+
+        const nodeModulesPath = path.join(hashPath, 'node_modules');
+        if (!(await fs.pathExists(nodeModulesPath))) {
+          // Empty cache directory - might be in progress or corrupted
+          corruptedPackages.push(`${hashDir} (empty)`);
+          continue;
+        }
+
+        // Check each package in node_modules
+        const packages = await fs.readdir(nodeModulesPath);
+        for (const pkg of packages) {
+          // Handle scoped packages (@org/package)
+          if (pkg.startsWith('@')) {
+            const scopePath = path.join(nodeModulesPath, pkg);
+            const scopedPackages = await fs.readdir(scopePath).catch(() => []);
+            for (const scopedPkg of scopedPackages) {
+              const fullPkgPath = path.join(scopePath, scopedPkg);
+              const isCorrupted = await this.isPackageCorrupted(fullPkgPath);
+              checkedPackages++;
+              if (isCorrupted) {
+                corruptedPackages.push(`${pkg}/${scopedPkg}`);
+              }
+            }
+          } else {
+            const pkgPath = path.join(nodeModulesPath, pkg);
+            const isCorrupted = await this.isPackageCorrupted(pkgPath);
+            checkedPackages++;
+            if (isCorrupted) {
+              corruptedPackages.push(pkg);
+            }
+          }
+        }
+      }
+
+      const healthy = corruptedPackages.length === 0;
+      if (!healthy) {
+        console.warn(`[NodeManager] Found ${corruptedPackages.length} corrupted packages in npx cache:`, corruptedPackages);
+      }
+
+      return { healthy, corruptedPackages, checkedPackages };
+    } catch (error) {
+      console.error('[NodeManager] Error checking npx cache health:', error);
+      return { healthy: false, corruptedPackages: ['error'], checkedPackages };
+    }
+  }
+
+  /**
+   * Check if a package directory is corrupted (missing package.json)
+   */
+  private async isPackageCorrupted(pkgPath: string): Promise<boolean> {
+    try {
+      const stat = await fs.stat(pkgPath);
+      if (!stat.isDirectory()) return false;
+
+      // A valid npm package must have package.json
+      const packageJsonPath = path.join(pkgPath, 'package.json');
+      const hasPackageJson = await fs.pathExists(packageJsonPath);
+
+      if (!hasPackageJson) {
+        return true; // Corrupted - missing package.json
+      }
+
+      // Verify package.json is valid JSON
+      try {
+        const content = await fs.readFile(packageJsonPath, 'utf-8');
+        JSON.parse(content);
+        return false; // Healthy
+      } catch {
+        return true; // Corrupted - invalid JSON
+      }
+    } catch {
+      return true; // Error accessing = treat as corrupted
+    }
+  }
+
+  /**
+   * Verify and repair npx cache if corrupted
+   * @returns true if cache is healthy or was successfully repaired
+   */
+  async verifyAndRepairNpxCache(): Promise<{
+    wasCorrupted: boolean;
+    repaired: boolean;
+    details: string;
+  }> {
+    console.log('[NodeManager] Verifying npx cache health...');
+
+    const healthCheck = await this.checkNpxCacheHealth();
+
+    if (healthCheck.healthy) {
+      console.log(`[NodeManager] npx cache is healthy (${healthCheck.checkedPackages} packages checked)`);
+      return {
+        wasCorrupted: false,
+        repaired: false,
+        details: `Cache healthy, ${healthCheck.checkedPackages} packages verified`,
+      };
+    }
+
+    // Cache is corrupted, attempt repair by cleaning
+    console.warn(`[NodeManager] npx cache corrupted, cleaning...`);
+    console.warn(`[NodeManager] Corrupted packages: ${healthCheck.corruptedPackages.join(', ')}`);
+
+    const cleaned = await this.cleanNpxCache();
+
+    if (cleaned) {
+      console.log('[NodeManager] npx cache cleaned successfully, will be rebuilt on next use');
+      return {
+        wasCorrupted: true,
+        repaired: true,
+        details: `Cleaned ${healthCheck.corruptedPackages.length} corrupted packages: ${healthCheck.corruptedPackages.join(', ')}`,
+      };
+    }
+
+    return {
+      wasCorrupted: true,
+      repaired: false,
+      details: `Failed to clean corrupted packages: ${healthCheck.corruptedPackages.join(', ')}`,
+    };
+  }
+
+  /**
    * Clean entire npm cache
    */
   async cleanNpmCache(): Promise<boolean> {
