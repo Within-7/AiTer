@@ -101,6 +101,29 @@
   border-color: #1a86d0;
 }
 
+/* Updates Available filter button - orange accent */
+.plugin-filter-btn-updates {
+  background-color: rgba(255, 152, 0, 0.15);
+  border-color: #ff9800;
+  color: #ffb74d;
+}
+
+.plugin-filter-btn-updates:hover {
+  background-color: rgba(255, 152, 0, 0.25);
+  border-color: #ffa726;
+}
+
+.plugin-filter-btn-updates.active {
+  background-color: #ff9800;
+  border-color: #ffa726;
+  color: #ffffff;
+}
+
+.plugin-filter-btn-updates.active:hover {
+  background-color: #ffa726;
+  border-color: #ffb74d;
+}
+
 /* Status Message */
 .plugin-panel-status {
   padding: 12px 20px;

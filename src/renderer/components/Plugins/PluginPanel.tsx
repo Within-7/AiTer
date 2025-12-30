@@ -15,7 +15,7 @@ interface PluginCardData extends Plugin {
   platforms: string[]
 }
 
-type PluginFilter = 'all' | 'installed' | 'not-installed' | 'built-in' | 'custom'
+type PluginFilter = 'all' | 'installed' | 'not-installed' | 'built-in' | 'custom' | 'updates-available'
 
 export const PluginPanel: React.FC = () => {
   const { state, dispatch } = useContext(AppContext)
@@ -399,6 +399,8 @@ export const PluginPanel: React.FC = () => {
       filtered = plugins.filter(p => p.isBuiltIn)
     } else if (filter === 'custom') {
       filtered = plugins.filter(p => !p.isBuiltIn)
+    } else if (filter === 'updates-available') {
+      filtered = plugins.filter(p => p.hasUpdate)
     }
 
     // Then, sort: installed plugins first, then not-installed
@@ -428,6 +430,7 @@ export const PluginPanel: React.FC = () => {
   const notInstalledCount = plugins.filter(p => !p.installed).length
   const builtInCount = plugins.filter(p => p.isBuiltIn).length
   const customCount = plugins.filter(p => !p.isBuiltIn).length
+  const updatesAvailableCount = plugins.filter(p => p.hasUpdate).length
 
   if (!isOpen) return null
 
@@ -487,6 +490,14 @@ export const PluginPanel: React.FC = () => {
             >
               Not Installed ({notInstalledCount})
             </button>
+            {updatesAvailableCount > 0 && (
+              <button
+                className={`plugin-filter-btn plugin-filter-btn-updates ${filter === 'updates-available' ? 'active' : ''}`}
+                onClick={() => setFilter('updates-available')}
+              >
+                Updates ({updatesAvailableCount})
+              </button>
+            )}
           </div>
 
           {statusMessage && (
