@@ -484,7 +484,7 @@ export class AutoUpdateManager {
    * 从 GitHub API 获取最新 Release 信息
    */
   async fetchLatestRelease(): Promise<GitHubRelease | null> {
-    const apiUrl = 'https://api.github.com/repos/Within-7/aiter/releases/latest'
+    const apiUrl = 'https://api.github.com/repos/Within-7/AiTer/releases/latest'
 
     return new Promise((resolve) => {
       const request = https.get(apiUrl, {
@@ -663,7 +663,7 @@ done
 log "Application has exited, running install.sh..."
 
 # Download and run install.sh
-curl -fsSL https://raw.githubusercontent.com/Within-7/aiter/main/scripts/install.sh | bash >> "$LOG_FILE" 2>&1
+curl -fsSL https://raw.githubusercontent.com/Within-7/AiTer/main/scripts/install.sh | bash >> "$LOG_FILE" 2>&1
 
 if [ $? -eq 0 ]; then
     log "Install.sh completed successfully"

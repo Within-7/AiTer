@@ -155,7 +155,7 @@ jobs:
             ### macOS / Linux
 
             ```bash
-            curl -fsSL https://raw.githubusercontent.com/Within-7/aiter/main/scripts/install.sh | bash
+            curl -fsSL https://raw.githubusercontent.com/Within-7/AiTer/main/scripts/install.sh | bash
             ```
 
             脚本会自动：
@@ -174,7 +174,7 @@ jobs:
 
             ```powershell
             # 以管理员身份运行 PowerShell / Run PowerShell as Administrator
-            irm https://raw.githubusercontent.com/Within-7/aiter/main/scripts/install.ps1 | iex
+            irm https://raw.githubusercontent.com/Within-7/AiTer/main/scripts/install.ps1 | iex
             ```
 
             脚本会自动：
@@ -195,7 +195,7 @@ jobs:
 
             ```bash
             # 下载并安装 / Download and install
-            curl -fsSL https://github.com/Within-7/aiter/releases/download/v${{ steps.version.outputs.VERSION }}/AiTer-${{ steps.version.outputs.VERSION }}-mac-arm64.dmg -o /tmp/AiTer.dmg
+            curl -fsSL https://github.com/Within-7/AiTer/releases/download/v${{ steps.version.outputs.VERSION }}/AiTer-${{ steps.version.outputs.VERSION }}-mac-arm64.dmg -o /tmp/AiTer.dmg
             hdiutil attach /tmp/AiTer.dmg -mountpoint /tmp/AiTer-mount
             cp -R "/tmp/AiTer-mount/AiTer.app" /Applications/
             hdiutil detach /tmp/AiTer-mount
@@ -208,7 +208,7 @@ jobs:
 
             ```bash
             # 下载并安装 / Download and install
-            curl -fsSL https://github.com/Within-7/aiter/releases/download/v${{ steps.version.outputs.VERSION }}/AiTer-${{ steps.version.outputs.VERSION }}-mac-x64.dmg -o /tmp/AiTer.dmg
+            curl -fsSL https://github.com/Within-7/AiTer/releases/download/v${{ steps.version.outputs.VERSION }}/AiTer-${{ steps.version.outputs.VERSION }}-mac-x64.dmg -o /tmp/AiTer.dmg
             hdiutil attach /tmp/AiTer.dmg -mountpoint /tmp/AiTer-mount
             cp -R "/tmp/AiTer-mount/AiTer.app" /Applications/
             hdiutil detach /tmp/AiTer-mount
@@ -221,7 +221,7 @@ jobs:
 
             ```powershell
             # 下载并安装 / Download and install
-            $url = "https://github.com/Within-7/aiter/releases/download/v${{ steps.version.outputs.VERSION }}/AiTer-${{ steps.version.outputs.VERSION }}-win-x64.exe"
+            $url = "https://github.com/Within-7/AiTer/releases/download/v${{ steps.version.outputs.VERSION }}/AiTer-${{ steps.version.outputs.VERSION }}-win-x64.exe"
             $installer = "$env:TEMP\AiTer-Setup.exe"
             Invoke-WebRequest -Uri $url -OutFile $installer
             Start-Process -FilePath $installer -Wait
@@ -233,7 +233,7 @@ jobs:
 
             ```powershell
             # 静默安装（无 UI）/ Silent install (no UI)
-            $url = "https://github.com/Within-7/aiter/releases/download/v${{ steps.version.outputs.VERSION }}/AiTer-${{ steps.version.outputs.VERSION }}-win-x64.exe"
+            $url = "https://github.com/Within-7/AiTer/releases/download/v${{ steps.version.outputs.VERSION }}/AiTer-${{ steps.version.outputs.VERSION }}-win-x64.exe"
             $installer = "$env:TEMP\AiTer-Setup.exe"
             Invoke-WebRequest -Uri $url -OutFile $installer
             Start-Process -FilePath $installer -ArgumentList "/S" -Wait

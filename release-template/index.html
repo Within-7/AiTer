@@ -451,7 +451,7 @@
         <!-- Error State -->
         <div id="error-state" class="error-msg hidden">
           无法获取版本信息，请稍后重试或访问
-          <a href="https://github.com/Within-7/aiter/releases" target="_blank">GitHub Releases</a>
+          <a href="https://github.com/Within-7/AiTer/releases" target="_blank">GitHub Releases</a>
         </div>
 
         <!-- Download Cards -->
@@ -525,7 +525,7 @@
           <div class="code-block">
             <button class="copy-btn" data-target="code-auto-install-mac">复制</button>
             <pre id="code-auto-install-mac"><span class="comment"># 一键安装 / One-click install</span>
-curl -fsSL https://raw.githubusercontent.com/Within-7/aiter/main/scripts/install.sh | bash</pre>
+curl -fsSL https://raw.githubusercontent.com/Within-7/AiTer/main/scripts/install.sh | bash</pre>
           </div>
           <p style="color: var(--text-muted); margin-top: 8px; font-size: 14px;">
             脚本会自动检测系统架构（Apple Silicon 或 Intel）并安装对应版本<br>
@@ -536,7 +536,7 @@ curl -fsSL https://raw.githubusercontent.com/Within-7/aiter/main/scripts/install
           <div class="code-block">
             <button class="copy-btn" data-target="code-auto-install-win">复制</button>
             <pre id="code-auto-install-win"><span class="comment"># 以管理员身份运行 PowerShell / Run PowerShell as Administrator</span>
-irm https://raw.githubusercontent.com/Within-7/aiter/main/scripts/install.ps1 | iex</pre>
+irm https://raw.githubusercontent.com/Within-7/AiTer/main/scripts/install.ps1 | iex</pre>
           </div>
           <p style="color: var(--text-muted); margin-top: 8px; font-size: 14px;">
             脚本会自动下载并安装最新版本 / Automatically downloads and installs the latest version<br>
@@ -557,7 +557,7 @@ irm https://raw.githubusercontent.com/Within-7/aiter/main/scripts/install.ps1 | 
             <div class="code-block">
               <button class="copy-btn" data-target="code-mac-arm">复制</button>
               <pre id="code-mac-arm"><span class="comment"># 下载并安装 AiTer (Apple Silicon)</span>
-curl -fsSL "<span id="url-mac-arm">https://github.com/Within-7/aiter/releases/latest</span>" -o /tmp/AiTer.dmg
+curl -fsSL "<span id="url-mac-arm">https://github.com/Within-7/AiTer/releases/latest</span>" -o /tmp/AiTer.dmg
 hdiutil attach /tmp/AiTer.dmg -mountpoint /tmp/AiTer-mount
 cp -R "/tmp/AiTer-mount/AiTer.app" /Applications/
 hdiutil detach /tmp/AiTer-mount
@@ -570,7 +570,7 @@ echo "AiTer 已安装到 /Applications"</pre>
             <div class="code-block">
               <button class="copy-btn" data-target="code-mac-intel">复制</button>
               <pre id="code-mac-intel"><span class="comment"># 下载并安装 AiTer (Intel)</span>
-curl -fsSL "<span id="url-mac-intel">https://github.com/Within-7/aiter/releases/latest</span>" -o /tmp/AiTer.dmg
+curl -fsSL "<span id="url-mac-intel">https://github.com/Within-7/AiTer/releases/latest</span>" -o /tmp/AiTer.dmg
 hdiutil attach /tmp/AiTer.dmg -mountpoint /tmp/AiTer-mount
 cp -R "/tmp/AiTer-mount/AiTer.app" /Applications/
 hdiutil detach /tmp/AiTer-mount
@@ -583,7 +583,7 @@ echo "AiTer 已安装到 /Applications"</pre>
             <div class="code-block">
               <button class="copy-btn" data-target="code-win">复制</button>
               <pre id="code-win"><span class="comment"># PowerShell: 下载并安装 AiTer</span>
-$url = "<span id="url-win">https://github.com/Within-7/aiter/releases/latest</span>"
+$url = "<span id="url-win">https://github.com/Within-7/AiTer/releases/latest</span>"
 $installer = "$env:TEMP\AiTer-Setup.exe"
 Invoke-WebRequest -Uri $url -OutFile $installer
 Start-Process -FilePath $installer -Wait
@@ -596,7 +596,7 @@ Write-Host "AiTer 安装完成"</pre>
             <div class="code-block">
               <button class="copy-btn" data-target="code-win-silent">复制</button>
               <pre id="code-win-silent"><span class="comment"># PowerShell: 静默安装（无 UI）</span>
-$url = "<span id="url-win-silent">https://github.com/Within-7/aiter/releases/latest</span>"
+$url = "<span id="url-win-silent">https://github.com/Within-7/AiTer/releases/latest</span>"
 $installer = "$env:TEMP\AiTer-Setup.exe"
 Invoke-WebRequest -Uri $url -OutFile $installer
 Start-Process -FilePath $installer -ArgumentList "/S" -Wait
@@ -663,14 +663,14 @@ Write-Host "AiTer 静默安装完成"</pre>
     <div class="container">
       <p>Copyright © 2025-2026 <a href="https://within-7.com" target="_blank">Within-7.com</a></p>
       <p style="margin-top: 8px;">
-        <a href="https://github.com/Within-7/aiter" target="_blank">GitHub</a> ·
+        <a href="https://github.com/Within-7/AiTer" target="_blank">GitHub</a> ·
         <a href="mailto:dev@within-7.com">联系我们</a>
       </p>
     </div>
   </footer>
 
   <script>
-    const GITHUB_REPO = 'Within-7/aiter';
+    const GITHUB_REPO = 'Within-7/AiTer';
     const GITHUB_API = 'https://api.github.com/repos/' + GITHUB_REPO + '/releases/latest';
     const GITHUB_RELEASES_URL = 'https://github.com/' + GITHUB_REPO + '/releases/latest';
 
@@ -683,17 +683,17 @@ Write-Host "AiTer 静默安装完成"</pre>
         {
           name: 'AiTer-0.1.23-mac-arm64.dmg',
           size: 252500000,
-          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.23/AiTer-0.1.23-mac-arm64.dmg'
+          browser_download_url: 'https://github.com/Within-7/AiTer/releases/download/v0.1.23/AiTer-0.1.23-mac-arm64.dmg'
         },
         {
           name: 'AiTer-0.1.23-mac-x64.dmg',
           size: 257400000,
-          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.23/AiTer-0.1.23-mac-x64.dmg'
+          browser_download_url: 'https://github.com/Within-7/AiTer/releases/download/v0.1.23/AiTer-0.1.23-mac-x64.dmg'
         },
         {
           name: 'AiTer-0.1.23-win-x64.exe',
           size: 116900000,
-          browser_download_url: 'https://github.com/Within-7/aiter/releases/download/v0.1.23/AiTer-0.1.23-win-x64.exe'
+          browser_download_url: 'https://github.com/Within-7/AiTer/releases/download/v0.1.23/AiTer-0.1.23-win-x64.exe'
         }
       ]
     };

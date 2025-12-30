@@ -14,10 +14,10 @@
 
 ```bash
 # 一键安装
-curl -fsSL https://raw.githubusercontent.com/within-7/aiter/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Within-7/AiTer/main/scripts/install.sh | bash
 
 # 或者下载后执行
-curl -O https://raw.githubusercontent.com/within-7/aiter/main/scripts/install.sh
+curl -O https://raw.githubusercontent.com/Within-7/AiTer/main/scripts/install.sh
 chmod +x install.sh
 ./install.sh
 ```
@@ -28,14 +28,14 @@ chmod +x install.sh
 # 以管理员身份运行 PowerShell，然后执行：
 
 # 一键安装（推荐）
-irm https://raw.githubusercontent.com/within-7/aiter/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/Within-7/AiTer/main/scripts/install.ps1 | iex
 
 # 或者下载后执行
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/within-7/aiter/main/scripts/install.ps1" -OutFile "install.ps1"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Within-7/AiTer/main/scripts/install.ps1" -OutFile "install.ps1"
 powershell -ExecutionPolicy Bypass -File install.ps1
 
 # 静默安装（无 UI）
-irm https://raw.githubusercontent.com/within-7/aiter/main/scripts/install.ps1 | iex -Silent
+irm https://raw.githubusercontent.com/Within-7/AiTer/main/scripts/install.ps1 | iex -Silent
 
 # 完全自定义
 powershell -ExecutionPolicy Bypass -File install.ps1 -Silent -NoDesktopShortcut
@@ -182,10 +182,10 @@ Use the automatic installation script that handles system detection, download, a
 
 ```bash
 # One-click install
-curl -fsSL https://raw.githubusercontent.com/within-7/aiter/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Within-7/AiTer/main/scripts/install.sh | bash
 
 # Or download and run
-curl -O https://raw.githubusercontent.com/within-7/aiter/main/scripts/install.sh
+curl -O https://raw.githubusercontent.com/Within-7/AiTer/main/scripts/install.sh
 chmod +x install.sh
 ./install.sh
 ```
@@ -196,14 +196,14 @@ chmod +x install.sh
 # Run PowerShell as Administrator, then execute:
 
 # One-click install (Recommended)
-irm https://raw.githubusercontent.com/within-7/aiter/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/Within-7/AiTer/main/scripts/install.ps1 | iex
 
 # Or download and run
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/within-7/aiter/main/scripts/install.ps1" -OutFile "install.ps1"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Within-7/AiTer/main/scripts/install.ps1" -OutFile "install.ps1"
 powershell -ExecutionPolicy Bypass -File install.ps1
 
 # Silent install (no UI)
-irm https://raw.githubusercontent.com/within-7/aiter/main/scripts/install.ps1 | iex -Silent
+irm https://raw.githubusercontent.com/Within-7/AiTer/main/scripts/install.ps1 | iex -Silent
 
 # Full customization
 powershell -ExecutionPolicy Bypass -File install.ps1 -Silent -NoDesktopShortcut
@@ -342,8 +342,8 @@ Remove user data (optional):
 
 ## 获取帮助 / Get Help
 
-- GitHub Issues: https://github.com/within-7/aiter/issues
-- 文档 / Documentation: https://github.com/within-7/aiter/wiki
+- GitHub Issues: https://github.com/Within-7/AiTer/issues
+- 文档 / Documentation: https://github.com/Within-7/AiTer/wiki
 
 ## 许可证 / License
 

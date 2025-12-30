@@ -151,13 +151,13 @@ GitHub Actions 工作流执行以下步骤：
 
 团队成员需要：
 1. GitHub 账号
-2. 对 `Within-7/aiter` 仓库的访问权限（至少 Read 权限）
+2. 对 `Within-7/AiTer` 仓库的访问权限（至少 Read 权限）
 
 ### 下载步骤
 
 1. **访问 Releases 页面**
    ```
-   https://github.com/Within-7/aiter/releases
+   https://github.com/Within-7/AiTer/releases
    ```
 
 2. **选择版本**
@@ -314,7 +314,7 @@ git tag -d v0.1.0
 git push origin :refs/tags/v0.1.0
 
 # 3. 在 GitHub 上手动删除 Release
-# 访问: https://github.com/Within-7/aiter/releases
+# 访问: https://github.com/Within-7/AiTer/releases
 # 找到对应版本，点击 "Delete"
 
 # 4. 重新运行发布脚本

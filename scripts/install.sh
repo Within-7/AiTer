@@ -14,7 +14,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # GitHub repository information
-GITHUB_REPO="within-7/aiter"
+GITHUB_REPO="Within-7/AiTer"
 GITHUB_API="https://api.github.com/repos/${GITHUB_REPO}/releases/latest"
 
 # Print colored message
@@ -264,7 +264,7 @@ main() {
     echo ""
     echo "╔════════════════════════════════════════════╗"
     echo "║   AiTer Auto-Installer                     ║"
-    echo "║   GitHub: github.com/within-7/aiter        ║"
+    echo "║   GitHub: github.com/Within-7/AiTer        ║"
     echo "╚════════════════════════════════════════════╝"
     echo ""
 

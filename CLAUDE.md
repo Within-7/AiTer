@@ -457,7 +457,7 @@ AiTer uses `electron-updater` for automatic updates:
 
 ### Update Configuration
 
-- **Update source**: GitHub Releases (`Within-7/aiter`)
+- **Update source**: GitHub Releases (`Within-7/AiTer`)
 - **Differential updates**: Disabled for unsigned builds
 - **Network error handling**: Silent retry without user notification
 

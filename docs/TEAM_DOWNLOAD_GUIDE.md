@@ -9,12 +9,12 @@
 点击以下链接访问最新版本下载页面：
 
 ```
-https://github.com/Within-7/aiter/releases/latest
+https://github.com/Within-7/AiTer/releases/latest
 ```
 
 或者：
 
-1. 访问 GitHub 仓库：`https://github.com/Within-7/aiter`
+1. 访问 GitHub 仓库：`https://github.com/Within-7/AiTer`
 2. 点击右侧的 **Releases** 标签
 3. 选择最新版本（通常在最顶部）
 
@@ -200,7 +200,7 @@ AiTer 是**专有软件**，仅供授权团队成员内部使用。
    - 邮箱：dev@within-7.com
 
 3. **提交 Issue**
-   - GitHub Issues：`https://github.com/Within-7/aiter/issues`
+   - GitHub Issues：`https://github.com/Within-7/AiTer/issues`
 
 ## 🎉 快速开始清单
 

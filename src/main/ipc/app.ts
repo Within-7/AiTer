@@ -128,7 +128,7 @@ export function registerAppHandlers(
       if (updateMode === 'install-script') {
         // macOS 未签名应用或开发模式：返回安装命令，让前端在终端中执行
         // 因为 install.sh 需要 sudo 权限，用户需要输入密码
-        const installCommand = 'curl -fsSL https://raw.githubusercontent.com/Within-7/aiter/main/scripts/install.sh | bash'
+        const installCommand = 'curl -fsSL https://raw.githubusercontent.com/Within-7/AiTer/main/scripts/install.sh | bash'
         return { success: true, mode: 'install-script', command: installCommand }
       } else {
         // 已签名应用：使用 electron-updater 安装

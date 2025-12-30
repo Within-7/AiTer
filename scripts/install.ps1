@@ -11,7 +11,7 @@ param(
 )
 
 # GitHub repository information
-$GITHUB_REPO = "Within-7/aiter"
+$GITHUB_REPO = "Within-7/AiTer"
 $GITHUB_API = "https://api.github.com/repos/$GITHUB_REPO/releases/latest"
 
 # Color output functions
@@ -39,7 +39,7 @@ function Write-Header {
     Write-Host ""
     Write-Host "╔════════════════════════════════════════════╗" -ForegroundColor Cyan
     Write-Host "║   AiTer Auto-Installer for Windows        ║" -ForegroundColor Cyan
-    Write-Host "║   GitHub: github.com/within-7/aiter        ║" -ForegroundColor Cyan
+    Write-Host "║   GitHub: github.com/Within-7/AiTer        ║" -ForegroundColor Cyan
     Write-Host "╚════════════════════════════════════════════╝" -ForegroundColor Cyan
     Write-Host ""
 }
