@@ -55,27 +55,15 @@
   border-bottom: 1px solid #3c3c3c;
   overflow-x: auto;
   overflow-y: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: #555555 transparent;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
   flex-shrink: 0;
   min-height: 44px;
 }
 
+/* Hide scrollbar for Chrome/Safari/Opera */
 .plugin-panel-filters::-webkit-scrollbar {
-  height: 4px;
-}
-
-.plugin-panel-filters::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.plugin-panel-filters::-webkit-scrollbar-thumb {
-  background-color: #555555;
-  border-radius: 2px;
-}
-
-.plugin-panel-filters::-webkit-scrollbar-thumb:hover {
-  background-color: #666666;
+  display: none;
 }
 
 .plugin-filter-btn {
