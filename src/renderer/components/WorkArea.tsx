@@ -8,6 +8,7 @@ import { ImageViewer } from './Editor/ImageViewer'
 import { PDFViewer } from './Editor/PDFViewer'
 import { OfficeViewer } from './Editor/OfficeViewer'
 import { TerminalContainer } from './TerminalContainer'
+import { ConfirmDialog } from './FileTree/ConfirmDialog'
 import { getProjectColor } from '../utils/projectColors'
 import '../styles/WorkArea.css'
 
@@ -21,6 +22,13 @@ interface Tab {
   isPreview?: boolean
 }
 
+// Dialog state for terminal close confirmation
+interface CloseTerminalDialogState {
+  show: boolean
+  terminalId: string | null
+  terminalName: string
+}
+
 export const WorkArea: React.FC = () => {
   const { state, dispatch } = useContext(AppContext)
 
@@ -31,6 +39,13 @@ export const WorkArea: React.FC = () => {
   const [draggedTabId, setDraggedTabId] = useState<string | null>(null)
   const [dragOverTabId, setDragOverTabId] = useState<string | null>(null)
   const [dragOverEnd, setDragOverEnd] = useState<boolean>(false) // For dropping at the end
+
+  // Track terminal close confirmation dialog
+  const [closeTerminalDialog, setCloseTerminalDialog] = useState<CloseTerminalDialogState>({
+    show: false,
+    terminalId: null,
+    terminalName: ''
+  })
 
   // Detect platform for Windows-specific styling
   const isWindows = navigator.platform.toLowerCase().includes('win')
@@ -116,9 +131,30 @@ export const WorkArea: React.FC = () => {
       dispatch({ type: 'REMOVE_EDITOR_TAB', payload: id })
     } else if (tabId.startsWith('terminal-')) {
       const id = tabId.substring('terminal-'.length)
-      dispatch({ type: 'REMOVE_TERMINAL', payload: id })
+      // Find terminal name for confirmation dialog
+      const terminal = state.terminals.find(t => t.id === id)
+      const terminalName = terminal?.name || 'Terminal'
+      // Show confirmation dialog for terminal close
+      setCloseTerminalDialog({
+        show: true,
+        terminalId: id,
+        terminalName
+      })
     }
-  }, [dispatch])
+  }, [dispatch, state.terminals])
+
+  // Handle terminal close confirmation
+  const handleConfirmCloseTerminal = useCallback(() => {
+    if (closeTerminalDialog.terminalId) {
+      dispatch({ type: 'REMOVE_TERMINAL', payload: closeTerminalDialog.terminalId })
+    }
+    setCloseTerminalDialog({ show: false, terminalId: null, terminalName: '' })
+  }, [closeTerminalDialog.terminalId, dispatch])
+
+  // Handle terminal close cancellation
+  const handleCancelCloseTerminal = useCallback(() => {
+    setCloseTerminalDialog({ show: false, terminalId: null, terminalName: '' })
+  }, [])
 
   const handleDragStart = useCallback((e: React.DragEvent, tabId: string) => {
     // If the dragged tab is not in selection, make it the only selected tab
@@ -491,6 +527,19 @@ export const WorkArea: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Terminal close confirmation dialog */}
+      {closeTerminalDialog.show && (
+        <ConfirmDialog
+          title="Close Terminal"
+          message={`Are you sure you want to close "${closeTerminalDialog.terminalName}"? Any running processes will be terminated.`}
+          confirmLabel="Close"
+          cancelLabel="Cancel"
+          variant="danger"
+          onConfirm={handleConfirmCloseTerminal}
+          onCancel={handleCancelCloseTerminal}
+        />
+      )}
     </div>
   )
 }
