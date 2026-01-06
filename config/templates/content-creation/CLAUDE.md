@@ -10,13 +10,26 @@ This project is designed for copywriting, marketing content, SEO optimization, a
 
 ## Core Rules (MUST FOLLOW)
 
-### Rule 1: Git Commit After Every Task
+**IMPORTANT: These two rules MUST be executed in the exact order specified below. Git commit is ALWAYS the final action of any task.**
 
-**Every task completion MUST be followed by a git commit.**
+### Rule 1: Update Project Index (BEFORE Git Commit)
 
-After completing any task that involves file operations (create, modify, update, delete), you MUST:
+**Every task completion MUST update the project index file FIRST.**
 
-1. Stage all changes: `git add -A`
+After completing any task that involves file operations, you MUST update `PROJECT_INDEX.md` in the project root:
+
+1. If the file doesn't exist, create it
+2. Add/update entries for any files that were created, modified, or deleted
+3. Update the "Last Updated" timestamp
+4. Include a brief summary of the latest changes
+
+### Rule 2: Git Commit (FINAL ACTION)
+
+**Git commit is ALWAYS the LAST action of every task. No operations should occur after the commit.**
+
+After updating the project index (Rule 1) and ensuring ALL task operations are complete, you MUST:
+
+1. Stage all changes (including the updated PROJECT_INDEX.md): `git add -A`
 2. Create a descriptive commit with the following format:
 
 ```bash
@@ -47,17 +60,17 @@ EOF
 - Every version of content is preserved
 - User can compare or rollback to any version
 - Clear history of content evolution
+- Project index is always in sync with actual files
 
-### Rule 2: Maintain Project Index
+## Task Completion Checklist
 
-**Every task completion MUST update the project index file.**
+**Every task MUST follow this exact sequence:**
 
-After completing any task, you MUST update `PROJECT_INDEX.md` in the project root:
+1. ✅ Complete all requested file operations (create, modify, delete)
+2. ✅ Update PROJECT_INDEX.md with all changes (Rule 1)
+3. ✅ Git commit ALL changes including index update (Rule 2) - **THIS IS THE FINAL ACTION**
 
-1. If the file doesn't exist, create it
-2. Add/update entries for any files that were created, modified, or deleted
-3. Update the "Last Updated" timestamp
-4. Include a brief summary of the latest changes
+⚠️ **NEVER perform any file operations after git commit. If you realize something was missed, create a new commit.**
 
 ## Content Project Structure
 
@@ -95,18 +108,19 @@ After completing any task, you MUST update `PROJECT_INDEX.md` in the project roo
 ### Phase 2: Creation
 1. Write first draft
 2. Save to `drafts/v1/`
-3. Commit with type `draft`
 
 ### Phase 3: Revision
 1. Review and edit
 2. Save revisions to `drafts/v2/`
-3. Commit with type `revision`
-4. Repeat until final
+3. Repeat until final
 
 ### Phase 4: Finalization
 1. Final review
 2. Move to `drafts/final/`
-3. Commit with type `publish`
+
+### After Each Phase
+1. Update PROJECT_INDEX.md with all new/modified files
+2. Git commit all changes (FINAL ACTION)
 
 ## Content Templates
 
@@ -209,6 +223,7 @@ When creating SEO content:
 3. **Metadata**: Include target keywords, audience, and status
 4. **Review Process**: Mark content status clearly
 5. **Asset Management**: Keep images organized in `assets/`
+6. **Index First, Commit Last**: Always update PROJECT_INDEX.md before committing
 
 ## Tools Integration
 

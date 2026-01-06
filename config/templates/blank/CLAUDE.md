@@ -8,13 +8,28 @@ This file provides guidance to Claude Code CLI and Minto CLI when working in thi
 
 ## Core Rules (MUST FOLLOW)
 
-### Rule 1: Git Commit After Every Task
+**IMPORTANT: These two rules MUST be executed in the exact order specified below. Git commit is ALWAYS the final action of any task.**
 
-**Every task completion MUST be followed by a git commit.**
+### Rule 1: Update Project Index (BEFORE Git Commit)
 
-After completing any task that involves file operations (create, modify, update, delete), you MUST:
+**Every task completion MUST update the project index file FIRST.**
 
-1. Stage all changes: `git add -A`
+After completing any task that involves file operations, you MUST update `PROJECT_INDEX.md` in the project root:
+
+1. If the file doesn't exist, create it
+2. Add/update entries for any files that were created, modified, or deleted
+3. Update the "Last Updated" timestamp
+4. Include a brief summary of the latest changes
+
+The index format is defined in the "Project Index Template" section below.
+
+### Rule 2: Git Commit (FINAL ACTION)
+
+**Git commit is ALWAYS the LAST action of every task. No operations should occur after the commit.**
+
+After updating the project index (Rule 1) and ensuring ALL task operations are complete, you MUST:
+
+1. Stage all changes (including the updated PROJECT_INDEX.md): `git add -A`
 2. Create a descriptive commit with the following format:
 
 ```bash
@@ -43,19 +58,17 @@ EOF
 - Every operation is trackable and reversible
 - User can rollback to any previous state
 - Clear history of all AI-assisted work
+- Project index is always in sync with actual files
 
-### Rule 2: Maintain Project Index
+## Task Completion Checklist
 
-**Every task completion MUST update the project index file.**
+**Every task MUST follow this exact sequence:**
 
-After completing any task, you MUST update `PROJECT_INDEX.md` in the project root:
+1. ✅ Complete all requested file operations (create, modify, delete)
+2. ✅ Update PROJECT_INDEX.md with all changes (Rule 1)
+3. ✅ Git commit ALL changes including index update (Rule 2) - **THIS IS THE FINAL ACTION**
 
-1. If the file doesn't exist, create it
-2. Add/update entries for any files that were created, modified, or deleted
-3. Update the "Last Updated" timestamp
-4. Include a brief summary of the latest changes
-
-The index format is defined in `PROJECT_INDEX.md` template below.
+⚠️ **NEVER perform any file operations after git commit. If you realize something was missed, create a new commit.**
 
 ## Project Index Template
 
@@ -113,9 +126,10 @@ When creating or updating `PROJECT_INDEX.md`, use this structure:
 
 1. **Before starting a task**: Read this file and `PROJECT_INDEX.md` to understand the project context
 2. **During the task**: Follow the user's instructions carefully
-3. **After completing the task**:
-   - Commit all changes (Rule 1)
-   - Update the project index (Rule 2)
+3. **After completing the task** (in this exact order):
+   - Complete all file operations
+   - Update the project index (Rule 1)
+   - Git commit all changes (Rule 2) - **FINAL ACTION**
    - Provide a summary to the user
 
 ## File Organization
@@ -140,6 +154,7 @@ Organize files in a clear, logical structure:
 - Document any non-obvious file purposes in PROJECT_INDEX.md
 - Make atomic commits (one logical change per commit)
 - Write meaningful commit messages
+- Always update PROJECT_INDEX.md before committing
 
 ---
 
