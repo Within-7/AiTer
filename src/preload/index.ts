@@ -406,6 +406,14 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.invoke('session:save', { session }),
     get: () => ipcRenderer.invoke('session:get'),
     clear: () => ipcRenderer.invoke('session:clear')
+  },
+
+  // Template APIs
+  templates: {
+    list: () => ipcRenderer.invoke('templates:list'),
+    get: (templateId: string) => ipcRenderer.invoke('templates:get', { templateId }),
+    apply: (templateId: string, projectPath: string, projectName: string) =>
+      ipcRenderer.invoke('templates:apply', { templateId, projectPath, projectName })
   }
 })
 
@@ -838,6 +846,41 @@ export interface API {
     }>
     clear(): Promise<{
       success: boolean;
+      error?: string;
+    }>
+  }
+  templates: {
+    list(): Promise<{
+      success: boolean;
+      templates?: Array<{
+        id: string;
+        name: string;
+        description: string;
+        icon?: string;
+        category: 'basic' | 'work' | 'development' | 'enterprise';
+        order: number;
+        templateDir: string;
+        requiredLicense?: string;
+      }>;
+      error?: string;
+    }>
+    get(templateId: string): Promise<{
+      success: boolean;
+      template?: {
+        id: string;
+        name: string;
+        description: string;
+        icon?: string;
+        category: 'basic' | 'work' | 'development' | 'enterprise';
+        order: number;
+        templateDir: string;
+        requiredLicense?: string;
+      };
+      error?: string;
+    }>
+    apply(templateId: string, projectPath: string, projectName: string): Promise<{
+      success: boolean;
+      filesCreated?: string[];
       error?: string;
     }>
   }

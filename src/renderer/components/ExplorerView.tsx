@@ -4,13 +4,14 @@ import { AppContext } from '../context/AppContext'
 import { FileTree } from './FileTree/FileTree'
 import { InputDialog } from './FileTree/InputDialog'
 import { ConfirmDialog } from './FileTree/ConfirmDialog'
+import { TemplateSelector } from './TemplateSelector'
 import { FileNode, EditorTab } from '../../types'
 import { getProjectColor } from '../utils/projectColors'
 import { getFileType, isExternalOpenCandidate, FileType } from '../../shared/fileTypeConfig'
 import '../styles/ExplorerView.css'
 
 interface DialogState {
-  type: 'new-file' | 'new-folder' | 'remove-project' | null
+  type: 'new-file' | 'new-folder' | 'remove-project' | 'template-selector' | null
   targetPath?: string
   projectId?: string
   projectName?: string
@@ -59,17 +60,42 @@ export function ExplorerView() {
     }
   }, [activeProjectId])
 
-  const handleAddProject = async () => {
-    const result = await window.api.dialog.openFolder()
-    if (result.success && result.data) {
-      const addResult = await window.api.projects.add(
-        result.data.path,
-        result.data.name
-      )
-      if (addResult.success && addResult.project) {
-        setExpandedProjects(new Set([addResult.project!.id]))
+  const handleAddProject = () => {
+    setDialog({ type: 'template-selector' })
+  }
+
+  const handleTemplateSelect = async (
+    templateId: string | null,
+    projectPath: string,
+    projectName: string
+  ) => {
+    // First add the project
+    const addResult = await window.api.projects.add(projectPath, projectName)
+    if (addResult.success && addResult.project) {
+      // If a template was selected, apply it
+      if (templateId) {
+        try {
+          const applyResult = await window.api.templates.apply(
+            templateId,
+            projectPath,
+            projectName
+          )
+          if (applyResult.success) {
+            console.log(`[TemplateSelector] Applied template '${templateId}', created ${applyResult.filesCreated?.length || 0} files`)
+          } else {
+            console.error('[TemplateSelector] Failed to apply template:', applyResult.error)
+          }
+        } catch (err) {
+          console.error('[TemplateSelector] Error applying template:', err)
+        }
       }
+
+      // Expand the new project
+      setExpandedProjects(new Set([addResult.project!.id]))
+      // Refresh file tree
+      setFileTreeRefreshKey(k => k + 1)
     }
+    setDialog({ type: null })
   }
 
   const handleRemoveProject = async (id: string) => {
@@ -472,6 +498,13 @@ export function ExplorerView() {
           confirmLabel="Remove"
           variant="danger"
           onConfirm={handleConfirmRemoveProject}
+          onCancel={() => setDialog({ type: null })}
+        />
+      )}
+
+      {dialog.type === 'template-selector' && (
+        <TemplateSelector
+          onSelect={handleTemplateSelect}
           onCancel={() => setDialog({ type: null })}
         />
       )}

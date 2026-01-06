@@ -1,0 +1,34 @@
+{
+  "$schema": "./project-templates.schema.json",
+  "version": "1.0.0",
+  "description": "Default project templates configuration",
+  "templates": [
+    {
+      "id": "blank",
+      "name": "Blank Project",
+      "description": "Empty project with basic AI CLI configuration",
+      "icon": "📁",
+      "category": "basic",
+      "order": 1,
+      "templateDir": "blank"
+    },
+    {
+      "id": "research-analysis",
+      "name": "Research & Analysis",
+      "description": "Market research, competitive analysis, data research",
+      "icon": "📊",
+      "category": "work",
+      "order": 2,
+      "templateDir": "research-analysis"
+    },
+    {
+      "id": "content-creation",
+      "name": "Content Creation",
+      "description": "Copywriting, marketing content, SEO optimization",
+      "icon": "✍️",
+      "category": "work",
+      "order": 3,
+      "templateDir": "content-creation"
+    }
+  ]
+}

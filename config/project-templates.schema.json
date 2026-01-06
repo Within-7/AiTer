@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AiTer Project Templates Configuration",
+  "description": "Configuration schema for AiTer project templates",
+  "type": "object",
+  "required": ["version", "templates"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Configuration schema version"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of this configuration variant"
+    },
+    "templates": {
+      "type": "array",
+      "description": "List of available project templates",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "description", "templateDir"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique template identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Short description of the template"
+          },
+          "icon": {
+            "type": "string",
+            "description": "Icon emoji"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["basic", "work", "development", "enterprise"],
+            "description": "Template category for grouping"
+          },
+          "order": {
+            "type": "number",
+            "description": "Display order (lower numbers first)"
+          },
+          "templateDir": {
+            "type": "string",
+            "description": "Directory name under config/templates/"
+          },
+          "requiredLicense": {
+            "type": "string",
+            "description": "Required license tier to use this template"
+          }
+        }
+      }
+    }
+  }
+}
